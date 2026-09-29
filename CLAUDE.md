@@ -5,5 +5,5 @@
 - Server bleibt ohne Zusatzpakete (nur Node.js-Bordmittel). Keine externen CDNs, alles liegt lokal (Offline-Betrieb).
 - Spielstand: lokal zuerst (IndexedDB), Abgleich über `/api/state` mit `baseRev` (409 = Konflikt, dann zusammenführen).
 - Datenformat hat eine Schemaversion; alte Stände immer migrieren, nie verwerfen.
-- Plan und Roadmap: Vault `Personal/Themes/Torjäger-Liga Standalone-Plan.md`. Prototyp: Claude-Artifact (siehe Plan).
+- Plan und Roadmap: Vault `Projects/Torjaeger/specs/Torjaeger-Plan.md`, Index `Projects/Torjaeger/Torjaeger.md`. Prototyp: Claude-Artifact (siehe Plan).
 - `data/` nie committen.

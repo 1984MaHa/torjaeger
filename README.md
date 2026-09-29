@@ -2,7 +2,7 @@
 
 Lernspiel für Emil (Mathe und Deutsch als Fußballspiele). Läuft auf der Synology **energizer**, erreichbar nur über Tailscale per HTTPS.
 
-Plan und Entscheidungen: Vault, `Personal/Themes/Torjäger-Liga Standalone-Plan.md`.
+Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Repo: https://github.com/1984MaHa/torjaeger
 
 ## Aufbau
 - `app/` Web-App (später: Home-Bildschirm-App mit Offline-Betrieb)
@@ -26,7 +26,7 @@ node server/server.js
      User git
      IdentityFile ~/.ssh/torjaeger
    ```
-5. Klonen: `cd /volume1/docker && git clone git@github-torjaeger:1984MaHa/Torjaeger-Liga.git torjaeger`
+5. Klonen: `cd /volume1/docker && git clone git@github-torjaeger:1984MaHa/torjaeger.git torjaeger`
 6. Starten: `cd /volume1/docker/torjaeger && sudo sh deploy.sh` (oder im Container Manager als Projekt mit diesem Ordner)
 7. HTTPS: `sudo /var/packages/Tailscale/target/bin/tailscale serve --bg http://127.0.0.1:8080`
    Adresse anzeigen: `sudo /var/packages/Tailscale/target/bin/tailscale serve status`
