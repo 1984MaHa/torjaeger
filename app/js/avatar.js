@@ -1,7 +1,5 @@
-// Avatare: Baukasten-Daten (Paletten, Vorlagen, Prüfung) und die SVG-Figuren für Spieler und Trainer.
+// Avatare: Baukasten-Daten (Paletten, Vorlagen, Prüfung). Gezeichnet wird in avatardraw.js.
 // Eigene, schlichte Figuren. Es gibt keinen festen Jungen- oder Mädchen-Modus: alles ist frei wählbar.
-import {esc} from "./util.js";
-
 export const HAIR_STYLES=["Kurz","Wuschel","Locken","Pferdeschwanz","Zöpfe","Lang","Dutt","Stoppel"];
 export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#b8341f","#22252b","#e75a9c","#2f6fde"];
 export const SKIN_TONES=["#ffe0c7","#f6c9a0","#e3a877","#c68642","#8d5524","#5c3a21"];
@@ -52,6 +50,8 @@ export function defaultLook(name){
   const tpl=TEMPLATES[hashOf(name)%TEMPLATES.length].look;
   return cleanLook({...tpl,shirtName:String(name||"").slice(0,10)},TEMPLATES[0].look);
 }
+// Aussehen eines Kontos (eigener Avatar oder Vorgabe aus dem Namen)
+export const lookOf=profile=>profile&&profile.avatar?cleanLook(profile.avatar):defaultLook(profile&&profile.name);
 export function templateLook(i,name){return cleanLook({...TEMPLATES[i].look,shirtName:String(name||"").slice(0,10)},TEMPLATES[0].look);}
 
 // ---------- Trainer ----------

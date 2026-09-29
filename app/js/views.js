@@ -1,6 +1,9 @@
 // Darstellung: baut das HTML für jede Ansicht. Kennt weder Speicher noch Netz.
 import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,topicsOf} from "./content.js";
-import {ballSVG,goalSVG} from "./svg.js";
+import {ballSVG} from "./svg.js";
+import {avatarSVG,sceneSVG,SHOT_TEXT} from "./avatardraw.js";
+import {lookOf,defaultTrainer} from "./avatar.js";
+import {rightText,coachHTML} from "./coach.js";
 import {total} from "./model.js";
 import {esc} from "./util.js";
 import {adminAskHTML} from "./admin.js";
@@ -9,7 +12,7 @@ import {topicSafe,safeCount,mastered,leagueState,playable,topLeague,canTrial,bud
 // Band oben in der Vorschau (label kommt vom Server, leer bei Live).
 export function bandHTML(label){return label?`<div class="preview-band" role="status">${esc(label)}</div>`:"";}
 
-export function rightText(T){return T.type==="tap"?T.words[T.a]:T.type==="pair"?`${T.a[0]} Rest ${T.a[1]}`:String(T.a);}
+export {rightText};
 
 export function boardHTML(s){
   const top=topLeague(s),L=LIGEN[top],sc=safeCount(s,top),tot=topicsOf(top).length,pct=Math.round(sc/tot*100);
@@ -57,8 +60,8 @@ export function homeHTML(s,UI,env){
     return `<div class="stat"><span>${TOPICS[t]}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
   return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+`
-  <div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel eine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
-    <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button></div></div>
+  <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel eine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
+    <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
   <div class="leagues">${LIGEN.map((_,i)=>leagueCard(s,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
   <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
@@ -71,7 +74,8 @@ export function homeHTML(s,UI,env){
 }
 
 export function accountsHTML(accounts,UI,env){
-  const list=accounts.map(a=>`<button class="mode" data-acct="${esc(a.id)}"><span class="ic" style="background:var(--sky)">${esc((a.name||"?").trim().charAt(0).toUpperCase())}</span><span><b>${esc(a.name)}</b></span></button>`).join("");
+  const list=accounts.map(a=>{const look=lookOf({name:a.name,avatar:a.avatar});
+    return `<button class="mode acct" data-acct="${esc(a.id)}"><span class="av">${avatarSVG(look,{crop:"bust",px:72,label:"Spieler "+(a.name||"")})}</span><span><b>${esc(a.name)}</b><span class="team">${esc(look.team)}</span></span></button>`;}).join("");
   const form=UI.newAcct?`<section class="panel"><h3>Neues Konto</h3>
     <p class="note">${env.hasPin?"Die Eltern-PIN wird gebraucht, um ein Konto anzulegen.":"Legt zuerst eine Eltern-PIN fest (4 Ziffern). Sie gilt für alle Konten und alle Geräte."}</p>
     <div class="pin" style="margin:8px 0"><input id="acctName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name" style="letter-spacing:0;width:190px"></div>
@@ -93,17 +97,18 @@ function inputHTML(T,G){
   if(!G.done)h+=`<button class="btn" id="tapok" ${G.pickIdx<0?'disabled style="opacity:.5"':""}>${T.tapLabel}</button>`;return h;
 }
 
-export function playHTML(s,G){
+export function playHTML(s,G,trainer=defaultTrainer()){
   const T=G.task,c=G.res.filter(Boolean).length,m=G.res.length-c,L=LIGEN[G.li];
   const dots=Array.from({length:G.len},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?"ok":"no"):i===G.i?"now":""}"></i>`).join("");
-  let fb="";if(G.done){fb=G.ok?`<div class="fb ok">${goalSVG()}<span class="big">Tor!</span><span class="plus">+${G.gain}${G.gain>10?" Serie!":""}</span><p>${T.ex}</p></div>`
-      :`<div class="fb no">${goalSVG()}<span class="big">Knapp vorbei</span><p><b>Richtig ist: ${rightText(T)}.</b> ${T.ex}</p></div>`;
-    fb+=`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;}
-  const hint=T.hint&&!G.done?(G.showHint?`<div class="hint">${T.hint}</div>`:`<button class="hintbtn" id="hint">Trainer-Tipp anzeigen</button>`):"";
+  let fb="";if(G.done){
+    const shot=G.shot||{kind:G.ok?"goal":"wide",side:1};
+    fb=`<div class="fb ${G.ok?"ok":"no"}">${sceneSVG(lookOf(s.profile),shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span>${G.ok?`<span class="plus">+${G.gain}${G.gain>10?" Serie!":""}</span>`:""}</div></div>`;
+    fb+=coachHTML({T,G,trainer})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;}
+  const coach=G.done?"":coachHTML({T,G,trainer});
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
     <div class="score">${esc(s.profile.name)} <em>${c}</em> : <em>${m}</em> ${G.rival}</div><div class="dots">${dots}</div></div>
     <section class="card"><div class="tag">${L.name}${G.trial?" · Schnuppern":""} · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}</div>
-    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${inputHTML(T,G)}${hint}${fb}</section>
+    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${coach}${inputHTML(T,G)}${fb}</section>
     <p class="lead small" style="color:#fff">Lies zuerst das gelb markierte Wort. Dann erst schießen!</p>`;
 }
 

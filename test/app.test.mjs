@@ -103,3 +103,12 @@ test("deploy.sh legt vor dem Pull eine Sicherung pre-deploy-JJJJMMTT-HHMM an",t=
     assert.ok(script.indexOf("pre-deploy-")>=0&&script.indexOf("pre-deploy-")<script.indexOf("git pull"));
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test("Keine Gedankenstriche in Texten der App (Regel: kurze Sätze, keine Gedankenstriche)",()=>{
+  const bad=[];
+  for(const f of walk(APP)){
+    if(!/\.(js|html|webmanifest)$/.test(f))continue;
+    fs.readFileSync(path.join(APP,f),"utf8").split("\n").forEach((l,i)=>{if(/[—–]/.test(l))bad.push(f+":"+(i+1)+": "+l.trim().slice(0,80));});
+  }
+  assert.deepEqual(bad,[]);
+});

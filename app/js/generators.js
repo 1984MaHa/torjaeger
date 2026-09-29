@@ -70,9 +70,9 @@ export const GEN={
   d3_fam(){const f=pick(FAM);return{type:"choice",q:`Welches Wort gehört <mark>nicht</mark> zur Wortfamilie <b>${f[0]}</b>?`,choices:f[1].concat([f[2]]),a:f[2],
     ex:`${f[1].join(", ")} haben alle den Wortstamm von „${f[0]}“. „${f[2]}“ klingt nur ähnlich.`,hint:"Wortfamilien haben denselben Wortstamm und etwas mit derselben Sache zu tun."};},
   d3_ie(){const w=pick(IE),full=w[0].replace("_",w[1]);return{type:"choice",fixed:true,q:`i oder ie? <b>${w[0].replace("_","<mark>_</mark>")}</b>`,choices:["i","ie"],a:w[1],
-    ex:w[1]==="ie"?`${full}: Das i klingt lang, also schreibt man meistens ie.`:`${full}: Das i klingt kurz, also nur i.`,hint:"Sprich das Wort langsam. Klingt das i lang wie in Biene oder kurz wie in Fisch?"};},
+    ex:w[1]==="ie"?`${full}: Das i klingt lang, also schreibt man meistens ie.`:`${full}: Das i klingt kurz, also nur i.`,hint:"Sprich das Wort langsam. Klingt das i lang wie in Biene oder kurz wie in Kiste?"};},
   d3_doppel(){const w=pick(DOPPEL);return{type:"choice",q:"Welches Wort ist <mark>richtig</mark> geschrieben?",choices:[w[0],w[1]],a:w[0],
-    ex:w[2]?`${w[0]}: Der Selbstlaut vor dem Mitlaut klingt kurz, deshalb kommt der Mitlaut doppelt.`:`${w[0]}: Der Selbstlaut klingt lang, deshalb bleibt der Mitlaut einfach.`,hint:"Klingt der Selbstlaut kurz, wird der Mitlaut danach oft verdoppelt: Ball, Sonne."};},
+    ex:w[2]?`${w[0]}: Der Selbstlaut vor dem Mitlaut klingt kurz, deshalb kommt der Mitlaut doppelt.`:`${w[0]}: Der Selbstlaut klingt lang, deshalb bleibt der Mitlaut einfach.`,hint:"Klingt der Selbstlaut kurz, wird der Mitlaut danach oft verdoppelt: Kanne, Tasse."};},
   d3_satzglied(){const s=pick(SG),w=s[0].split(" "),subj=Math.random()<.5;
     return{type:"tap",q:subj?"Tippe auf das Nomen im <mark>Subjekt</mark>. Frag: Wer oder was?":"Tippe auf das <mark>Prädikat</mark>. Frag: Was tut jemand?",words:w,a:subj?s[1]:s[2],
       ex:subj?`Wer oder was ${w[s[2]]}? ${w[s[1]]}. Das ist das Subjekt.`:`Was tut jemand? ${w[s[2]]}. Das Prädikat ist das Verb im Satz.`,tapLabel:"Das ist es!",hint:"Subjekt: Wer oder was tut etwas? Prädikat: Was tut es? Das Prädikat ist immer ein Verb."};},
@@ -91,3 +91,18 @@ export const GEN={
     if(sup)return{type:"choice",q:`${s[0]} → ${s[1]} → <mark>___</mark>`,choices:[s[2],"am "+s[3],"am "+s[1]].filter((x,i,a)=>a.indexOf(x)===i),a:s[2],ex:`${s[0]}, ${s[1]}, ${s[2]}.`};
     return{type:"choice",q:`${s[0]} → <mark>___</mark> → ${s[2]}`,choices:[s[1],s[3],"mehr "+s[0]],a:s[1],ex:`${s[0]}, ${s[1]}, ${s[2]}.`};}
 };
+
+// Erster Tipp (Denkanstoß) für Aufgaben, die keinen eigenen hint haben. Verrät nie die Lösung.
+const HINTS={
+  m_read:"Zähle zuerst die Zehnerstangen. Jede Stange ist zehn wert. Dann zählst du die einzelnen Würfel dazu.",
+  m_split:"Die linke Ziffer sind die Zehner. Die rechte Ziffer sind die Einer.",
+  m_plaet:"Ein Plättchen bei Z macht die Zahl um zehn größer oder kleiner. Ein Plättchen bei E ändert sie um eins.",
+  m_zehner:"Ein Zehner ist zehn, ein Einer ist eins. Rechne erst aus, wie viel das zusammen ist.",
+  m_mal:"Zähle die Reihen und die Punkte in einer Reihe. Mal heißt: gleich viele, immer wieder.",
+  m_rechnen:"Rechne in zwei Schritten. Erst zum vollen Zehner, dann den Rest.",
+  m3_1x1:"Kennst du die Reihe? Zähle in Schritten oder nimm eine leichtere Aufgabe, die du schon weißt.",
+  m3_htz:"H ist Hunderter, Z ist Zehner, E ist Einer. Schau dir jede Stelle einzeln an.",
+  m3_plus:"Rechne Stelle für Stelle. Erst die Hunderter, dann die Zehner, dann die Einer.",
+  d4_steigern:"Steigern heißt: warm, wärmer, am wärmsten. Sprich es laut. Welche Form klingt richtig?"
+};
+for(const t of Object.keys(HINTS)){const f=GEN[t];GEN[t]=()=>{const T=f();if(!T.hint)T.hint=HINTS[t];return T;};}

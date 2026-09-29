@@ -76,18 +76,18 @@ test("Bestätigungen und Zustände",()=>{
 
 test("Formate",()=>{
   assert.equal(fmtSize(500),"500 B");assert.equal(fmtSize(1536),"1,5 KB");assert.equal(fmtSize(3*1048576),"3,0 MB");
-  assert.equal(fmtDur(65),"1:05 min");assert.equal(fmtDur(undefined),"–");assert.equal(fmtDay("2026-09-05"),"05.09.2026");
+  assert.equal(fmtDur(65),"1:05 min");assert.equal(fmtDur(undefined),"-");assert.equal(fmtDay("2026-09-05"),"05.09.2026");
 });
 
 test("Jede Taste im Eltern-Bereich hat einen Handler in app.js",()=>{
-  const views=src("admin.js")+src("views.js"),app=src("app.js");
+  const views=src("admin.js")+src("views.js")+src("avatarui.js")+src("coach.js"),app=src("app.js");
   const attrs=new Set([...views.matchAll(/data-([a-z]+)=/g)].map(m=>m[1]).concat([...views.matchAll(/\s(data-[a-z]+)(?=[\s>])/g)].map(m=>m[1].slice(5))));
   const ids=new Set([...views.matchAll(/id="([A-Za-z]+)"/g)].map(m=>m[1]));
   const missing=[];
   for(const a of attrs)if(!app.includes(`[data-${a}]`))missing.push("data-"+a);
   for(const i of ids)if(!app.includes(`$("${i}")`)&&!app.includes(`getElementById("${i}")`))missing.push("#"+i);
   // Eingabefelder ohne Handler sind in Ordnung, sie werden per id gelesen
-  assert.deepEqual(missing.filter(m=>!["#renameIn","#aNewName","#aOldPin","#aNewPin","#devIn","#adminPin","#acctName","#acctPin","#pinNew","#pinIn"].includes(m)),[]);
+  assert.deepEqual(missing.filter(m=>!["#renameIn","#aNewName","#aOldPin","#aNewPin","#devIn","#adminPin","#avShirtName","#avTeam","#trName","#acctName","#acctPin","#pinNew","#pinIn"].includes(m)),[]);
 });
 
 test("Aufrufe des Eltern-Bereichs gegen den echten Server",async()=>{

@@ -1,8 +1,5 @@
 // Grafiken als SVG-Strings (Ball, Tor, Zehnerstangen, Stellenwerttafel, Punktefeld, Gruppen).
 export function ballSVG(s,cls){return `<svg ${cls===false?"":'class="ballx"'} width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#fff" stroke="#16271c" stroke-width="2.5"/><polygon points="20,12 27,17 24.5,25 15.5,25 13,17" fill="#16271c"/><path d="M20 12V3M27 17l9-3M24.5 25l5.5 8M15.5 25L10 33M13 17l-9-3" stroke="#16271c" stroke-width="2.5" fill="none"/></svg>`;}
-export function goalSVG(){let s=`<div class="goalwrap" id="gw"><svg width="120" height="74" viewBox="0 0 120 74" aria-hidden="true"><rect x="62" y="6" width="54" height="64" fill="none" stroke="#16271c" stroke-width="4"/>`;
-  for(let i=0;i<6;i++)s+=`<line x1="${62+i*9}" y1="6" x2="${62+i*9}" y2="70" stroke="#16271c" opacity=".35"/>`;for(let i=0;i<7;i++)s+=`<line x1="62" y1="${6+i*9}" x2="116" y2="${6+i*9}" stroke="#16271c" opacity=".35"/>`;
-  return s+`<line x1="0" y1="71" x2="120" y2="71" stroke="#16271c" stroke-width="2"/></svg>${ballSVG(26)}</div>`;}
 export function blocksSVG(z,e){const u=18,gap=7,w=10*u+10,h=Math.max(1,z)*(u+gap)+(e?u+16:0)+6;let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${z} Zehnerstangen und ${e} Einerwürfel">`;let y=4;
   for(let i=0;i<z;i++){for(let k=0;k<10;k++)s+=`<rect x="${5+k*u}" y="${y}" width="${u}" height="${u}" fill="#9fc3a9" stroke="#16271c" stroke-width="1.5"/>`;y+=u+gap;}
   y=z?y+6:4;for(let k=0;k<e;k++)s+=`<rect x="${5+k*(u+6)}" y="${y}" width="${u}" height="${u}" fill="#ffd66b" stroke="#16271c" stroke-width="1.5"/>`;return s+"</svg>";}
