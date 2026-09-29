@@ -9,7 +9,7 @@ import {newProfile} from "../app/js/model.js";
 import {applyAnswer,applyRoundEnd,nextTopic,leagueState,topLeague} from "../app/js/rules.js";
 import {homeHTML,accountsHTML,playHTML,resultHTML} from "../app/js/views.js";
 
-const env={hasPin:true,syncText:"noch nie",updateReady:true,persistent:true,version:"1.0.0"};
+const env={hasPin:true,syncText:"noch nie",updateReady:true,persistent:true,version:"1.1.0"};
 const UI={confirmReset:false,parent:true,pinMsg:"",celebrate:"",newAcct:true,acctMsg:"x",sync:""};
 
 test("app.js importiert nur vorhandene Exporte",async()=>{

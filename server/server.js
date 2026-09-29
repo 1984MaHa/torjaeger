@@ -8,6 +8,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
+const SERVER_VERSION = "1.1.0";
 const MAX_BODY = 2 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
 const ID_RE = /^[a-z0-9][a-z0-9-]{2,39}$/; // Konto-ID: streng, keine Punkte, keine Schrägstriche
@@ -25,6 +26,9 @@ function createServer(opts = {}) {
   const BACKUPS = path.join(DATA_DIR, "backups");
   fs.mkdirSync(PROFILES, { recursive: true });
   fs.mkdirSync(BACKUPS, { recursive: true });
+
+  // Kennung der Vorschau (leer bei Live). Kommt aus PREVIEW_LABEL, z. B. "VORSCHAU".
+  const PREVIEW = String(opts.previewLabel !== undefined ? opts.previewLabel : (process.env.PREVIEW_LABEL || "")).trim().slice(0, 30);
 
   const profileFile = id => path.join(PROFILES, id + ".json");
 
@@ -86,7 +90,8 @@ function createServer(opts = {}) {
     const p = url.pathname.replace(/\/+$/, "");
     const m = req.method;
 
-    if (p === "/api/health") return send(res, 200, { ok: true, time: new Date().toISOString() });
+    if (p === "/api/health") return send(res, 200, { ok: true, time: new Date().toISOString(), preview: PREVIEW, serverVersion: SERVER_VERSION });
+    if (p === "/api/config") return send(res, 200, { preview: PREVIEW, serverVersion: SERVER_VERSION });
 
     if (p === "/api/settings") {
       const cur = readJson(SETTINGS) || { rev: 0, schemaVersion: null, settings: null };
@@ -163,7 +168,7 @@ function createServer(opts = {}) {
   return server;
 }
 
-module.exports = { createServer, ID_RE };
+module.exports = { createServer, ID_RE, SERVER_VERSION };
 
 if (require.main === module) {
   const PORT = Number(process.env.PORT || 8080);

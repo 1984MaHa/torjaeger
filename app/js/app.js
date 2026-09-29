@@ -8,7 +8,7 @@ import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore} from "./store.js";
 import {createSync} from "./sync.js";
 import {tone} from "./audio.js";
-import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText} from "./views.js";
+import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML} from "./views.js";
 import {APP_VERSION} from "./version.js";
 
 const root=document.getElementById("app");
@@ -17,7 +17,7 @@ let globalRec;                 // {state:{pin,...}, baseRev, dirty, lastSync}
 let accounts=[];               // [{id,name}]
 let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null;
-const UI={confirmReset:false,parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",sync:"",updateReady:false,fatal:""};
+const UI={preview:"",confirmReset:false,parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
 const S=()=>cur.rec.state;
 
@@ -41,6 +41,8 @@ async function loadAll(){
     }
     accounts.push({id:rec.id,name:rec.state?rec.state.profile.name:rec.name||rec.id,rec});
   }
+  const cfg=await store.get("config");
+  applyConfig(cfg);
   const curId=await store.get("current");
   const found=accounts.find(a=>a.id===curId)||(accounts.length===1?accounts[0]:null);
   if(found){cur={rec:found.rec};view="home";}
@@ -63,6 +65,18 @@ async function useAccount(id){
   render();scheduleSync(0);
 }
 
+// Kennung vom Server (Vorschau-Band). Die letzte bekannte Kennung bleibt lokal gespeichert, auch offline.
+function applyConfig(cfg){
+  UI.preview=cfg&&typeof cfg.preview==="string"?cfg.preview:"";
+  document.title=(UI.preview?UI.preview+" · ":"")+"Torjäger-Liga";
+}
+async function refreshConfig(){
+  const r=await sync.getConfig();
+  if(r.ok&&r.config.preview!==UI.preview){applyConfig(r.config);await store.put("config",{preview:UI.preview});return true;}
+  if(r.ok&&!(await store.get("config")))await store.put("config",{preview:UI.preview});
+  return false;
+}
+
 // ================= Abgleich =================
 let timer=null;
 function scheduleSync(ms){clearTimeout(timer);timer=setTimeout(syncNow,ms);}
@@ -73,6 +87,7 @@ async function syncNow(){
 async function syncOnce(){
   const before=cur?canon(S()):"",beforeG=canon(globalRec.state);
   const results=[];
+  const bandChanged=await refreshConfig();
   results.push(await sync.syncGlobal(globalRec));
   const list=await sync.listRemoteProfiles();
   if(list.ok)for(const p of list.profiles){
@@ -87,7 +102,7 @@ async function syncOnce(){
   if(UI.sync==="reload")updateApp(true);
   const changed=(cur&&canon(S())!==before)||canon(globalRec.state)!==beforeG;
   const typing=document.activeElement&&document.activeElement.tagName==="INPUT";
-  if((view==="home"||view==="accounts")&&!typing&&(changed||view==="accounts"))render();
+  if((view==="home"||view==="accounts")&&!typing&&(changed||bandChanged||view==="accounts"))render();
 }
 function syncText(){
   const t=cur&&cur.rec.lastSync;
@@ -168,8 +183,8 @@ function finish(){
 function env(){return{hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
-  root.innerHTML=view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name),UI,env())
-    :view==="home"?homeHTML(S(),UI,env()):view==="play"?playHTML(S(),G):resultHTML(S(),G,UI);
+  root.innerHTML=bandHTML(UI.preview)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name),UI,env())
+    :view==="home"?homeHTML(S(),UI,env()):view==="play"?playHTML(S(),G):resultHTML(S(),G,UI));
   bind();
 }
 function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}

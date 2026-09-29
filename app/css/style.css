@@ -143,3 +143,6 @@ h4.gl{margin:12px 0 4px;font-size:1rem}
 /* Home-Bildschirm-App (iOS, Standalone): Inhalt nicht unter Statusleiste und Home-Balken */
 .wrap{padding-top:calc(14px + env(safe-area-inset-top));padding-bottom:calc(40px + env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 body{overscroll-behavior-y:none}
+
+/* Vorschau-Band (nur wenn der Server eine Kennung meldet) */
+.preview-band{position:sticky;top:0;z-index:50;margin-inline:-16px;margin-top:calc(-14px - env(safe-area-inset-top));padding:calc(6px + env(safe-area-inset-top)) 12px 6px;background:#ff8a00;color:#1a1200;text-align:center;font-family:var(--display);letter-spacing:4px;font-size:1.1rem;box-shadow:0 3px 0 rgba(0,0,0,.25)}

@@ -54,6 +54,73 @@ Stand: energizer, DS918+, DSM 7.1.1, Paket **Docker** (docker-compose v1, kein C
    Adresse anzeigen: `sudo /var/packages/Tailscale/target/bin/tailscale serve status`
 8. Hyper Backup auf `/volume1/docker/torjaeger/data` ist bewusst noch nicht eingerichtet (Entscheidung Marco). Es gibt nur die Kopien in `data/backups` auf derselben Platte.
 
+## Vorschau (zweiter Klon, Branch preview)
+Neues wird zuerst in der Vorschau getestet, dann erst live. Beide laufen aus demselben Repo, je in einem eigenen Ordner mit eigenem Container, eigenem Port und eigenen Daten:
+
+| | Live | Vorschau |
+|---|---|---|
+| Ordner auf energizer | `/volume1/docker/torjaeger` | `/volume1/docker/torjaeger-preview` |
+| Branch | `main` | `preview` |
+| Container | `torjaeger-liga` | `torjaeger-liga-preview` |
+| Port lokal | `127.0.0.1:8080` | `127.0.0.1:8081` |
+| Adresse (Tailscale) | https://energizer.tailfc5923.ts.net | https://energizer.tailfc5923.ts.net:8443 |
+| Daten | `torjaeger/data/` | `torjaeger-preview/data/` (leer, eigene PIN, eigene Konten) |
+
+Container-Name, Port und Kennung stehen in der Datei `.env` des jeweiligen Klons (nicht im Repo, Vorlagen `.env.example` für Live und `.env.preview.example` für die Vorschau). Der Live-Klon braucht keine `.env`: ohne sie gelten die Live-Werte. Ist `PREVIEW_LABEL` gesetzt, zeigt die App oben das Band **VORSCHAU** (der Server meldet die Kennung in `/api/config` und `/api/health`). Der Port 8443 hat einen eigenen Browser-Speicher, nichts vermischt sich mit Live.
+
+`deploy.sh` prüft zuerst den Branch: Live nur `main`, Vorschau nur `preview`. Passt er nicht, bricht das Skript ab, bevor etwas gesichert oder geändert wird (`sh deploy.sh --check` prüft nur das).
+
+### Vorschau einrichten (einmalig, Schritt für Schritt)
+Voraussetzung: Der Branch `preview` ist auf GitHub (am PC: `git push -u origin preview`).
+1. Per SSH auf energizer anmelden.
+2. In den Docker-Ordner wechseln:
+```
+cd /volume1/docker
+```
+3. Den Branch preview in einen neuen Ordner klonen:
+```
+git clone -b preview git@github-torjaeger:1984MaHa/torjaeger.git torjaeger-preview
+```
+4. In den neuen Ordner wechseln:
+```
+cd /volume1/docker/torjaeger-preview
+```
+5. Die Vorlage für die Vorschau als `.env` kopieren:
+```
+cp .env.preview.example .env
+```
+6. Kontrollieren, dass dort Port 8081 und `PREVIEW_LABEL=VORSCHAU` stehen:
+```
+cat .env
+```
+7. Branch prüfen (erwartet: `Branch preview passt zu diesem Klon (Vorschau).`):
+```
+sudo sh deploy.sh --check
+```
+8. Bauen und starten:
+```
+sudo sh deploy.sh
+```
+9. Testen (erwartet: `"preview":"VORSCHAU"` in der Antwort):
+```
+wget -qO- http://127.0.0.1:8081/api/health
+```
+10. HTTPS über Tailscale auf Port 8443 freigeben:
+```
+sudo /var/packages/Tailscale/target/bin/tailscale serve --bg --https=8443 http://127.0.0.1:8081
+```
+11. Kontrollieren, dass Live (443) und Vorschau (8443) beide aufgeführt sind:
+```
+sudo /var/packages/Tailscale/target/bin/tailscale serve status
+```
+12. Am iPad in Safari https://energizer.tailfc5923.ts.net:8443 öffnen. Oben steht das orange Band **VORSCHAU**. Die Vorschau ist leer: eigenes Konto und eigene PIN anlegen, Emils Live-Konto bleibt unberührt.
+
+Später Vorschau aktualisieren (nach neuen Commits auf `preview`):
+```
+cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh
+```
+Live wird erst aktualisiert, wenn `preview` nach `main` gemerged und gepusht ist: dann im Live-Ordner `sudo sh deploy.sh` (Abschnitt Update).
+
 ## Update
 Per SSH auf energizer:
 ```

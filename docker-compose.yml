@@ -1,11 +1,15 @@
+# Live und Vorschau laufen aus demselben Repo, je in einem eigenen Ordner (Klon).
+# Container-Name, Port und Vorschau-Kennung stehen in der Datei .env (nicht im Repo, Vorlagen: .env.example, .env.preview.example).
+# Ohne .env gilt Live: Container torjaeger-liga, Port 8080.
 services:
   torjaeger:
     build: .
-    container_name: torjaeger-liga
+    container_name: ${CONTAINER_NAME:-torjaeger-liga}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"   # nur lokal, von außen nur über tailscale serve (HTTPS)
+      - "127.0.0.1:${HOST_PORT:-8080}:8080"   # nur lokal, von außen nur über tailscale serve (HTTPS)
     volumes:
       - ./data:/data
     environment:
       - TZ=Europe/Berlin
+      - PREVIEW_LABEL=${PREVIEW_LABEL:-}

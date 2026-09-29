@@ -137,5 +137,13 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
       return{ok:true,profiles:r.json.profiles};
     });
   }
-  return{syncProfile,syncGlobal,listRemoteProfiles};
+  // Kennung des Servers (Vorschau-Band, Serverversion)
+  async function getConfig(){
+    return guard(async()=>{
+      const r=await call("GET","/api/config");
+      if(r.status!==200||!r.json)throw new Error("Konfiguration fehlgeschlagen: "+r.status);
+      return{ok:true,config:r.json};
+    });
+  }
+  return{syncProfile,syncGlobal,listRemoteProfiles,getConfig};
 }

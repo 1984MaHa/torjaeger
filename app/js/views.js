@@ -5,6 +5,9 @@ import {total} from "./model.js";
 import {esc} from "./util.js";
 import {topicSafe,safeCount,mastered,leagueState,playable,topLeague,canTrial,budgetOf,streakDays,stickerCount} from "./rules.js";
 
+// Band oben in der Vorschau (label kommt vom Server, leer bei Live).
+export function bandHTML(label){return label?`<div class="preview-band" role="status">${esc(label)}</div>`:"";}
+
 export function rightText(T){return T.type==="tap"?T.words[T.a]:T.type==="pair"?`${T.a[0]} Rest ${T.a[1]}`:String(T.a);}
 
 export function boardHTML(s){
