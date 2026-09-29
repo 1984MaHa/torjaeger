@@ -8,7 +8,9 @@ Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (In
 - `app/` die Web-App (ES-Module ohne Build-Schritt, keine externen Ressourcen)
   - `index.html`, `manifest.webmanifest`, `sw.js` (Service Worker), `css/`, `fonts/` (Andika, Lilita One, OFL), `icons/`
   - `js/` Module: `app.js` (Steuerung), `views.js` (Darstellung), `rules.js` (Spielregeln), `generators.js` (Aufgaben), `model.js` (Datenmodell, Migration), `merge.js` (Zusammenführen), `sync.js` (Abgleich), `store.js` (IndexedDB), `pin.js`, `content.js`, `svg.js`, `audio.js`, `util.js`, `version.js`
-- `server/server.js` liefert die App aus und speichert die Stände (Node 20, keine Zusatzpakete)
+  - Eltern-Bereich: `admin.js` (Ansichten), `adminapi.js` (Aufrufe an den Server)
+  - Avatar und Trainer: `avatar.js` (Daten, Paletten, Vorlagen), `avatardraw.js` (Figuren und Torszene als SVG), `avatarui.js` (Baukasten), `coach.js` (Trainer-Hilfe)
+- `server/server.js` liefert die App aus und speichert die Stände (Node 20, keine Zusatzpakete), `server/admin.js` die Admin-Aktionen der Eltern (PIN-Prüfung, Papierkorb, Zurücksetzen, Wiederherstellen, Geräteliste)
 - `test/` Tests mit `node --test`, `test/fixtures/` Stand im Prototyp-Format für die Migration
 - `tools/` einmalige Hilfsskripte (Icons erzeugen, Schriften laden)
 - `prototype/` der ursprüngliche Prototyp (Claude-Artifact), nur zur Referenz
@@ -20,7 +22,11 @@ node server/server.js
 ```
 Dann http://localhost:8080 öffnen. Daten liegen lokal in `data/` (mit `DATA_DIR=...` und `PORT=...` änderbar).
 
-Tests (Server-API, Konflikte, Zusammenführen, Migration, zwei Geräte, deploy.sh):
+Vorschau lokal daneben starten (eigene Daten, Band VORSCHAU):
+```
+PORT=8081 DATA_DIR=data/preview PREVIEW_LABEL=VORSCHAU node server/server.js
+```
+Tests (Server-API, Admin, Konflikte, Zusammenführen, Migration, Avatar und Trainer, zwei Geräte, Ende zu Ende mit der echten App, deploy.sh):
 ```
 node --test
 ```
@@ -29,12 +35,15 @@ node --test
 - `data/profiles/<id>.json` ein Stand je Konto
 - `data/settings.json` globale Einstellungen (Eltern-PIN als Hash)
 - `data/backups/` Tageskopien der letzten 30 Tage (`profile-<id>-<Datum>.json`, `settings-<Datum>.json`) und die Sicherungen vor jedem Update (`pre-deploy-<JJJJMMTT-HHMM>/`, die letzten 20)
+- `data/backups/manual/` Sicherungen, die der Server vor Zurücksetzen und Wiederherstellen anlegt (die letzten 100)
+- `data/trash/` gelöschte Konten (Papierkorb, nie hart gelöscht, Zurückholen im Eltern-Bereich)
+- `data/devices.json` Geräteliste (Kennung, Name, zuletzt gesehen)
 - Auf dem Gerät: IndexedDB `torjaeger` im Browser (Stand, Kontenliste, Geräte-ID)
 
 Ein Update ersetzt nur Code. Spielstände liegen nie im Repo und nie im Container-Image. Jeder Stand trägt eine Schemaversion, alte Stände werden beim Laden migriert und nie verworfen.
 
 ### Sicherung zurückspielen
-Container stoppen, Datei aus `data/backups/` nach `data/profiles/<id>.json` bzw. `data/settings.json` kopieren, Container starten. Die App holt sich beim nächsten Abgleich den Stand vom Server. Hinweis: Ein Gerät mit neueren Änderungen führt diese wieder mit dem zurückgespielten Stand zusammen (Zähler steigen nie zurück). Soll wirklich zurückgesetzt werden, in der Trainerbank „Spielstand zurücksetzen“ nutzen.
+Am einfachsten im Eltern-Bereich (Taste „Eltern“ auf „Wer spielt?“, Reiter „Sicherungen und System“): Der Server sichert den aktuellen Stand, spielt die Sicherung ein und alle Geräte übernehmen sie. Von Hand (zum Beispiel für die Einstellungen mit der PIN) geht es so: Container stoppen, Datei aus `data/backups/` nach `data/profiles/<id>.json` bzw. `data/settings.json` kopieren, Container starten. Die App holt sich beim nächsten Abgleich den Stand vom Server. Hinweis: Ein Gerät mit neueren Änderungen führt diese wieder mit dem zurückgespielten Stand zusammen (Zähler steigen nie zurück). Soll wirklich zurückgesetzt werden, in der Trainerbank „Spielstand zurücksetzen“ nutzen.
 
 ## Einrichtung Synology (einmalig, erledigt)
 Stand: energizer, DS918+, DSM 7.1.1, Paket **Docker** (docker-compose v1, kein Container Manager), Git Server, Tailscale.
@@ -138,6 +147,17 @@ Beim Auslieferen einer neuen App-Version die Version in **beiden** Dateien erhö
 ## Hilfsskripte
 - `node tools/make-icons.js` erzeugt die Icons in `app/icons/` neu.
 - `node tools/fetch-fonts.js` lädt die Schriften und OFL-Texte nach `app/fonts/` (nur nötig, wenn der Ordner leer ist).
+
+## Eltern-Bereich, Avatar, Trainer
+- **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).
+- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten (überspringbar). Später über „Mein Spieler“ in der Kabine. Der Avatar steht auf der Kachel und schießt die Tore.
+- **Trainer:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp, dann Erklärung). Name und Aussehen im Eltern-Bereich unter Einstellungen. Die Tipp-Zeit je Konto ebenda.
+
+## Abnahme Version 1.1.0 (in der Vorschau)
+1. `node --test` grün.
+2. Zwei Instanzen lokal: Live `node server/server.js` (Port 8080) und Vorschau (Befehl oben, Port 8081): nur die Vorschau zeigt das orange Band, beide haben getrennte Daten.
+3. Vorschau am iPad: neues Konto, Baukasten, eine Runde mit Hilfe (Tipp, Erklärung), Torszene mit Treffer und Fehlschuss, Eltern-Bereich in allen vier Reitern.
+4. Emils Stand (Format 1.0.0) migriert ohne Verlust: siehe `test/schema2.test.mjs`, in der Vorschau nur mit einer Kopie von `data/` prüfen, nie mit dem Live-Ordner.
 
 ## Abnahme Phase 1
 - `node --test` grün.

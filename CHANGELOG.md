@@ -1,5 +1,44 @@
 # Änderungen
 
+## 1.1.0 (Vorschau, Eltern-Bereich, Avatar)
+Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start ohne Verlust migriert.
+
+### Vorschau
+- Zweiter Klon auf der NAS aus demselben Repo (Branch `preview`, Port 8081, eigener Container und eigene Daten), erreichbar über Tailscale auf Port 8443. Orange Band **VORSCHAU** oben in der App (Kennung vom Server).
+- `docker-compose.yml` liest Container-Name, Port und Kennung aus `.env` (Vorlagen `.env.example`, `.env.preview.example`), läuft mit docker-compose v1. Ohne `.env` bleibt alles wie in 1.0.0.
+- `deploy.sh` prüft den Branch (Live nur `main`, Vorschau nur `preview`) und bricht sonst vor jeder Änderung ab. Neu: `--check`.
+- Server: `/api/config`, Kennung und Serverversion in `/api/health`.
+
+### Eltern-Bereich
+- Taste **Eltern** auf „Wer spielt?“ (mit Eltern-PIN). Vier Bereiche:
+  - Konten: anlegen, umbenennen, zurücksetzen, löschen (Papierkorb, nie hart gelöscht), Ligen freigeben und sperren, Probe-Kontingent.
+  - Lernstand: Trefferquote je Thema (letzte 10 und gesamt), letzte Spiele mit Datum, Liga, Modus, Ergebnis und Dauer, Trainingstage, genutzte Tipps.
+  - Einstellungen: Eltern-PIN ändern (alte PIN nötig), je Konto Ton, Aufgaben pro Runde (6, 8, 10), Schnupper-Regeln, Tipp-Zeit; Trainer (Name, Aussehen).
+  - Sicherungen und System: Liste der Sicherungen auf der NAS mit Datum und Größe, Wiederherstellen je Konto (vorher Sicherung des aktuellen Stands), Geräteliste mit änderbarem Namen, App-, Server- und Schemaversion.
+- Der Server prüft die PIN bei jeder heiklen Aktion (Löschen, Wiederherstellen, Zurücksetzen, PIN ändern) selbst, nach 5 falschen Versuchen eine Minute Pause. Neue Routen `/api/admin/*`, siehe SPEC.md.
+- Gelöschte Konten liegen in `data/trash/`, Zurücksetzen und Wiederherstellen sichern vorher nach `data/backups/manual/`. Andere Geräte entfernen ein gelöschtes Konto (Antwort 410).
+- Geräteliste im Server (`data/devices.json`, Header `X-Device`).
+- Spiele speichern ihre Dauer.
+
+### Avatar und Trainer
+- Avatar je Konto: Baukasten mit 8 Frisuren, Haarfarbe, 6 Hauttönen, Trikot-, Hosen- und Schuhfarbe, Rückennummer, Name auf dem Trikot, Mannschaftsname, Vereinsfarben und 8 Vorlagen. Kein fester Jungen- oder Mädchen-Modus. Erscheint auf der Kachel, in der Kabine und in der Torszene. Beim ersten Öffnen eines Kontos ohne Avatar wird der Baukasten angeboten (überspringbar).
+- Torszene: richtig = Schuss ins Netz, falsch = zufällig Pfosten, Latte oder knapp vorbei. `prefers-reduced-motion` wird beachtet.
+- Trainer (Vorgabe „Trainer Papa“, Name und Aussehen im Eltern-Bereich, gilt für alle Konten): Hilfe-Taste in jeder Aufgabe mit zwei Stufen (1. Tipp, 2. Erklärung an einem ähnlichen Beispiel, nie die Lösung), Erklärung nach der Antwort in einer Sprechblase, freundliches Angebot nach der Tipp-Zeit (Vorgabe 45 Sekunden, je Konto einstellbar oder aus). Hilfe kostet keine Punkte, die Nutzung steht je Thema im Lernstand.
+- Neue Tipp-Texte für alle Aufgabenarten, die keinen hatten. Einige alte Tipps nannten Beispielwörter, die als Lösung vorkommen konnten (Doppelte Mitlaute, i oder ie, Adjektive steigern), sie sind ersetzt.
+
+### Datenmodell (Schemaversion 2)
+- Neu im Konto: `profile.avatar`, `profile.avatarAsked`, `settings.perRound`, `trialN`, `trialDaily`, `hintAfter`, `stats.<Thema>.help`, `stats.<Thema>.last[].h`, `history[].dur`. Global: `trainer`.
+- Migration 1 nach 2 ohne Verlust (Unbekanntes bleibt, Eingabe unverändert), migrierter Stand geht zurück auf den Server.
+- Zusammenführen: Aussehen und Trainer neuester gewinnt, Tipp-Zähler je Gerät summieren. Regeln in SPEC.md.
+
+### Geändert
+- „Spielstand zurücksetzen“ ist aus der Trainerbank in den Eltern-Bereich gewandert (nur dort prüft der Server die PIN und sichert vorher).
+- Rundenlänge, Schnupper-Aufgaben und die Sieg-Schwelle (60 Prozent, aufgerundet) kommen aus den Einstellungen des Kontos.
+- Versionen: App 1.1.0 (`app/js/version.js`, `sw.js`), Server 1.1.0, `package.json` 1.1.0.
+
+### Tests
+95 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
+
 ## 1.0.0 (Phase 1, Umzug)
 Erste spielbare Fassung im Repo. Der Prototyp läuft jetzt als Home-Bildschirm-Web-App.
 

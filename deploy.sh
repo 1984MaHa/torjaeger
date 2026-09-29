@@ -16,7 +16,9 @@ if [ -n "$PREVIEW_LABEL" ]; then WANT=preview; else WANT=main; fi
 
 # 1. Branch prüfen: Live nur main, Vorschau nur preview. Sonst Abbruch, bevor irgendetwas passiert.
 if [ "$1" != "--backup-only" ]; then
-  HAVE=$(git symbolic-ref --short -q HEAD || echo "(kein Branch)")
+  # Branch direkt aus .git/HEAD lesen: braucht kein git (auch nicht als root mit fremdem Ordner, "dubious ownership")
+  HAVE=$(sed -n 's#^ref: refs/heads/##p' .git/HEAD 2>/dev/null)
+  [ -n "$HAVE" ] || HAVE="(kein Branch)"
   if [ "$HAVE" != "$WANT" ]; then
     echo "ABBRUCH: Dieser Klon ist für den Branch $WANT, ausgecheckt ist aber $HAVE." >&2
     echo "Nichts wurde geändert. Prüfe den Ordner und die Datei .env." >&2

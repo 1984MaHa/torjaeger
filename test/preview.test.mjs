@@ -106,3 +106,9 @@ test("deploy.sh: Live nur auf main, Vorschau nur auf preview (Abbruch ohne Ände
   // nur sichern geht immer
   assert.equal(deployIn("feature",PREV,["--backup-only"]).status,0);
 });
+
+test("Versionen stimmen überall überein (App, Service Worker, Server, package.json)",()=>{
+  const pkg=JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8"));
+  assert.equal(pkg.version,APP_VERSION);assert.equal(server.SERVER_VERSION,APP_VERSION);
+  assert.equal(/const VERSION = "([^"]+)"/.exec(fs.readFileSync(path.join(ROOT,"app","sw.js"),"utf8"))[1],APP_VERSION);
+});
