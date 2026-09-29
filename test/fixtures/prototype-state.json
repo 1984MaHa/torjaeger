@@ -1,0 +1,26 @@
+{
+  "points": 1234,
+  "rounds": 17,
+  "wins": 11,
+  "stickers": 11,
+  "stats": {
+    "m_read": {"a": 30, "c": 27, "last": [1,1,1,1,1,1,1,1,0,1]},
+    "m_split": {"a": 24, "c": 15, "last": [0,1,0,1,1,0,1,1,0,1]},
+    "m_plaet": {"a": 5, "c": 3, "last": [1,0,1,1,0]},
+    "d_wortart": {"a": 12, "c": 9, "last": [1,1,0,1,1,1,0,1,1,1,1,0]},
+    "m3_rest": {"a": 6, "c": 4, "last": [1,0,1,1,0,1]}
+  },
+  "days": ["2026-09-20", "2026-09-21", "2026-09-22", "2026-09-28", "2026-09-29"],
+  "history": [
+    {"d": "2026-09-28", "liga": "L1", "mode": "math", "trial": false, "c": 6, "n": 8, "pts": 90},
+    {"d": "2026-09-29", "liga": "L2", "mode": "mix", "trial": true, "c": 2, "n": 3, "pts": 25}
+  ],
+  "sound": false,
+  "pin": "h1k2j3",
+  "lg": {
+    "L2": {"budget": 12, "open": false, "trial": "2026-09-29"},
+    "L3": {"budget": null, "open": false, "trial": ""}
+  },
+  "sel": 1,
+  "zusatz": {"unbekannt": "muss erhalten bleiben"}
+}
