@@ -1,9 +1,10 @@
 // Darstellung: baut das HTML für jede Ansicht. Kennt weder Speicher noch Netz.
-import {LIGEN,TOPICS,STICKERS,ROUND,TRIAL,PROBE,MASTER_N,MASTER_K,topicsOf} from "./content.js";
+import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,topicsOf} from "./content.js";
 import {ballSVG,goalSVG} from "./svg.js";
 import {total} from "./model.js";
 import {esc} from "./util.js";
-import {topicSafe,safeCount,mastered,leagueState,playable,topLeague,canTrial,budgetOf,streakDays,stickerCount} from "./rules.js";
+import {adminAskHTML} from "./admin.js";
+import {topicSafe,safeCount,mastered,leagueState,playable,topLeague,canTrial,budgetOf,streakDays,stickerCount,settingsOf,roundLen,trialLen,winNeed} from "./rules.js";
 
 // Band oben in der Vorschau (label kommt vom Server, leer bei Live).
 export function bandHTML(label){return label?`<div class="preview-band" role="status">${esc(label)}</div>`:"";}
@@ -34,19 +35,19 @@ function leagueCard(s,i){
   else if(st==="wait"){body=chips+`<p class="note">Das Probetraining ist geschafft. Jetzt müssen Mama oder Papa die ${L.name} in der Trainerbank freigeben.</p>`;}
   else{const prev=LIGEN[i-1];
     body=`<p class="note">Freispielen: In der ${prev.name} alle Themen sicher schaffen (je ${MASTER_K} von den letzten ${MASTER_N} Aufgaben richtig). Stand: ${safeCount(s,i-1)} von ${topicsOf(i-1).length}.</p>`+
-      (canTrial(s,i)?`<div class="row"><button class="btn sm" data-trial="${i}">Schnuppern: ${TRIAL} Aufgaben</button><span class="note">Einmal am Tag</span></div>`:i<=top+2?`<p class="note">Heute schon geschnuppert. Morgen geht es wieder.</p>`:"");}
+      (canTrial(s,i)?`<div class="row"><button class="btn sm" data-trial="${i}">Schnuppern: ${trialLen(s)} Aufgaben</button>${settingsOf(s).trialDaily?`<span class="note">Einmal am Tag</span>`:""}</div>`:i<=top+2?`<p class="note">Heute schon geschnuppert. Morgen geht es wieder.</p>`:"");}
   return `<section class="lg ${playable(s,i)?"":"locked"}"><div class="lg-head"><div><b>${L.name}</b><span class="k">${L.klasse}</span></div>${badge}</div>${body}</section>`;
 }
 
 function parentHTML(s,UI,hasPin){
   const msg=UI.pinMsg?`<p class="note">${UI.pinMsg}</p>`:"";
-  if(!hasPin)return `<div class="parent"><p class="note">Legt eine Eltern-PIN fest (4 Ziffern). Sie gilt für alle Konten und alle Geräte. Damit gebt ihr Ligen frei, legt neue Konten an oder setzt den Spielstand zurück.</p>
+  if(!hasPin)return `<div class="parent"><p class="note">Legt eine Eltern-PIN fest (4 Ziffern). Sie gilt für alle Konten und alle Geräte. Damit gebt ihr Ligen frei und legt neue Konten an.</p>
     <div class="pin"><input id="pinNew" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Neue PIN"><button class="btn sm" id="pinSet">PIN speichern</button></div>${msg}</div>`;
   if(!UI.parent)return `<div class="parent"><div class="pin"><input id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Eltern-PIN"><button class="btn sm" id="pinOk">Eltern-Bereich öffnen</button></div>${msg}</div>`;
   const rows=LIGEN.slice(1).map((L,k)=>{const i=k+1,st=leagueState(s,i);
     const txt=st==="open"?"ganz frei":st==="probe"?`Probetraining (noch ${budgetOf(s,i)})`:st==="wait"?"Probetraining fertig, wartet auf euch":"gesperrt";
     return `<div class="prow"><span><b>${L.name}</b> (${L.klasse}): ${txt}</span><span class="row">${st!=="open"?`<button class="btn sm" data-open="${i}">Ganz freigeben</button>`:""}${st!=="locked"?`<button class="btn ghost sm" data-lock="${i}">Wieder sperren</button>`:""}</span></div>`;}).join("");
-  return `<div class="parent">${rows}<div class="row">${UI.confirmReset?`<span>Wirklich alles löschen?</span><button class="btn warn" id="resetYes">Ja, löschen</button><button class="btn ghost sm" id="resetNo">Abbrechen</button>`:`<button class="btn warn" id="reset">Spielstand zurücksetzen</button>`}<button class="btn ghost sm" id="pinClose">Eltern-Bereich schließen</button></div></div>`;
+  return `<div class="parent">${rows}<p class="small">Zurücksetzen, Umbenennen, Löschen, Sicherungen und alle Einstellungen gibt es im Eltern-Bereich auf der Seite „Wer spielt?“.</p><div class="row"><button class="btn ghost sm" id="pinClose">Schließen</button></div></div>`;
 }
 
 export function homeHTML(s,UI,env){
@@ -56,11 +57,11 @@ export function homeHTML(s,UI,env){
     return `<div class="stat"><span>${TOPICS[t]}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
   return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+`
-  <div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${ROUND} Aufgaben. Richtig heißt Tor! Spiel eine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
+  <div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel eine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button></div></div>
   <div class="leagues">${LIGEN.map((_,i)=>leagueCard(s,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
-  <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab 5 von 8 Toren.</p></section>
+  <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
   <section class="panel"><details ${UI.parent||UI.pinMsg?"open":""}><summary>Trainerbank (für Mama und Papa)</summary>
     <p class="small">Zahlen zeigen, wie viele der letzten ${MASTER_N} Aufgaben je Thema richtig waren. Ein Thema ist sicher ab ${MASTER_K} von ${MASTER_N}. Schwache Themen kommen öfter dran.</p>${stats}
     <p class="small"><b>Zuletzt abgeglichen:</b> ${env.syncText}</p>
@@ -76,7 +77,7 @@ export function accountsHTML(accounts,UI,env){
     <div class="pin" style="margin:8px 0"><input id="acctName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name" style="letter-spacing:0;width:190px"></div>
     <div class="pin"><input id="acctPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="${env.hasPin?"Eltern-PIN":"Neue Eltern-PIN"}" placeholder="PIN"><button class="btn sm" id="acctCreate">Konto anlegen</button><button class="btn ghost sm" id="acctCancel">Abbrechen</button></div>
     ${UI.acctMsg?`<p class="note">${UI.acctMsg}</p>`:""}</section>`
-    :`<div class="row"><button class="btn" id="acctNew">Neues Konto</button></div>`;
+    :`<div class="row"><button class="btn" id="acctNew">Neues Konto</button>${env.hasPin?`<button class="btn ghost" id="adminOpen">Eltern</button>`:""}</div>${UI.adminAsk?adminAskHTML(UI.adminMsg):""}`;
   return `<div><h1 class="title">Torjäger-Liga</h1><p class="lead">${accounts.length?"Wer spielt?":"Willkommen! Legt das erste Konto an."}</p></div>
   ${accounts.length?`<div class="modes">${list}</div>`:""}${!UI.newAcct&&UI.acctMsg?`<p class="lead">${UI.acctMsg}</p>`:""}${form}
   ${env.persistent?"":`<p class="lead small">Achtung: Dieser Browser kann nichts dauerhaft speichern.</p>`}`;

@@ -9,12 +9,14 @@
 //   offline  Server nicht erreichbar (kein Fehler, wird später nachgeholt)
 //   reload   App ist veraltet (Server oder Stand hat neuere Schemaversion), App muss neu geladen werden
 //   busy     zu viele Konflikte hintereinander
+//   deleted  das Konto wurde von den Eltern gelöscht (liegt im Papierkorb des Servers), das Gerät entfernt es lokal
 import {migrateProfile,migrateGlobal,UnsupportedSchema} from "./model.js";
 import {mergeProfile,mergeGlobal} from "./merge.js";
 import {canon} from "./util.js";
 
 class Offline extends Error{}
 class Reload extends Error{}
+class Deleted extends Error{}
 
 // Vergleichsform ohne Felder, die je Gerät verschieden sein dürfen.
 const same=(a,b,kind)=>{
@@ -27,7 +29,8 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
   async function call(method,url,body){
     let res;
     try{
-      res=await doFetch(base+url,{method,headers:body?{"Content-Type":"application/json"}:undefined,body:body?JSON.stringify(body):undefined,cache:"no-store"});
+      // X-Device meldet dem Server die Geräte-Kennung (Geräteliste im Eltern-Bereich).
+      res=await doFetch(base+url,{method,headers:Object.assign({"X-Device":deviceId},body?{"Content-Type":"application/json"}:{}),body:body?JSON.stringify(body):undefined,cache:"no-store"});
     }catch(e){throw new Offline(String(e&&e.message||e));}
     let json=null;try{json=await res.json();}catch(e){}
     return{status:res.status,json};
@@ -50,6 +53,7 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
     catch(e){
       if(e instanceof Offline)return{ok:false,reason:"offline"};
       if(e instanceof Reload||e instanceof UnsupportedSchema)return{ok:false,reason:"reload"};
+      if(e instanceof Deleted)return{ok:false,reason:"deleted"};
       throw e;
     }
   };
@@ -59,6 +63,7 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
     return single(key||"profile:"+rec.id,()=>guard(async()=>{
       for(let attempt=0;attempt<6;attempt++){
         let r=await call("GET",`/api/profiles/${rec.id}/state`);
+        if(r.status===410)throw new Deleted();
         if(r.status===404){
           const name=rec.state&&rec.state.profile?rec.state.profile.name:rec.id;
           const c=await call("POST","/api/profiles",{id:rec.id,name});
@@ -91,6 +96,7 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
           await store.put("profile:"+rec.id,rec);
           return{ok:true,pushed:true};
         }
+        if(p.status===410)throw new Deleted();
         if(p.status===409&&p.json&&p.json.reason==="schema_too_old")throw new Reload();
         if(p.status===409)continue;
         throw new Error("Senden fehlgeschlagen: "+p.status);
