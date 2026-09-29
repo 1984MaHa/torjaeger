@@ -13,3 +13,16 @@
 - Schemaversion 2: Migration in `PROFILE_MIGRATIONS` (`model.js`), Merge-Regeln in `merge.js` und SPEC.md. Der Server prüft die Eltern-PIN bei jeder Admin-Aktion selbst (`server/admin.js`).
 - Hilfe des Trainers verrät nie die Lösung: Tipps (`hint`) und Beispiele bleiben ohne Lösungswörter, Tests prüfen es.
 - `data/` nie committen.
+
+## Rückübergabe an Cowork (Pflicht am Ende jeder Sitzung)
+Cowork sieht diese Sitzung nicht. Alles, was hier passiert ist, muss in die Rückübergabe, sonst wird doppelt gearbeitet.
+- Schreibe sie nach `.handover/return.md` (überschreiben, committen) und gib sie zusätzlich als einen kopierfertigen Block im Chat aus.
+- Inhalt vollständig:
+  - **Was Marco in dieser Sitzung schon selbst ausgeführt hat**, mit Ergebnis: Push, Merge, Branch-Wechsel, Befehle auf der NAS (Klon, `.env`, `deploy.sh`, `tailscale serve`), Tests auf iPad/iPhone. Ausdrücklich auch, was noch **nicht** ausgeführt ist.
+  - Stand je Umgebung: welcher Commit liegt auf `main`, `preview`, `origin/*`, welche Version läuft live und in der Vorschau (soweit bekannt).
+  - Rückmeldungen und Wünsche von Marco aus der Sitzung und wie sie umgesetzt wurden.
+  - Entscheidungen mit Grund, verworfene Wege, Abweichungen vom Auftrag (Annahmekorrekturen).
+  - Restposten kategorisiert: echter Blocker, bewusst offen, kosmetisch.
+  - Anker: Commit, Branch, Arbeitsbaum.
+  - Nächste Schritte für Marco, einzeln, Befehle unverschachtelt, ohne Heredocs.
+
