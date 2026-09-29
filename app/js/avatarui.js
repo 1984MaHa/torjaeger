@@ -1,6 +1,6 @@
 // Oberfläche für Aussehen: Baukasten für den Spieler (beginnt mit Junge oder Mädchen) und Einstellung für Trainer und Trainerin.
 // Reine Darstellung. Farbwerte kommen nur aus den Paletten in avatar.js, Texte laufen durch esc().
-import {BODIES,EYE_COLORS,PATTERNS,COLLARS,MOUTHS,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,JACKET_COLORS,TRAINER_HAIR,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook,startLook} from "./avatar.js";
+import {FACES,NOSES,BROWS,EYESHAPES,GLASSES,BUILDS,BODIES,EYE_COLORS,PATTERNS,COLLARS,MOUTHS,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,JACKET_COLORS,TRAINER_HAIR,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook,startLook} from "./avatar.js";
 import {avatarSVG,crestSVG,trainerSVG} from "./avatardraw.js";
 import {esc} from "./util.js";
 
@@ -23,6 +23,7 @@ export function avatarBuilderHTML(D){
   const tpls=TEMPLATES.map((t,i)=>({t,i})).filter(x=>x.t.look.body===l.body).map(({t,i})=>`<button class="tpl" data-avtpl="${i}" aria-label="Vorlage ${esc(t.name)}">${avatarSVG(templateLook(i,D.name),{crop:"bust",px:84,label:"Vorlage "+t.name})}<span>${esc(t.name)}</span></button>`).join("");
   const hair=HAIR_STYLES[l.body].map((n,i)=>`<button class="hairb ${i===l.hair?"on":""}" data-avhair="${i}" aria-pressed="${i===l.hair}" aria-label="Frisur ${esc(n)}">${avatarSVG({...l,hair:i},{crop:"head",px:74,label:"Frisur "+n})}<span>${esc(n)}</span></button>`).join("");
   const hats=HATS.map((n,i)=>`<button class="hairb ${i===l.hat?"on":""}" data-avhat="${i}" aria-pressed="${i===l.hat}" aria-label="Kopfbedeckung ${esc(n)}">${avatarSVG({...l,hat:i},{crop:"head",px:74,label:"Kopfbedeckung "+n})}<span>${esc(n)}</span></button>`).join("");
+  const faces=FACES.map((n,i)=>`<button class="hairb ${i===l.face?"on":""}" data-avface="${i}" aria-pressed="${i===l.face}" aria-label="Kopfform ${esc(n)}">${avatarSVG({...l,face:i,hat:0},{crop:"head",px:74,label:"Kopfform "+n})}<span>${esc(n)}</span></button>`).join("");
   const who=`<span class="seg">${BODIES.map(([b,label])=>`<button class="segb ${b===l.body?"on":""}" data-avbody="${b}" aria-pressed="${b===l.body}">${label}</button>`).join("")}</span>`;
   return `<div><h1 class="title">${D.first?"Dein Spieler":"Spieler ändern"}</h1><p class="lead">${D.first?"Bau dir deinen Spieler. Er schießt deine Tore. Du kannst das auch später machen.":"Ändere deinen Spieler, wie du magst."}</p></div>
   <section class="panel"><div class="avprev">${avatarSVG(l,{px:230,view:"front"})}${avatarSVG(l,{px:230,view:"back"})}<div class="avcrest">${crestSVG(l,64)}<span>${esc(l.team)}</span></div></div>
@@ -32,6 +33,13 @@ export function avatarBuilderHTML(D){
     ${field("Frisur",`<div class="hairs">${hair}</div>`)}
     ${field("Haarfarbe",swatches("data-avhc",HAIR_COLORS,l.hairColor,"Haarfarbe"))}
     ${field("Hautton",swatches("data-avskin",SKIN_TONES,l.skin,"Hautton"))}
+    ${field("Kopfform",`<div class="hairs">${faces}</div>`)}
+    ${field("Augenform",opts("data-aveyeshape",EYESHAPES,l.eyeShape))}
+    ${field("Augenbrauen",opts("data-avbrows",BROWS,l.brows))}
+    ${field("Nase",opts("data-avnose",NOSES,l.nose))}
+    ${field("Sommersprossen",opts("data-avfreckles",["Ohne","Mit"],l.freckles))}
+    ${field("Brille",opts("data-avglasses",GLASSES,l.glasses))}
+    ${field("Statur",opts("data-avbuild",BUILDS,l.build))}
     ${field("Augenfarbe",swatches("data-aveyes",EYE_COLORS,l.eyes,"Augenfarbe"))}
     ${field("Gesicht",opts("data-avmouth",MOUTHS,l.mouth))}
   </section>

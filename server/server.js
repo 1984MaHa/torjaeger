@@ -12,7 +12,7 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 const { createAdmin } = require("./admin");
 
-const SERVER_VERSION = "1.1.3";
+const SERVER_VERSION = "1.1.4";
 const MAX_BODY = 2 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
 const ID_RE = /^[a-z0-9][a-z0-9-]{2,39}$/; // Konto-ID: streng, keine Punkte, keine Schrägstriche
@@ -53,7 +53,11 @@ function createServer(opts = {}) {
   function writeAtomic(file, doc) {
     const tmp = file + ".tmp";
     fs.writeFileSync(tmp, JSON.stringify(doc));
-    fs.renameSync(tmp, file);
+    // Unter Windows kann das Umbenennen kurz an einem Virenscanner scheitern (EPERM, EBUSY): ein paar Mal wiederholen.
+    for (let i = 0; ; i++) {
+      try { fs.renameSync(tmp, file); return; }
+      catch (e) { if (i >= 8 || (e.code !== "EPERM" && e.code !== "EBUSY" && e.code !== "EACCES")) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 15); }
+    }
   }
   function writeJson(file, doc, backupName) {
     writeAtomic(file, doc);

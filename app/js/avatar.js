@@ -12,6 +12,12 @@ export const EYE_COLORS=["#4a3426","#7a5a2a","#6a95c4","#5f9b6a","#8a97a3"];
 export const PATTERNS=["Einfarbig","Schulterstreifen","Querstreifen","Brustband"];
 export const COLLARS=["V-Ausschnitt","Rundkragen"];
 export const MOUTHS=["Lächeln","Breites Grinsen"];
+export const FACES=["Oval","Rund","Eckig","Herz","Lang"];
+export const NOSES=["Klein","Mittel","Groß"];
+export const BROWS=["Dünn","Normal","Dick"];
+export const EYESHAPES=["Rund","Mandel","Schmal"];
+export const GLASSES=["Ohne","Rund","Eckig"];
+export const BUILDS=["Schlank","Normal","Kräftig"];
 export const HATS=["Keine","Cap","Cap verkehrt","Mütze","Stirnband","Bandana"];
 export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#d9c58a","#b8341f","#22252b","#e75a9c","#2f6fde"];
 export const SKIN_TONES=["#ffe0c7","#f6c9a0","#e3a877","#c68642","#8d5524","#5c3a21"];
@@ -56,6 +62,9 @@ export function cleanLook(look,fallback){
     hat:int(l.hat,0,HATS.length-1,b.hat||0),hatColor:hex(l.hatColor,b.hatColor||"#e5484d"),
     eyes:hex(l.eyes,b.eyes||"#4a3426"),pattern:int(l.pattern,0,PATTERNS.length-1,b.pattern||0),collar:int(l.collar,0,COLLARS.length-1,b.collar||0),mouth:int(l.mouth,0,MOUTHS.length-1,b.mouth||0),
     socks:hex(l.socks,hex(l.shirt,b.shirt)),
+    face:int(l.face,0,FACES.length-1,b.face||0),nose:int(l.nose,0,NOSES.length-1,b.nose===undefined?1:b.nose),brows:int(l.brows,0,BROWS.length-1,b.brows===undefined?1:b.brows),
+    eyeShape:int(l.eyeShape,0,EYESHAPES.length-1,b.eyeShape===undefined?1:b.eyeShape),freckles:l.freckles===undefined?(b.freckles?1:0):(l.freckles?1:0),
+    glasses:int(l.glasses,0,GLASSES.length-1,b.glasses||0),build:int(l.build,0,BUILDS.length-1,b.build===undefined?1:b.build),
     shirt:hex(l.shirt,b.shirt),shorts:hex(l.shorts,b.shorts),boots:hex(l.boots,b.boots),
     number:cleanNumber(l.number,b.number),
     shirtName:cleanText(l.shirtName,10,b.shirtName||"").toUpperCase(),

@@ -355,7 +355,7 @@ function bindAvatar($){
   for(const [attr,key] of pairs)document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:b.getAttribute(attr)}));
   document.querySelectorAll("[data-avbody]").forEach(b=>b.onclick=()=>{grab();const body=b.dataset.avbody;
     UI.av.look=UI.av.step==="gender"?startLook(body,UI.av.name):withBody(UI.av.look,body);UI.av.step="build";render();window.scrollTo(0,0);});
-  for(const [attr,key] of [["data-avpattern","pattern"],["data-avcollar","collar"],["data-avmouth","mouth"]])document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:Number(b.getAttribute(attr))}));
+  for(const [attr,key] of [["data-avpattern","pattern"],["data-avcollar","collar"],["data-avmouth","mouth"],["data-avface","face"],["data-avnose","nose"],["data-avbrows","brows"],["data-aveyeshape","eyeShape"],["data-avfreckles","freckles"],["data-avglasses","glasses"],["data-avbuild","build"]])document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:Number(b.getAttribute(attr))}));
   document.querySelectorAll("[data-avhat]").forEach(b=>b.onclick=()=>set({hat:Number(b.dataset.avhat)}));
   document.querySelectorAll("[data-avhair]").forEach(b=>b.onclick=()=>set({hair:Number(b.dataset.avhair)}));
   document.querySelectorAll("[data-avtpl]").forEach(b=>b.onclick=()=>{grab();UI.av.look=templateLook(Number(b.dataset.avtpl),UI.av.name);render();});

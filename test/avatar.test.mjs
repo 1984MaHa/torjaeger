@@ -6,7 +6,7 @@ import {fileURLToPath} from "node:url";
 import {LIGEN,topicsOf} from "../app/js/content.js";
 import {GEN} from "../app/js/generators.js";
 import {newProfile} from "../app/js/model.js";
-import {BODIES,HATS,PATTERNS,COLLARS,MOUTHS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
+import {FACES,NOSES,BROWS,EYESHAPES,GLASSES,BUILDS,BODIES,HATS,PATTERNS,COLLARS,MOUTHS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
 import {figureG,avatarSVG,crestSVG,trainerSVG,sceneSVG,pickShot,shotPath,SHOT_KINDS,SHOT_TEXT} from "../app/js/avatardraw.js";
 import {avatarBuilderHTML,trainerPanelHTML} from "../app/js/avatarui.js";
 import {leaks,similarExample,exampleHTML,helpBubblesHTML,coachHTML,rightText,speakerOf,FALLBACK_EXAMPLE} from "../app/js/coach.js";
@@ -30,7 +30,7 @@ test("Baukasten: Junge oder Mädchen, je 10 Frisuren, mehrere Hauttöne, 5 Vorla
   for(const b of ["j","m"]){assert.ok(HAIR_STYLES[b].length>=6);assert.equal(new Set(HAIR_STYLES[b]).size,HAIR_STYLES[b].length);assert.equal(TEMPLATES.filter(t=>t.look.body===b).length,5);}
   assert.notDeepEqual(HAIR_STYLES.j,HAIR_STYLES.m);
   assert.ok(SKIN_TONES.length>=4);assert.ok(HAIR_COLORS.length>=5);assert.ok(SHIRT_COLORS.length>=6);
-  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","c1","c2","collar","eyes","hair","hairColor","hat","hatColor","mouth","number","pattern","shirt","shirtName","shorts","skin","socks","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
+  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","brows","build","c1","c2","collar","eyeShape","eyes","face","freckles","glasses","hair","hairColor","hat","hatColor","mouth","nose","number","pattern","shirt","shirtName","shorts","skin","socks","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
   assert.equal(new Set(TEMPLATES.map(t=>JSON.stringify(t.look))).size,TEMPLATES.length);
 });
 
@@ -317,4 +317,33 @@ test("Neue Auswahlen ändern das Bild: Augenfarbe, Muster, Kragen, Mund, Stutzen
   const h=avatarBuilderHTML({look:l,name:"Emil",first:false,step:"build"});clean(h.replace(/<input[^>]*>/g,""),"Baukasten neu");
   for(const [a,n] of [["data-aveyes",5],["data-avpattern",4],["data-avcollar",2],["data-avmouth",2],["data-avsocks",10]])assert.equal((h.match(new RegExp(a+"=","g"))||[]).length,n,a);
   for(const w of ["Augenfarbe","Trikotmuster","Kragen","Stutzenfarbe","Gesicht","Schulterstreifen","Rundkragen","Breites Grinsen"])assert.ok(h.includes(w),w);
+});
+
+test("Mehr Vielfalt: Kopfform, Augenform, Augenbrauen, Nase, Sommersprossen, Brille, Statur ändern das Bild",()=>{
+  const l=cleanLook(TEMPLATES[0].look);
+  assert.deepEqual([FACES.length,NOSES.length,BROWS.length,EYESHAPES.length,GLASSES.length,BUILDS.length],[5,3,3,3,3,3]);
+  const variants=(key,n)=>new Set(Array.from({length:n},(_,i)=>figureG({...l,[key]:i},"front"))).size;
+  assert.equal(variants("face",5),5,"5 verschiedene Kopfformen");
+  assert.equal(variants("eyeShape",3),3);assert.equal(variants("brows",3),3);assert.equal(variants("nose",3),3);assert.equal(variants("glasses",3),3);assert.equal(variants("build",3),3);
+  assert.notEqual(figureG({...l,freckles:0},"front"),figureG({...l,freckles:1},"front"));
+  // Statur wirkt auch von hinten und in der Torszene
+  assert.notEqual(figureG({...l,build:0},"back"),figureG({...l,build:2},"back"));
+  assert.ok(sceneSVG({...l,build:2},{kind:"goal",side:1}).includes("scale(1.12 1)"));
+  // Kopfformen sind keine Kreise und liegen im Kopfraum
+  for(const face of [0,1,2,3,4])for(const body of ["j","m"]){
+    clean(avatarSVG({...l,body,hair:0,face,glasses:face%3,freckles:face%2,build:face%3,nose:face%3,brows:face%3,eyeShape:face%3},{px:110}),`Kopfform ${face} ${body}`);
+    clean(avatarSVG({...l,face},{crop:"head",px:60}),"Kopf "+face);
+    clean(avatarSVG({...l,face,glasses:1,hat:1},{view:"back",px:60}),"Kopf hinten "+face);
+  }
+  assert.ok(figureG({...l,face:2},"front").includes("L85 56 C85 66"),"eckig hat einen breiten Kiefer");
+  // Brille sitzt auf den Augen, freie Farben bleiben gültig
+  assert.ok(figureG({...l,glasses:1},"front").includes('r="9" fill="#9bb7e6"')&&figureG({...l,glasses:2},"front").includes('width="19.2"'));
+  // Vorgaben: alte Avatare sehen unverändert aus (Oval, Mandelaugen, mittlere Nase, normale Brauen, normale Statur, keine Sommersprossen, keine Brille)
+  const old=cleanLook({body:"j",hair:1,shirt:"#e5484d"});
+  assert.deepEqual([old.face,old.eyeShape,old.nose,old.brows,old.build,old.freckles,old.glasses],[0,1,1,1,1,0,0]);
+  assert.equal(cleanLook({...l,face:9,nose:9,brows:9,eyeShape:9,glasses:9,build:9,freckles:"ja"}).face,0);
+  // Baukasten zeigt sie
+  const h=avatarBuilderHTML({look:l,name:"Emil",first:false,step:"build"});clean(h.replace(/<input[^>]*>/g,""),"Baukasten Vielfalt");
+  for(const [a,n] of [["data-avface",5],["data-aveyeshape",3],["data-avbrows",3],["data-avnose",3],["data-avfreckles",2],["data-avglasses",3],["data-avbuild",3]])assert.equal((h.match(new RegExp(a+"=","g"))||[]).length,n,a);
+  for(const w of ["Kopfform","Augenform","Augenbrauen","Nase","Sommersprossen","Brille","Statur","Herz","Kräftig"])assert.ok(h.includes(w),w);
 });

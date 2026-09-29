@@ -84,7 +84,9 @@ test("Jede Taste im Eltern-Bereich hat einen Handler in app.js",()=>{
   const attrs=new Set([...views.matchAll(/data-([a-z]+)=/g)].map(m=>m[1]).concat([...views.matchAll(/\s(data-[a-z]+)(?=[\s>])/g)].map(m=>m[1].slice(5))));
   const ids=new Set([...views.matchAll(/id="([A-Za-z]+)"/g)].map(m=>m[1]));
   const missing=[];
-  for(const a of attrs)if(!app.includes(`[data-${a}]`))missing.push("data-"+a);
+  for(const a of attrs)if(!app.includes(`[data-${a}]`)&&!app.includes(`"data-${a}"`))missing.push("data-"+a);
+  // auch Attribute, die in den Ansichten nur als Name übergeben werden ("data-avhc" und so weiter), brauchen eine Verdrahtung
+  for(const m of views.matchAll(/"(data-[a-z]+)"/g))if(!app.includes("["+m[1]+"]")&&!app.includes('"'+m[1]+'"'))missing.push(m[1]);
   for(const i of ids)if(!app.includes(`$("${i}")`)&&!app.includes(`getElementById("${i}")`))missing.push("#"+i);
   // Eingabefelder ohne Handler sind in Ordnung, sie werden per id gelesen
   assert.deepEqual(missing.filter(m=>!["#renameIn","#aNewName","#aOldPin","#aNewPin","#devIn","#adminPin","#avShirtName","#avTeam","#trName","#acctName","#acctPin","#pinNew","#pinIn"].includes(m)),[]);

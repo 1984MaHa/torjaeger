@@ -78,6 +78,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await clickData("avbody","m");await clickData("avhair","2");
     await clickData("avhat","1");assert.ok(has("data-avhatc"));await clickData("avhatc","#2f6fde");      // Cap in Blau
     await clickData("avpattern","1");await clickData("aveyes","#6a95c4");await clickData("avsocks","#22252b");await clickData("avmouth","1");await clickData("avcollar","1");
+    await clickData("avface","3");await clickData("aveyeshape","0");await clickData("avbrows","2");await clickData("avnose","2");await clickData("avfreckles","1");await clickData("avglasses","2");await clickData("avbuild","2");
     await clickId("avSave");
     await until(()=>has("Hallo Emil"),"Kabine nach Speichern");
     assert.ok(has('id="avEdit"')&&has("avsvg"));
@@ -125,7 +126,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
     assert.equal(st.meta.schemaVersion,2);
-    assert.equal(st.profile.avatar.body,"m");assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.avatar.hat,1);assert.equal(st.profile.avatar.pattern,1);assert.equal(st.profile.avatar.eyes,"#6a95c4");assert.equal(st.profile.avatar.socks,"#22252b");assert.equal(st.profile.avatar.mouth,1);assert.equal(st.profile.avatar.collar,1);assert.equal(st.profile.avatar.hatColor,"#2f6fde");assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);
+    assert.equal(st.profile.avatar.body,"m");assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.avatar.hat,1);assert.equal(st.profile.avatar.pattern,1);assert.equal(st.profile.avatar.eyes,"#6a95c4");assert.equal(st.profile.avatar.socks,"#22252b");assert.equal(st.profile.avatar.mouth,1);assert.equal(st.profile.avatar.collar,1);assert.deepEqual([st.profile.avatar.face,st.profile.avatar.eyeShape,st.profile.avatar.brows,st.profile.avatar.nose,st.profile.avatar.freckles,st.profile.avatar.glasses,st.profile.avatar.build],[3,0,2,2,1,2,2]);assert.equal(st.profile.avatar.hatColor,"#2f6fde");assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
     assert.ok(helped.reduce((n,h)=>n+h.t1,0)>=3&&helped.reduce((n,h)=>n+h.t2,0)>=1&&helped.reduce((n,h)=>n+h.n,0)>=1,"Hilfe wurde gezählt: "+JSON.stringify(helped));
