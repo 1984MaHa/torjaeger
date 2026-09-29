@@ -1,0 +1,145 @@
+/* Schriften liegen lokal (Lizenz: fonts/OFL.txt). Kein Abruf aus dem Netz. */
+@font-face{font-family:"Andika";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/andika-400.woff2") format("woff2")}
+@font-face{font-family:"Andika";font-style:normal;font-weight:700;font-display:swap;src:url("../fonts/andika-700.woff2") format("woff2")}
+@font-face{font-family:"Lilita One";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/lilita-one-400.woff2") format("woff2")}
+/* Layout: ein Fußballplatz als Bühne. Oben die Anzeigetafel, in der Mitte die Aufgabe als Taktiktafel, unten die Spieltasten. */
+:root{
+  --pitch:#1d7337; --pitch2:#218040; --chalk:#ffffff; --ink:#16271c; --muted:#5b6b60;
+  --paper:#fbfcf7; --board:#0e1c14; --gold:#ffc83d; --goal:#34c56a; --miss:#e5484d; --sky:#2f6fde;
+  --display:"Lilita One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Andika","Comic Sans MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--pitch);background-image:repeating-linear-gradient(90deg,var(--pitch) 0 70px,var(--pitch2) 70px 140px);color:var(--ink);font-family:var(--body);font-size:18px;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+button{font-family:inherit;cursor:pointer;border:0;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+
+/* Anzeigetafel */
+.board{background:var(--board);color:var(--chalk);border-radius:18px;padding:14px 18px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.board .league{font-family:var(--display);font-size:1.5rem;letter-spacing:.5px}
+.board .sub{font-size:.9rem;opacity:.8}
+.board .pts{font-family:var(--display);font-size:2.2rem;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.board .pts small{display:block;font-family:var(--body);font-size:.8rem;color:var(--chalk);opacity:.8}
+.bar{grid-column:1/-1;height:12px;background:#24392c;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--goal),var(--gold));border-radius:99px;transition:width .6s}
+.icons{display:flex;gap:8px;grid-column:1/-1;justify-content:space-between;align-items:center;font-size:.9rem}
+.pill{background:#24392c;padding:4px 10px;border-radius:99px}
+.snd{background:#24392c;color:var(--chalk);padding:6px 12px;border-radius:99px;font-size:.85rem}
+
+/* Kabine / Start */
+.title{font-family:var(--display);color:var(--chalk);font-size:clamp(2rem,6vw,3.2rem);line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.25);text-wrap:balance;margin:6px 0 0}
+.lead{color:var(--chalk);margin:0;opacity:.95}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mode{background:var(--paper);border-radius:18px;padding:18px;text-align:left;display:flex;gap:14px;align-items:center;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .1s}
+.mode:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.mode b{font-family:var(--display);font-size:1.5rem;display:block;font-weight:400}
+.mode span{color:var(--muted);font-size:.95rem}
+.mode .ic{flex:0 0 56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.6rem;color:#fff}
+.panel{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+.panel h3{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0 0 10px}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.st{aspect-ratio:3/4;border-radius:12px;border:3px dashed #c9d3cb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;text-align:center;font-size:.78rem;color:var(--muted);max-width:100%}
+.st.on{border:3px solid var(--gold);color:var(--ink);background:linear-gradient(160deg,#fff7d6,#ffe79a)}
+.st .n{font-family:var(--display);font-size:1.3rem}
+details summary{cursor:pointer;font-family:var(--display);font-size:1.25rem;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.stat{display:grid;grid-template-columns:minmax(0,1fr) 120px 60px;gap:8px;align-items:center;font-size:.95rem;padding:4px 0;border-bottom:1px solid #e6ece7}
+.stat .b{height:10px;background:#e6ece7;border-radius:99px;overflow:hidden}.stat .b i{display:block;height:100%}
+.stat .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.small{font-size:.9rem;color:var(--muted)}
+.btn{background:var(--gold);color:var(--ink);font-family:var(--display);font-size:1.3rem;padding:14px 22px;border-radius:14px;box-shadow:0 5px 0 #c9951d}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c9951d}
+.btn.ghost{background:var(--paper);box-shadow:0 5px 0 #b8c4bb}
+.btn.warn{background:var(--miss);color:#fff;box-shadow:0 5px 0 #a3282c;font-size:1rem;padding:10px 14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* Spiel */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--chalk);flex-wrap:wrap}
+.score{background:var(--board);border-radius:12px;padding:6px 14px;font-family:var(--display);font-size:1.4rem;display:flex;gap:12px;align-items:center;font-variant-numeric:tabular-nums}
+.score em{font-style:normal;color:var(--gold)}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3)}
+.dots i.ok{background:var(--goal);box-shadow:0 0 0 2px #fff}.dots i.no{background:var(--miss);box-shadow:0 0 0 2px #fff}.dots i.now{background:#fff}
+.card{background:var(--paper);border-radius:20px;padding:20px;box-shadow:0 8px 0 rgba(0,0,0,.22);display:flex;flex-direction:column;gap:16px;min-height:300px}
+.tag{font-size:.8rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.q{font-size:clamp(1.45rem,3.6vw,2rem);line-height:1.35;margin:0}
+.q mark{background:#ffe38a;padding:0 6px;border-radius:6px;color:var(--ink)}
+.vis{display:flex;justify-content:center;overflow-x:auto}
+.ans{min-height:70px;border:4px solid var(--ink);border-radius:14px;font-size:2.4rem;font-family:var(--display);display:flex;align-items:center;justify-content:center;min-width:150px;align-self:center;padding:0 20px;background:#fff;font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:520px;width:100%;align-self:center}
+.pad button{background:#e9f2eb;font-family:var(--display);font-size:1.9rem;padding:14px 0;border-radius:14px;box-shadow:0 4px 0 #b9cabd;color:var(--ink)}
+.pad button:active{transform:translateY(3px);box-shadow:0 1px 0 #b9cabd}
+.pad .ok{background:var(--goal);color:#fff;box-shadow:0 4px 0 #1f8a45}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.choices button{background:#e9f2eb;border-radius:14px;padding:18px 10px;font-size:1.6rem;font-family:var(--body);font-weight:700;box-shadow:0 4px 0 #b9cabd;color:var(--ink)}
+.choices button.right{background:var(--goal);color:#fff}.choices button.wrong{background:var(--miss);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chips button{background:#fff;border:3px solid #cfd9d1;border-radius:12px;padding:10px 14px;font-size:1.5rem;font-family:var(--body);color:var(--ink)}
+.chips button.pick::after{content:".";color:var(--miss);font-weight:700}
+.chips button.pick{border-color:var(--sky)}
+.chips button.right{border-color:var(--goal);background:#e3f7ea}.chips button.wrong{border-color:var(--miss);background:#fde8e8}
+.hintbtn{align-self:flex-start;background:none;color:var(--sky);font-size:1rem;text-decoration:underline;padding:0}
+.hint{background:#eaf1fd;border-radius:12px;padding:10px 14px;font-size:1rem;line-height:1.5}
+.fb{border-radius:16px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.fb.ok{background:#e3f7ea}.fb.no{background:#fde8e8}
+.fb .big{font-family:var(--display);font-size:1.8rem}
+.fb.ok .big{color:#1f8a45}.fb.no .big{color:#b3262b}
+.fb p{margin:0;font-size:1.15rem;flex:1 1 260px;min-width:0}
+.plus{font-family:var(--display);color:#1f8a45;font-size:1.3rem}
+
+/* Torschuss */
+.goalwrap{width:120px;height:74px;position:relative;flex:0 0 auto}
+.goalwrap .ballx{position:absolute;left:4px;bottom:0;width:26px;height:26px}
+.goalwrap.shoot .ballx{animation:shoot .7s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes shoot{0%{transform:translate(0,0) rotate(0)}60%{transform:translate(70px,-34px) rotate(300deg)}100%{transform:translate(78px,-26px) rotate(360deg)}}
+.goalwrap.miss .ballx{animation:miss .7s ease-out forwards}
+@keyframes miss{to{transform:translate(90px,-70px) rotate(200deg);opacity:.2}}
+@media (prefers-reduced-motion:reduce){.goalwrap .ballx{animation:none!important}.bar i{transition:none}}
+
+/* Ergebnis */
+.result{text-align:center;align-items:center}
+.result .final{font-family:var(--display);font-size:clamp(2.4rem,9vw,4rem);line-height:1;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap}
+.result .final .team{font-size:clamp(1.2rem,3.5vw,1.6rem)}
+.result .final small{font-size:1rem;font-family:var(--body);display:block;color:var(--muted)}
+.result h2{font-family:var(--display);font-weight:400;font-size:2rem;margin:0}
+.newst{width:130px;margin:0 auto}
+.confirm{background:#fde8e8;border-radius:12px;padding:10px 12px}
+/* Ligen */
+.leagues{display:grid;gap:12px}
+.lg{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:0 6px 0 rgba(0,0,0,.2);display:flex;flex-direction:column;gap:12px}
+.lg.locked{background:#dfe8e1}
+.lg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lg-head b{font-family:var(--display);font-weight:400;font-size:1.5rem;display:block;line-height:1.1}
+.lg-head span.k{color:var(--muted);font-size:.95rem}
+.badge{font-size:.85rem;padding:5px 12px;border-radius:99px;font-weight:700;white-space:nowrap}
+.badge.cur{background:var(--gold);color:var(--ink)}
+.badge.done{background:var(--goal);color:#fff}
+.badge.probe{background:var(--sky);color:#fff}
+.badge.wait{background:#f3d7a4;color:var(--ink)}
+.badge.lock{background:#b9c7bd;color:var(--ink)}
+.chipsT{display:flex;flex-wrap:wrap;gap:6px}
+.chipsT span{font-size:.82rem;padding:4px 10px;border-radius:99px;background:#e6ece7;color:var(--muted)}
+.chipsT span.ok{background:#d4f2de;color:#1f6b3a;font-weight:700}
+.modes.sm{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.modes.sm .mode{padding:12px 14px;box-shadow:0 4px 0 rgba(0,0,0,.18);background:#fff;border:2px solid #dfe8e1}
+.modes.sm .mode b{font-size:1.2rem}
+.modes.sm .mode .ic{flex-basis:42px;height:42px;font-size:1.2rem}
+.note{font-size:.95rem;color:var(--muted);margin:0}
+.btn.sm{font-size:1.05rem;padding:10px 16px}
+.pairrow{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-size:1.8rem}
+.pairrow .ans{min-width:110px;cursor:pointer}
+.pairrow .ans.act{border-color:var(--sky);box-shadow:0 0 0 4px #cfe0ff}
+.pin{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pin input{font-size:1.3rem;width:130px;padding:8px 10px;border:2px solid #b9c7bd;border-radius:10px;font-family:var(--body);letter-spacing:4px}
+.parent{border-top:1px solid #e6ece7;margin-top:10px;padding-top:10px;display:grid;gap:10px}
+.parent .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.celebrate{background:#fff4c9;border:3px solid var(--gold);border-radius:14px;padding:12px 14px;font-size:1.15rem}
+h4.gl{margin:12px 0 4px;font-size:1rem}
+
+/* Hinweis auf neue App-Version */
+.banner{background:#fff4c9;border:3px solid var(--gold);border-radius:14px;padding:10px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+/* Home-Bildschirm-App (iOS, Standalone): Inhalt nicht unter Statusleiste und Home-Balken */
+.wrap{padding-top:calc(14px + env(safe-area-inset-top));padding-bottom:calc(40px + env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+body{overscroll-behavior-y:none}

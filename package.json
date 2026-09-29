@@ -1,0 +1,7 @@
+{
+  "name": "torjaeger-liga",
+  "private": true,
+  "description": "Torjäger-Liga: Lernspiel für Emil. Keine Abhängigkeiten.",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" }
+}
