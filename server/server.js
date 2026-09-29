@@ -2,11 +2,15 @@
 // Liefert die App aus (app/) und speichert die Stände als JSON-Dateien:
 //   DATA_DIR/profiles/<id>.json   ein Stand je Konto
 //   DATA_DIR/settings.json        globale Einstellungen (Eltern-PIN)
-//   DATA_DIR/backups/             Tagessicherungen (30 Tage) und Sicherungen vor jedem Deploy
+//   DATA_DIR/backups/             Tagessicherungen (30 Tage), Sicherungen vor jedem Deploy, backups/manual/ (vor Zurücksetzen und Wiederherstellen)
+//   DATA_DIR/trash/               gelöschte Konten (Papierkorb, nie hart gelöscht)
+//   DATA_DIR/devices.json         Geräteliste (Kennung, Name, zuletzt gesehen)
 "use strict";
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { pathToFileURL } = require("url");
+const { createAdmin } = require("./admin");
 
 const SERVER_VERSION = "1.1.0";
 const MAX_BODY = 2 * 1024 * 1024;
@@ -24,6 +28,9 @@ function createServer(opts = {}) {
   const PROFILES = path.join(DATA_DIR, "profiles");
   const SETTINGS = path.join(DATA_DIR, "settings.json");
   const BACKUPS = path.join(DATA_DIR, "backups");
+  const TRASH = path.join(DATA_DIR, "trash");
+  const MANUAL = path.join(BACKUPS, "manual");
+  const DEVICES = path.join(DATA_DIR, "devices.json");
   fs.mkdirSync(PROFILES, { recursive: true });
   fs.mkdirSync(BACKUPS, { recursive: true });
 
@@ -32,14 +39,24 @@ function createServer(opts = {}) {
 
   const profileFile = id => path.join(PROFILES, id + ".json");
 
+  // Modell und Regeln der App (ES-Module in app/js) für Schemaversionen, Zurücksetzen und Wiederherstellen: eine Wahrheit, kein Doppel.
+  let modelPromise = null;
+  const loadModel = () => modelPromise || (modelPromise = Promise.all([
+    import(pathToFileURL(path.join(APP_DIR, "js", "model.js")).href),
+    import(pathToFileURL(path.join(APP_DIR, "js", "rules.js")).href)
+  ]).then(([model, rules]) => ({ model, rules })));
+
   function readJson(file) {
     try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch (e) { return null; }
   }
   // Atomar schreiben (erst .tmp, dann umbenennen), danach die Tagessicherung auffrischen.
-  function writeJson(file, doc, backupName) {
+  function writeAtomic(file, doc) {
     const tmp = file + ".tmp";
     fs.writeFileSync(tmp, JSON.stringify(doc));
     fs.renameSync(tmp, file);
+  }
+  function writeJson(file, doc, backupName) {
+    writeAtomic(file, doc);
     const day = new Date().toISOString().slice(0, 10);
     fs.copyFileSync(file, path.join(BACKUPS, backupName + "-" + day + ".json"));
     const mine = fs.readdirSync(BACKUPS).filter(f => f.startsWith(backupName + "-") && f.endsWith(".json")
@@ -69,6 +86,8 @@ function createServer(opts = {}) {
     });
   }
 
+  const admin = createAdmin({ DATA_DIR, PROFILES, SETTINGS, BACKUPS, TRASH, MANUAL, DEVICES, ID_RE, profileFile, readJson, writeJson, writeAtomic, send, readBody, loadModel });
+
   const isVersion = v => Number.isInteger(v) && v >= 1;
   const profileSchema = state => state && state.meta && state.meta.schemaVersion;
 
@@ -89,9 +108,15 @@ function createServer(opts = {}) {
     try { url = new URL(req.url, "http://x"); } catch (e) { return send(res, 400, { error: "bad_url" }); }
     const p = url.pathname.replace(/\/+$/, "");
     const m = req.method;
+    admin.touchDevice(req, m === "PUT");
+
+    if (p.startsWith("/api/admin/")) return admin.handle(req, res, p, m);
 
     if (p === "/api/health") return send(res, 200, { ok: true, time: new Date().toISOString(), preview: PREVIEW, serverVersion: SERVER_VERSION });
-    if (p === "/api/config") return send(res, 200, { preview: PREVIEW, serverVersion: SERVER_VERSION });
+    if (p === "/api/config") {
+      return loadModel().then(({ model }) => send(res, 200, { preview: PREVIEW, serverVersion: SERVER_VERSION, schemaVersion: model.SCHEMA_VERSION, globalSchemaVersion: model.GLOBAL_SCHEMA_VERSION }))
+        .catch(() => send(res, 200, { preview: PREVIEW, serverVersion: SERVER_VERSION }));
+    }
 
     if (p === "/api/settings") {
       const cur = readJson(SETTINGS) || { rev: 0, schemaVersion: null, settings: null };
@@ -117,6 +142,7 @@ function createServer(opts = {}) {
         if (id === undefined) { do { id = "k-" + Math.random().toString(36).slice(2, 10); } while (!ID_RE.test(id) || fs.existsSync(profileFile(id))); }
         if (typeof id !== "string" || !ID_RE.test(id)) return send(res, 400, { error: "bad_id" });
         if (fs.existsSync(profileFile(id))) return send(res, 409, { error: "exists" });
+        if (admin.isTrashed(id)) return send(res, 409, { error: "deleted" });
         const doc = { id, name, rev: 0, savedAt: new Date().toISOString(), device: "", schemaVersion: null, state: null };
         writeJson(profileFile(id), doc, "profile-" + id);
         return send(res, 201, { id, name, rev: 0 });
@@ -130,7 +156,7 @@ function createServer(opts = {}) {
       try { id = decodeURIComponent(pm[1]); } catch (e) { return send(res, 400, { error: "bad_id" }); }
       if (!ID_RE.test(id)) return send(res, 400, { error: "bad_id" });
       const cur = readJson(profileFile(id));
-      if (!cur) return send(res, 404, { error: "unknown_profile" });
+      if (!cur) return admin.isTrashed(id) ? send(res, 410, { error: "deleted" }) : send(res, 404, { error: "unknown_profile" });
       if (m === "GET") return send(res, 200, { rev: cur.rev, savedAt: cur.savedAt, schemaVersion: cur.schemaVersion, state: cur.state });
       if (m === "PUT") return readBody(req, res, body => putDoc(res, cur, body, body.state, profileSchema(body.state), rev => {
         const name = body.state.profile && typeof body.state.profile.name === "string" ? body.state.profile.name.trim().slice(0, 40) : cur.name;

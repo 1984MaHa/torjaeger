@@ -13,8 +13,8 @@ export async function startServer(){
   const base="http://127.0.0.1:"+srv.address().port;
   return{srv,base,dataDir,close:()=>new Promise(r=>{srv.close(r);srv.closeAllConnections&&srv.closeAllConnections();}).then(()=>fs.rmSync(dataDir,{recursive:true,force:true}))};
 }
-export async function api(base,method,url,body){
-  const res=await fetch(base+url,{method,headers:body?{"Content-Type":"application/json"}:undefined,body:body===undefined?undefined:(typeof body==="string"?body:JSON.stringify(body))});
+export async function api(base,method,url,body,headers){
+  const res=await fetch(base+url,{method,headers:body?{"Content-Type":"application/json",...headers}:headers,body:body===undefined?undefined:(typeof body==="string"?body:JSON.stringify(body))});
   let json=null;try{json=await res.json();}catch(e){}
   return{status:res.status,json};
 }
