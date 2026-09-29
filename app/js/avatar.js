@@ -3,10 +3,15 @@
 // alle Farben, Nummer, Name und Mannschaft sind frei wählbar.
 export const BODIES=[["j","Junge"],["m","Mädchen"]];
 export const HAIR_STYLES={
-  j:["Kurz","Wuschel","Igel","Locken","Tolle","Stoppel","Seitenscheitel","Surfer","Ohne Haare"],
-  m:["Pferdeschwanz","Zöpfe","Lang","Dutt","Bob","Lockenmähne","Halbzopf","Pony","Ohne Haare"]
+  j:["Kurz","Wuschel","Igel","Locken","Tolle","Stoppel","Seitenscheitel","Surfer","Fransen","Ohne Haare"],
+  m:["Pferdeschwanz","Zöpfe","Lang","Dutt","Bob","Lockenmähne","Halbzopf","Pony","Fransen","Ohne Haare"]
 };
 // Kopfbedeckung (eigene Farbe): 0 keine, 1 Cap, 2 Cap verkehrt herum, 3 Mütze, 4 Stirnband, 5 Bandana
+// Augenfarben, Trikotmuster, Kragen und Mund
+export const EYE_COLORS=["#4a3426","#7a5a2a","#6a95c4","#5f9b6a","#8a97a3"];
+export const PATTERNS=["Einfarbig","Schulterstreifen","Querstreifen","Brustband"];
+export const COLLARS=["V-Ausschnitt","Rundkragen"];
+export const MOUTHS=["Lächeln","Breites Grinsen"];
 export const HATS=["Keine","Cap","Cap verkehrt","Mütze","Stirnband","Bandana"];
 export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#d9c58a","#b8341f","#22252b","#e75a9c","#2f6fde"];
 export const SKIN_TONES=["#ffe0c7","#f6c9a0","#e3a877","#c68642","#8d5524","#5c3a21"];
@@ -15,7 +20,7 @@ export const SHORTS_COLORS=["#f4f4f4","#22252b","#1f3f8f","#e5484d","#34a853","#
 export const BOOT_COLORS=["#22252b","#f4f4f4","#e5484d","#2f6fde","#d7f000","#ff8a00","#e75a9c"];
 export const COLOR_NAMES={"#2b1d14":"dunkelbraun","#5a3825":"braun","#8a5a2b":"hellbraun","#c48b3c":"dunkelblond","#e6c15a":"blond","#d9c58a":"aschblond","#b8341f":"kupferrot","#22252b":"schwarz","#e75a9c":"pink","#2f6fde":"blau",
   "#ffe0c7":"sehr hell","#f6c9a0":"hell","#e3a877":"mittel","#c68642":"gebräunt","#8d5524":"dunkel","#5c3a21":"sehr dunkel",
-  "#e5484d":"rot","#ffc83d":"gelb","#34a853":"grün","#ff8a00":"orange","#8e44ad":"lila","#f4f4f4":"weiß","#17b3b3":"türkis","#f27fb1":"rosa","#1f3f8f":"dunkelblau","#8a8f98":"grau","#d7f000":"neongelb"};
+  "#e5484d":"rot","#ffc83d":"gelb","#34a853":"grün","#ff8a00":"orange","#8e44ad":"lila","#f4f4f4":"weiß","#17b3b3":"türkis","#f27fb1":"rosa","#1f3f8f":"dunkelblau","#8a8f98":"grau","#d7f000":"neongelb","#4a3426":"braun","#7a5a2a":"haselnuss","#6a95c4":"blau","#5f9b6a":"grün","#8a97a3":"grau"};
 
 const HEX=/^#[0-9a-fA-F]{6}$/;
 const hex=(v,d)=>typeof v==="string"&&HEX.test(v)?v.toLowerCase():d;
@@ -27,9 +32,11 @@ export const TEMPLATES=[
   {name:"Wirbel", look:{body:"j",hair:3,hairColor:"#5a3825",skin:"#c68642",shirt:"#2f6fde",shorts:"#1f3f8f",boots:"#f4f4f4",number:"7", team:"Blaue Wirbel", c1:"#2f6fde",c2:"#ffc83d"}},
   {name:"Rakete", look:{body:"j",hair:4,hairColor:"#b8341f",skin:"#ffe0c7",shirt:"#ff8a00",shorts:"#1f3f8f",boots:"#f4f4f4",number:"8", team:"Raketen",      c1:"#ff8a00",c2:"#1f3f8f"}},
   {name:"Nacht",  look:{body:"j",hair:5,hairColor:"#2b1d14",skin:"#e3a877",shirt:"#22252b",shorts:"#22252b",boots:"#d7f000",number:"1", team:"Nachtfalken",  c1:"#22252b",c2:"#d7f000"}},
+  {name:"Torjäger",look:{body:"j",hair:8,hairColor:"#e6c15a",skin:"#ffe0c7",eyes:"#6a95c4",shirt:"#2f6fde",shorts:"#22252b",socks:"#22252b",boots:"#f4f4f4",pattern:1,collar:1,mouth:1,number:"10",team:"Blau Weiß",c1:"#2f6fde",c2:"#f4f4f4"}},
   {name:"Sonne",  look:{body:"m",hair:0,hairColor:"#e6c15a",skin:"#ffe0c7",shirt:"#ffc83d",shorts:"#22252b",boots:"#22252b",number:"10",team:"Gelbe Sonnen", c1:"#ffc83d",c2:"#22252b"}},
   {name:"Wald",   look:{body:"m",hair:1,hairColor:"#22252b",skin:"#8d5524",shirt:"#34a853",shorts:"#f4f4f4",boots:"#e5484d",number:"11",team:"Grüne Wälder", c1:"#34a853",c2:"#f4f4f4"}},
   {name:"Eis",    look:{body:"m",hair:2,hairColor:"#c48b3c",skin:"#f6c9a0",shirt:"#17b3b3",shorts:"#f4f4f4",boots:"#22252b",number:"5", team:"Eiskristalle", c1:"#17b3b3",c2:"#f4f4f4"}},
+  {name:"Funke",  look:{body:"m",hair:6,hairColor:"#8a5a2b",skin:"#f6c9a0",eyes:"#5f9b6a",shirt:"#e5484d",shorts:"#f4f4f4",socks:"#f4f4f4",boots:"#22252b",pattern:2,collar:1,mouth:1,number:"6",team:"Rote Funken",c1:"#e5484d",c2:"#f4f4f4"}},
   {name:"Beere",  look:{body:"m",hair:3,hairColor:"#e75a9c",skin:"#c68642",shirt:"#8e44ad",shorts:"#f4f4f4",boots:"#ff8a00",number:"3", team:"Beerenstark",  c1:"#8e44ad",c2:"#f27fb1"}}
 ];
 
@@ -47,6 +54,8 @@ export function cleanLook(look,fallback){
     v:2,body,
     hair:int(l.hair,0,HAIR_STYLES[body].length-1,Math.min(b.hair,HAIR_STYLES[body].length-1)),hairColor:hex(l.hairColor,b.hairColor),skin:hex(l.skin,b.skin),
     hat:int(l.hat,0,HATS.length-1,b.hat||0),hatColor:hex(l.hatColor,b.hatColor||"#e5484d"),
+    eyes:hex(l.eyes,b.eyes||"#4a3426"),pattern:int(l.pattern,0,PATTERNS.length-1,b.pattern||0),collar:int(l.collar,0,COLLARS.length-1,b.collar||0),mouth:int(l.mouth,0,MOUTHS.length-1,b.mouth||0),
+    socks:hex(l.socks,hex(l.shirt,b.shirt)),
     shirt:hex(l.shirt,b.shirt),shorts:hex(l.shorts,b.shorts),boots:hex(l.boots,b.boots),
     number:cleanNumber(l.number,b.number),
     shirtName:cleanText(l.shirtName,10,b.shirtName||"").toUpperCase(),

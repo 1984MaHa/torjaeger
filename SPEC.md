@@ -1,4 +1,4 @@
-# Torjäger-Liga: gebauter Stand (Version 1.1.2)
+# Torjäger-Liga: gebauter Stand (Version 1.1.3)
 
 Diese Datei beschreibt, was der Code heute tut. Absicht, Entscheidungen und Roadmap stehen im Vault (`Projects/Torjaeger/`).
 
@@ -23,6 +23,7 @@ Es gibt zwei Betriebsarten aus demselben Repo: **Live** (Branch `main`, Port 808
 ### Avatar (Spieler)
 - `avatar.js` (Daten, Paletten, Vorlagen, Prüfung `cleanLook`), `avatardraw.js` (SVG), `avatarui.js` (Baukasten), keine externen Ressourcen, keine bekannten Figuren oder Vereinslogos. Stil: Comic mit dunkler Kontur, Schattierung und Glanzlichtern, natürlichere Proportionen: eiförmiger Kopf mit Wangen und Kinn (kein Kreis), Kopf im Verhältnis kleiner, mandelförmige Augen, Nase, Lippen, Ohren, Hände mit Daumen.
 - Der Baukasten beginnt mit der Wahl **Junge oder Mädchen** (`look.body`, `j` oder `m`). Danach gibt es je 8 passende Frisuren (Junge: Kurz, Wuschel, Igel, Locken, Tolle, Stoppel, Seitenscheitel, Surfer; Mädchen: Pferdeschwanz, Zöpfe, Lang, Dutt, Bob, Lockenmähne, Halbzopf, Pony) und 4 Vorlagen. Ein Umschalter wechselt später zwischen Junge und Mädchen (Farben, Nummer, Name und Mannschaft bleiben, die Frisur wird die erste der neuen Liste).
+- Nach Vorbild eines Fotos (Junge mit blonden Fransen, blauem Trikot mit Schulterstreifen, schwarzer Hose und Stutzen) gibt es zusätzlich: Frisur **Fransen** (kurze wuschelige Stirnfransen), **Augenfarbe** (5), **Trikotmuster** (Einfarbig, Schulterstreifen, Querstreifen, Brustband, in der zweiten Vereinsfarbe), **Kragen** (V-Ausschnitt, Rundkragen), **Stutzenfarbe** (einzeln, alte Avatare behalten die Trikotfarbe) und **Gesicht** (Lächeln, Breites Grinsen). Die Vorlage „Torjäger“ zeigt diese Kombination, es gibt je 5 Vorlagen für Junge und Mädchen.
 - Frisuren gibt es auch **ohne Haare** (letzter Eintrag). **Kopfbedeckung** (`look.hat` 0 bis 5, eigene Farbe `look.hatColor`): Keine, Cap, Cap verkehrt herum, Mütze, Stirnband, Bandana. Sie liegt über der Frisur und sieht von vorn und hinten passend aus (verkehrte Cap: Schirm im Nacken).
 - Weiter: Haarfarbe (10), Hautton (6), Trikotfarbe (10), Hosenfarbe (8), Schuhfarbe (7), Rückennummer (0 bis 99), Name auf dem Trikot (bis 10 Zeichen), Mannschaftsname (bis 20), Vereinsfarben 1 und 2 (Wappen, Ärmelbündchen, Hosenstreifen, Stutzenrand). Alle Farben frei wählbar.
 - Erscheint auf der Kachel in „Wer spielt?“, in der Kabine und in der Torszene. Konten ohne Avatar bekommen eine feste Vorgabe aus dem Namen. Beim ersten Öffnen eines Kontos ohne Avatar wird der Baukasten einmal angeboten (überspringbar, `profile.avatarAsked`). „Mein Spieler“ in der Kabine öffnet ihn jederzeit.
@@ -46,7 +47,7 @@ Konto-Stand (`data/profiles/<id>.json`, Feld `state`):
 | `history` | je Spiel `{id, t, d, liga, mode, trial, c, n, pts, dur?}` (`dur` in Sekunden), höchstens 200 |
 | `settings` | `sound`, `t`, `perRound` (6, 8, 10), `trialN` (Schnupper-Aufgaben), `trialDaily` (nur einmal pro Tag), `hintAfter` (Tipp-Zeit in Sekunden, 0 = aus) |
 
-`profile.avatar`: `{v, body (j oder m), hair (Index in der Liste der Auswahl, der letzte Eintrag ist Ohne Haare), hairColor, hat (0 bis 5), hatColor, skin, shirt, shorts, boots (Hexfarben), number, shirtName, team, c1, c2, t}`. Ein Avatar ohne `body` (frühe Vorschau) gilt als Junge. Alle Werte laufen beim Lesen durch `cleanLook` (falsche Werte werden ersetzt, Texte bereinigt).
+`profile.avatar`: `{v, body (j oder m), hair (Index in der Liste der Auswahl, der letzte Eintrag ist Ohne Haare), hairColor, hat (0 bis 5), hatColor, eyes, pattern (0 bis 3), collar (0 oder 1), mouth (0 oder 1), socks, skin, shirt, shorts, boots (Hexfarben), number, shirtName, team, c1, c2, t}`. Ein Avatar ohne `body` (frühe Vorschau) gilt als Junge. Alle Werte laufen beim Lesen durch `cleanLook` (falsche Werte werden ersetzt, Texte bereinigt).
 
 Anzeigewerte (Punkte, Spiele, Siege, Sticker) sind die Summe über `progress.dev`. Jedes Gerät schreibt nur seinen eigenen Zähler.
 

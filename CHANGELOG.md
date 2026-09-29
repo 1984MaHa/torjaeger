@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.1.3
+- Baukasten so erweitert, dass der Junge mindestens wie auf dem Foto aussehen kann: Frisur **Fransen** (Junge und Mädchen), **Augenfarbe** (Braun, Haselnuss, Blau, Grün, Grau), **Trikotmuster** (Einfarbig, Schulterstreifen, Querstreifen, Brustband), **Kragen** (V-Ausschnitt, Rundkragen), eigene **Stutzenfarbe** (schwarze Stutzen zu blauem Trikot), **Gesicht** (Lächeln, Breites Grinsen).
+- Neue Vorlagen „Torjäger“ (Junge, nach dem Foto) und „Funke“ (Mädchen). Alte Avatare bleiben unverändert (Stutzen wie das Trikot, braune Augen, kein Muster).
+- Version 1.1.3.
+
 ## 1.1.2
 - Figuren realistischer: eiförmiger Kopf mit Wangen und Kinn statt Kreis, Kopf im Verhältnis kleiner, mandelförmige Augen, Nase, Lippen, Ohren, Hände mit Daumen, leichte Taille. Gilt auch für Trainer und Trainerin.
 - Frisuren: neu **Ohne Haare** (Junge und Mädchen).
@@ -47,7 +52,7 @@ Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start oh
 - Versionen: App 1.1.0 (`app/js/version.js`, `sw.js`), Server 1.1.0, `package.json` 1.1.0.
 
 ### Tests
-99 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
+101 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
 
 ## 1.0.0 (Phase 1, Umzug)
 Erste spielbare Fassung im Repo. Der Prototyp läuft jetzt als Home-Bildschirm-Web-App.

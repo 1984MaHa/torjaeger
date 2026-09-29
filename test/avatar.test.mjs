@@ -6,7 +6,7 @@ import {fileURLToPath} from "node:url";
 import {LIGEN,topicsOf} from "../app/js/content.js";
 import {GEN} from "../app/js/generators.js";
 import {newProfile} from "../app/js/model.js";
-import {BODIES,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
+import {BODIES,HATS,PATTERNS,COLLARS,MOUTHS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
 import {figureG,avatarSVG,crestSVG,trainerSVG,sceneSVG,pickShot,shotPath,SHOT_KINDS,SHOT_TEXT} from "../app/js/avatardraw.js";
 import {avatarBuilderHTML,trainerPanelHTML} from "../app/js/avatarui.js";
 import {leaks,similarExample,exampleHTML,helpBubblesHTML,coachHTML,rightText,speakerOf,FALLBACK_EXAMPLE} from "../app/js/coach.js";
@@ -25,12 +25,12 @@ function wellFormed(s){
 const noSvg=s=>s.replace(/<svg[\s\S]*?<\/svg>/g,"");
 const clean=(s,what)=>{assert.ok(wellFormed(s),what+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s),what+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),what+": unsicher");};
 
-test("Baukasten: Junge oder Mädchen, je 8 Frisuren, mehrere Hauttöne, 4 Vorlagen je Auswahl",()=>{
+test("Baukasten: Junge oder Mädchen, je 10 Frisuren, mehrere Hauttöne, 5 Vorlagen je Auswahl",()=>{
   assert.deepEqual(BODIES.map(b=>b[0]),["j","m"]);assert.deepEqual(BODIES.map(b=>b[1]),["Junge","Mädchen"]);
-  for(const b of ["j","m"]){assert.ok(HAIR_STYLES[b].length>=6);assert.equal(new Set(HAIR_STYLES[b]).size,HAIR_STYLES[b].length);assert.equal(TEMPLATES.filter(t=>t.look.body===b).length,4);}
+  for(const b of ["j","m"]){assert.ok(HAIR_STYLES[b].length>=6);assert.equal(new Set(HAIR_STYLES[b]).size,HAIR_STYLES[b].length);assert.equal(TEMPLATES.filter(t=>t.look.body===b).length,5);}
   assert.notDeepEqual(HAIR_STYLES.j,HAIR_STYLES.m);
   assert.ok(SKIN_TONES.length>=4);assert.ok(HAIR_COLORS.length>=5);assert.ok(SHIRT_COLORS.length>=6);
-  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","c1","c2","hair","hairColor","hat","hatColor","number","shirt","shirtName","shorts","skin","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
+  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","c1","c2","collar","eyes","hair","hairColor","hat","hatColor","mouth","number","pattern","shirt","shirtName","shorts","skin","socks","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
   assert.equal(new Set(TEMPLATES.map(t=>JSON.stringify(t.look))).size,TEMPLATES.length);
 });
 
@@ -152,7 +152,7 @@ test("Baukasten-Oberfläche: erst Junge oder Mädchen, dann Auswahlen; überspri
     const h=avatarBuilderHTML(D);clean(h.replace(/<input[^>]*>/g,""),"Baukasten "+body);
     assert.equal((h.match(/data-avhair=/g)||[]).length,HAIR_STYLES[body].length);
     for(const n of HAIR_STYLES[body])assert.ok(h.includes(n),n);
-    assert.equal((h.match(/data-avtpl=/g)||[]).length,4);                 // nur Vorlagen der Auswahl
+    assert.equal((h.match(/data-avtpl=/g)||[]).length,5);                 // nur Vorlagen der Auswahl
     assert.equal((h.match(/data-avbody=/g)||[]).length,2);                // Umschalter Junge oder Mädchen
     for(const a of ["data-avhc","data-avskin","data-avshirt","data-avshorts","data-avboots","data-avc1","data-avc2","data-avnum","id=\"avShirtName\"","id=\"avTeam\"","id=\"avSave\"","id=\"avSkip\""])assert.ok(h.includes(a),a);
     assert.ok(!h.includes("avCancel")&&h.includes("Später"));
@@ -287,4 +287,34 @@ test("Ohne Haare und Kopfbedeckungen: Cap, Cap verkehrt, Mütze, Stirnband, Band
   assert.ok(!avatarBuilderHTML({look:{...look,hat:0},name:"Emil",first:false,step:"build"}).includes("data-avhatc"),"Farbwahl nur mit Kopfbedeckung");
   // Vorlagen bleiben ohne Kopfbedeckung
   for(const t of TEMPLATES)assert.equal(cleanLook(t.look).hat,0);
+});
+
+test("Vorlage nach dem Foto: blonde Fransen, blaue Augen, blaues Trikot mit Schulterstreifen, schwarze Hose und Stutzen, Grinsen",()=>{
+  const t=TEMPLATES.find(x=>x.name==="Torjäger"),l=cleanLook(t.look);
+  assert.equal(l.body,"j");assert.equal(HAIR_STYLES.j[l.hair],"Fransen");assert.equal(l.hairColor,"#e6c15a");assert.equal(l.skin,"#ffe0c7");assert.equal(l.eyes,"#6a95c4");
+  assert.equal(l.shirt,"#2f6fde");assert.equal(PATTERNS[l.pattern],"Schulterstreifen");assert.equal(COLLARS[l.collar],"Rundkragen");assert.equal(l.shorts,"#22252b");assert.equal(l.socks,"#22252b");assert.equal(MOUTHS[l.mouth],"Breites Grinsen");
+  const f=figureG(l,"front");
+  assert.ok(f.includes('fill="#6a95c4"'),"blaue Iris");assert.ok(f.includes("M43 80.5 Q34 82 30 93"),"Schulterstreifen");assert.ok(f.includes("M49.5 77 Q60 88.5"),"Rundkragen");assert.ok(f.includes("M49 62.6"),"Grinsen");
+  assert.ok((f.match(/rx="3" fill="#22252b"/g)||[]).length===2,"schwarze Stutzen");
+  clean(avatarSVG(l,{px:220}),"Foto-Vorlage vorn");clean(avatarSVG(l,{px:220,view:"back"}),"Foto-Vorlage hinten");
+  // Fransen sehen anders aus als alle anderen Frisuren, auch von hinten
+  const others=new Set(HAIR_STYLES.j.map((_,h)=>figureG({...l,hair:h},"front")));assert.equal(others.size,HAIR_STYLES.j.length);
+});
+
+test("Neue Auswahlen ändern das Bild: Augenfarbe, Muster, Kragen, Mund, Stutzenfarbe",()=>{
+  const l=cleanLook(TEMPLATES[0].look);
+  const same=(a,b)=>figureG({...l,...a},"front")===figureG({...l,...b},"front");
+  assert.equal(new Set([0,1,2,3].map(p=>figureG({...l,pattern:p},"front"))).size,4);
+  assert.equal(new Set([0,1,2,3].map(p=>figureG({...l,pattern:p},"back"))).size,4);
+  assert.ok(!same({collar:0},{collar:1}));assert.ok(!same({mouth:0},{mouth:1}));
+  assert.ok(!same({eyes:"#4a3426"},{eyes:"#5f9b6a"}));assert.ok(!same({socks:"#22252b"},{socks:"#f4f4f4"}));
+  for(const p of [0,1,2,3])for(const view of ["front","back"])clean(avatarSVG({...l,pattern:p,collar:1,mouth:1},{view,px:90}),`Muster ${p} ${view}`);
+  // alte Avatare ohne die neuen Felder sehen wie vorher aus: Stutzen wie das Trikot, braune Augen, kein Muster
+  const old=cleanLook({body:"j",hair:1,hairColor:"#2b1d14",skin:"#f6c9a0",shirt:"#e5484d",shorts:"#f4f4f4",boots:"#22252b",number:"9",team:"X",c1:"#e5484d",c2:"#f4f4f4"});
+  assert.equal(old.socks,"#e5484d");assert.equal(old.eyes,"#4a3426");assert.equal(old.pattern,0);assert.equal(old.collar,0);assert.equal(old.mouth,0);
+  assert.equal(cleanLook({...l,pattern:9,collar:9,mouth:9,eyes:"grün",socks:"x"}).pattern,0);
+  // Baukasten zeigt die neuen Auswahlen
+  const h=avatarBuilderHTML({look:l,name:"Emil",first:false,step:"build"});clean(h.replace(/<input[^>]*>/g,""),"Baukasten neu");
+  for(const [a,n] of [["data-aveyes",5],["data-avpattern",4],["data-avcollar",2],["data-avmouth",2],["data-avsocks",10]])assert.equal((h.match(new RegExp(a+"=","g"))||[]).length,n,a);
+  for(const w of ["Augenfarbe","Trikotmuster","Kragen","Stutzenfarbe","Gesicht","Schulterstreifen","Rundkragen","Breites Grinsen"])assert.ok(h.includes(w),w);
 });

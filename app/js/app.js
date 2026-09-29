@@ -351,10 +351,11 @@ async function adminChangePin(){
 function bindAvatar($){
   const grab=()=>{const n=$("avShirtName"),t=$("avTeam");if(n)UI.av.look.shirtName=n.value;if(t)UI.av.look.team=t.value;};
   const set=patch=>{grab();UI.av.look=Object.assign({},UI.av.look,patch);render();};
-  const pairs=[["data-avhc","hairColor"],["data-avskin","skin"],["data-avshirt","shirt"],["data-avshorts","shorts"],["data-avboots","boots"],["data-avc1","c1"],["data-avc2","c2"],["data-avhatc","hatColor"]];
+  const pairs=[["data-avhc","hairColor"],["data-avskin","skin"],["data-avshirt","shirt"],["data-avshorts","shorts"],["data-avboots","boots"],["data-avc1","c1"],["data-avc2","c2"],["data-avhatc","hatColor"],["data-aveyes","eyes"],["data-avsocks","socks"]];
   for(const [attr,key] of pairs)document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:b.getAttribute(attr)}));
   document.querySelectorAll("[data-avbody]").forEach(b=>b.onclick=()=>{grab();const body=b.dataset.avbody;
     UI.av.look=UI.av.step==="gender"?startLook(body,UI.av.name):withBody(UI.av.look,body);UI.av.step="build";render();window.scrollTo(0,0);});
+  for(const [attr,key] of [["data-avpattern","pattern"],["data-avcollar","collar"],["data-avmouth","mouth"]])document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:Number(b.getAttribute(attr))}));
   document.querySelectorAll("[data-avhat]").forEach(b=>b.onclick=()=>set({hat:Number(b.dataset.avhat)}));
   document.querySelectorAll("[data-avhair]").forEach(b=>b.onclick=()=>set({hair:Number(b.dataset.avhair)}));
   document.querySelectorAll("[data-avtpl]").forEach(b=>b.onclick=()=>{grab();UI.av.look=templateLook(Number(b.dataset.avtpl),UI.av.name);render();});

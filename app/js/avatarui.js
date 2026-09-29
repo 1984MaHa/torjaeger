@@ -1,10 +1,11 @@
 // Oberfläche für Aussehen: Baukasten für den Spieler (beginnt mit Junge oder Mädchen) und Einstellung für Trainer und Trainerin.
 // Reine Darstellung. Farbwerte kommen nur aus den Paletten in avatar.js, Texte laufen durch esc().
-import {BODIES,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,JACKET_COLORS,TRAINER_HAIR,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook,startLook} from "./avatar.js";
+import {BODIES,EYE_COLORS,PATTERNS,COLLARS,MOUTHS,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,JACKET_COLORS,TRAINER_HAIR,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook,startLook} from "./avatar.js";
 import {avatarSVG,crestSVG,trainerSVG} from "./avatardraw.js";
 import {esc} from "./util.js";
 
 const swatches=(attr,colors,cur,label)=>`<div class="sws" role="group" aria-label="${label}">${colors.map(c=>`<button class="sw ${c===cur?"on":""}" ${attr}="${c}" style="background:${c}" aria-label="${COLOR_NAMES[c]||c}" aria-pressed="${c===cur}"></button>`).join("")}</div>`;
+const opts=(attr,names,cur)=>`<span class="seg">${names.map((n,i)=>`<button class="segb ${i===cur?"on":""}" ${attr}="${i}" aria-pressed="${i===cur}">${n}</button>`).join("")}</span>`;
 const field=(label,inner)=>`<div class="avfield"><span class="avlabel">${label}</span>${inner}</div>`;
 
 // Erster Schritt: Junge oder Mädchen
@@ -31,6 +32,8 @@ export function avatarBuilderHTML(D){
     ${field("Frisur",`<div class="hairs">${hair}</div>`)}
     ${field("Haarfarbe",swatches("data-avhc",HAIR_COLORS,l.hairColor,"Haarfarbe"))}
     ${field("Hautton",swatches("data-avskin",SKIN_TONES,l.skin,"Hautton"))}
+    ${field("Augenfarbe",swatches("data-aveyes",EYE_COLORS,l.eyes,"Augenfarbe"))}
+    ${field("Gesicht",opts("data-avmouth",MOUTHS,l.mouth))}
   </section>
   <section class="panel"><h3>Kopfbedeckung</h3><p class="note">Cap, Mütze und Co. sind wählbar. Ohne Kopfbedeckung siehst du die Frisur.</p>
     ${field("Kopfbedeckung",`<div class="hairs">${hats}</div>`)}
@@ -38,7 +41,10 @@ export function avatarBuilderHTML(D){
   </section>
   <section class="panel"><h3>Trikot</h3>
     ${field("Trikotfarbe",swatches("data-avshirt",SHIRT_COLORS,l.shirt,"Trikotfarbe"))}
+    ${field("Trikotmuster",opts("data-avpattern",PATTERNS,l.pattern))}
+    ${field("Kragen",opts("data-avcollar",COLLARS,l.collar))}
     ${field("Hosenfarbe",swatches("data-avshorts",SHORTS_COLORS,l.shorts,"Hosenfarbe"))}
+    ${field("Stutzenfarbe",swatches("data-avsocks",SHIRT_COLORS,l.socks,"Stutzenfarbe"))}
     ${field("Schuhfarbe",swatches("data-avboots",BOOT_COLORS,l.boots,"Schuhfarbe"))}
     ${field("Rückennummer",`<div class="numpick"><button class="segb" data-avnum="-1" aria-label="Nummer kleiner">−</button><b class="numv" aria-live="polite">${esc(l.number)}</b><button class="segb" data-avnum="1" aria-label="Nummer größer">+</button></div>`)}
     ${field("Name auf dem Trikot",`<input id="avShirtName" type="text" maxlength="10" autocomplete="off" value="${esc(l.shirtName)}" aria-label="Name auf dem Trikot" class="avinput">`)}
