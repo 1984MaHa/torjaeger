@@ -29,7 +29,9 @@ async function loadAll(){
   sync=createSync({store,deviceId});
   globalRec=await store.get("global");
   if(!globalRec){globalRec={id:"global",state:newGlobal(),baseRev:null,dirty:true,lastSync:null};}
+  const gBefore=globalRec.state.schemaVersion;
   globalRec.state=migrateGlobal(globalRec.state);
+  if(globalRec.state.schemaVersion!==gBefore)globalRec.dirty=true;
   await store.put("global",globalRec);
   accounts=[];
   for(const key of await store.keys("profile:")){

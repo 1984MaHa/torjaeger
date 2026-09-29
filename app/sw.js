@@ -4,7 +4,7 @@ const VERSION = "1.1.0";
 const CACHE = "torjaeger-app-" + VERSION;
 const FILES = [
   "index.html", "manifest.webmanifest", "css/style.css",
-  "js/app.js", "js/audio.js", "js/content.js", "js/generators.js", "js/merge.js", "js/model.js", "js/pin.js",
+  "js/app.js", "js/audio.js", "js/avatar.js", "js/content.js", "js/generators.js", "js/merge.js", "js/model.js", "js/pin.js",
   "js/rules.js", "js/store.js", "js/svg.js", "js/sync.js", "js/util.js", "js/version.js", "js/views.js",
   "fonts/andika-400.woff2", "fonts/andika-700.woff2", "fonts/lilita-one-400.woff2",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"

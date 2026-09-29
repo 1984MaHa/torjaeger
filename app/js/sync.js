@@ -112,6 +112,8 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
             const merged=mergeGlobal(rec.state,rs);
             rec.dirty=canon(merged)!==canon(rs);rec.state=merged;rec.baseRev=remote.rev;
           }
+          // Wurde ein älterer Stand migriert, muss die neue Form auch zurück auf den Server (schützt vor älteren Apps).
+          if(remote.schemaVersion!==rs.schemaVersion)rec.dirty=true;
         }else{rec.baseRev=0;rec.dirty=true;}
         await store.put("global",rec);
         if(!rec.dirty){rec.lastSync=now();await store.put("global",rec);return{ok:true,pushed:false};}

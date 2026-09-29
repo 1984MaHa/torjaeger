@@ -5,11 +5,15 @@
 //  - Je Thema die letzten 10 Antworten nach Zeitstempel (Vereinigung ohne Doppelte).
 //  - Trainingstage und Spielverlauf: Vereinigung.
 //  - Ligen-Freigaben, Name, Einstellungen: der neuere Stand gewinnt.
+//  - Aussehen (profile.avatar) und Trainer (global): der neuere Stand gewinnt, je mit eigenem Zeitstempel.
+//  - Tipp-Nutzung (stats.<Thema>.help): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler).
 //  - Zurücksetzen (meta.resetAt): der Stand mit dem späteren Zurücksetzen gewinnt vollständig.
 //  - Unbekannte Felder bleiben erhalten.
 // Das Ergebnis ist unabhängig von der Reihenfolge und ändert sich nicht, wenn man erneut zusammenführt.
 import {clone} from "./util.js";
 import {SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,defaultLg} from "./model.js";
+import {defaultTrainer} from "./avatar.js";
+import {canon} from "./util.js";
 import {MASTER_N} from "./content.js";
 
 const isNum=v=>typeof v==="number"&&Number.isFinite(v);
@@ -41,6 +45,13 @@ function mergeLg(a,b){
   res.t=Math.max(a.t,b.t);
   return res;
 }
+// Der Wert mit dem größeren Zeitstempel t gewinnt. Bei Gleichstand entscheidet die Textform (unabhängig von der Reihenfolge).
+function newerBy(a,b){
+  if(!a)return b===undefined?null:b;if(!b)return a;
+  const ta=a.t||0,tb=b.t||0;
+  if(ta!==tb)return ta>tb?a:b;
+  return canon(a)>=canon(b)?a:b;
+}
 function mergeLast(a,b){
   const seen=new Map();
   for(const e of [...(a||[]),...(b||[])])seen.set(e.t+"|"+(e.d||""),e);
@@ -64,6 +75,8 @@ export function mergeProfile(local,remote){
     updatedAt:Math.max(local.meta.updatedAt||0,remote.meta.updatedAt||0),
     createdAt:created===Infinity?0:created,resetAt:lr});
   out.profile=clone((local.profile.t||0)>=(remote.profile.t||0)?local.profile:remote.profile);
+  out.profile.avatar=clone(newerBy(local.profile.avatar,remote.profile.avatar));
+  out.profile.avatarAsked=!!(local.profile.avatarAsked||remote.profile.avatarAsked);
 
   const lp=local.progress,rp=remote.progress;
   const lg={};
@@ -77,6 +90,7 @@ export function mergeProfile(local,remote){
   for(const t of new Set([...Object.keys(local.stats||{}),...Object.keys(remote.stats||{})])){
     const x=local.stats[t]||{},y=remote.stats[t]||{};
     stats[t]=Object.assign({},clone(y),clone(x),{tot:mergeDevMap(x.tot,y.tot,aNewer),last:mergeLast(x.last,y.last)});
+    if(x.help||y.help)stats[t].help=mergeDevMap(x.help,y.help,aNewer);
   }
   out.stats=stats;
 
@@ -95,6 +109,7 @@ export function mergeGlobal(local,remote){
   const out=Object.assign(clone(o),clone(n));
   out.schemaVersion=GLOBAL_SCHEMA_VERSION;
   out.pin=clone(lt>=rt?local.pin:remote.pin);
+  out.trainer=clone(newerBy(local.trainer||defaultTrainer(),remote.trainer||defaultTrainer()));
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
   return out;
 }

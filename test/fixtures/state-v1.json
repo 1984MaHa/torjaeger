@@ -1,0 +1,20 @@
+{
+  "meta": {"schemaVersion": 1, "deviceId": "g-ipad00001", "rev": 12, "updatedAt": 1790100000000, "createdAt": 1790000000000, "resetAt": 0},
+  "profile": {"id": "k-emil0001", "name": "Emil", "t": 1790000000000},
+  "progress": {
+    "dev": {"g-ipad00001": {"points": 1500, "rounds": 21, "wins": 14, "stickers": 14}, "g-iphone002": {"points": 300, "rounds": 4, "wins": 3, "stickers": 3}},
+    "days": ["2026-09-26", "2026-09-27", "2026-09-29"],
+    "lg": {"L2": {"probe": true, "spent": 8, "open": false, "trial": "2026-09-29", "t": 1790050000000}},
+    "sel": 1
+  },
+  "stats": {
+    "m_read": {"tot": {"g-ipad00001": {"a": 14, "c": 13}}, "last": [{"t": 1, "ok": 1, "d": "g-ipad"}, {"t": 2, "ok": 1, "d": "g-ipad"}, {"t": 3, "ok": 0, "d": "g-ipad"}]},
+    "d_wortart": {"tot": {"g-ipad00001": {"a": 9, "c": 5}, "g-iphone002": {"a": 3, "c": 2}}, "last": [{"t": 10, "ok": 0, "d": "g-ipad"}, {"t": 11, "ok": 1, "d": "g-ipho"}]}
+  },
+  "history": [
+    {"id": "1790010000000-g-ipad00001", "t": 1790010000000, "d": "2026-09-27", "liga": "L1", "mode": "mix", "trial": false, "c": 6, "n": 8, "pts": 90},
+    {"id": "1790090000000-g-iphone002", "t": 1790090000000, "d": "2026-09-29", "liga": "L2", "mode": "math", "trial": true, "c": 2, "n": 3, "pts": 20}
+  ],
+  "settings": {"sound": false, "t": 1790020000000},
+  "zusatz": {"unbekannt": "muss erhalten bleiben"}
+}
