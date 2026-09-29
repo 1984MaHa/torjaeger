@@ -1,89 +1,109 @@
 # Cross-Handover
 
-**Stand:** 2026-09-29 21:15
+**Stand:** 2026-09-29 22:10
 **Von:** cowork
 **An:** claude-code
 **Stufe:** voll
 **Modus:** bauen
 
-Inhalt identisch mit dem kopierfertigen Block (unten vollständig). Anker: Commit 7760159b6ab155b03eb09c9aeb1f61b3268c6b4f auf main, Arbeitsbaum sauber bis auf die von Cowork abgelegten Ordner .handover/ und prototype/ (untracked, gewollt).
+Inhalt identisch mit dem kopierfertigen Block. Anker: Commit 67a0bed auf main, Arbeitsbaum sauber bis auf diese Datei.
 
 ```
 Cross-Handover cowork nach claude-code, 2026-09-29.
 Modus: bauen. Stufe: voll.
-Projekt: Torjäger-Liga (Fußball-Lernspiel Mathe/Deutsch für Emil, Grundschule). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger, Branch main).
+Projekt: Torjäger-Liga (Fußball-Lernspiel Mathe/Deutsch für Emil, Grundschule). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger). Phase 1 ist live und von Marco auf iPad/iPhone abgenommen.
 
 ANKER, zuerst gegenprüfen, nicht arbeiten:
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -2   -> erwartet oben 7760159 "Doku: Repo-Name und Vault-Pfad", darunter 8eff9b4
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" status --short     -> erwartet genau: ?? .handover/  und  ?? prototype/
-Beide untracked Ordner sind gewollt (von Cowork abgelegt). Bei anderer Abweichung: zurückweisen und als Prüfauftrag an Cowork zurückspielen.
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1   -> erwartet 67a0bed "Doku: README, CHANGELOG, SPEC für Phase 1"
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" status --short     -> erwartet genau: M .handover/current.md (dieser Auftrag, von Cowork überschrieben)
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" branch -a          -> erwartet nur main und remotes/origin/main, noch kein preview
+Bei anderer Abweichung: zurückweisen und als Prüfauftrag an Cowork zurückspielen.
 
 LIES ZUERST, in dieser Reihenfolge:
 1. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\CLAUDE.md
-2. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\.handover\current.md (dieser Auftrag als Zettel)
-3. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\Torjaeger.md (Index, Stand, Grundregeln)
-4. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\specs\Torjaeger-Plan.md (Architektur, Spielkonzept, Datenmodell, "Neue Anforderungen A bis D", "Phase 0 abgeschlossen")
-5. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\prototype\torjaeger-prototyp-v2.html (funktionierender Prototyp, lief als Claude-Artifact; enthält die komplette Spiellogik)
-6. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\server\server.js, deploy.sh, docker-compose.yml, Dockerfile, README.md (Phase-0-Stand, läuft produktiv auf der Synology)
+2. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\SPEC.md und CHANGELOG.md (gebauter Stand 1.0.0)
+3. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\.handover\current.md (dieser Auftrag als Zettel)
+4. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\Torjaeger.md (Index, Stand, Grundregeln)
+5. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\specs\Torjaeger-Plan.md (Abschnitte "Neue Anforderungen A bis F", "Spielkonzept > Avatar")
+6. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\app\js\ (model.js, store.js, sync.js, merge.js, views.js), server\server.js, deploy.sh, docker-compose.yml
 
 AUFTRAG
-Phase 1 "Umzug": Den Prototyp als offline-fähige Home-Bildschirm-Web-App nach app/ überführen, mit mehrkontenfähigem Datenmodell (schemaVersion + Migrationen), lokaler Speicherung (IndexedDB) und automatischem Abgleich mit dem Server. Server und deploy.sh so erweitern, dass kein Update je einen Spielstand zurücksetzt. Ergebnis: lokal getestet und committet, bereit für Marcos Push und Deploy.
+Drei Pakete in dieser Reihenfolge, alles auf einem neuen Branch preview (von main abzweigen), jeweils eigene Commits:
+1. Vorschau-Betrieb, 2. Admin-Bereich, 3. Avatar für jedes Kind plus Trainer-Avatar mit Hilfe.
+Ergebnis: lokal getestet, auf preview committet, bereit für Marcos Push und die Einrichtung der Vorschau auf der NAS. Nichts nach main mergen.
 
-Inhaltlich im Einzelnen (Verdacht, nicht Vorschrift, eigene Analyse erwünscht):
-- App: Spiellogik aus dem Prototyp übernehmen (3 Ligen Klasse 2 bis 4, alle Themen und Generatoren, Schnuppern, Aufstieg 8 von 10, 20 Probe-Aufgaben, Eltern-PIN-Freigabe, Punkte, Sticker, Trainerbank). Aufteilen in einfache ES-Module ohne Build-Schritt. window.claude / db-Capability komplett entfernen.
-- Keine externen Ressourcen: Schriften Andika und Lilita One (beide OFL) als woff2 nach app/fonts/, Lizenzdatei dazu. Kein CDN, kein Google-Fonts-Link.
-- PWA: manifest.webmanifest, Icons (192, 512, apple-touch-icon 180), iOS-Meta-Tags für Standalone, Service Worker mit versionierter Cache-Nummer (App-Dateien cache-first, /api network-only). Service Worker leert nie IndexedDB.
-- Datenmodell je Konto: meta (schemaVersion, deviceId, rev, updatedAt), profile (Name), progress, stats (je Thema letzte 10 Antworten mit Zeitstempel), history, settings. Global (kontenübergreifend, geräteübergreifend abgeglichen): Eltern-PIN (gehasht), Kontenliste.
-- Abgleich: lokal zuerst speichern (nach jeder Aufgabe), dann PUT mit baseRev. Bei 409 zusammenführen nach Plan-Regel (Punkte/Spiele/Siege als Summe der Zuwächse je Gerät, je Thema letzte 10 nach Zeitstempel, Sticker/Freigaben/Avatar: neuester gewinnt) und erneut senden. Anzeige in der Trainerbank "Zuletzt abgeglichen".
-- Server: /api/health bleibt; neu /api/profiles (Liste, Anlegen), /api/profiles/<id>/state (GET/PUT mit baseRev), /api/settings (GET/PUT). Dateien data/profiles/<id>.json, data/settings.json, atomar schreiben, Tagessicherungen wie bisher. Konto-ID streng validieren. PUT mit älterer schemaVersion als gespeichert: 409 mit Grund, App lädt sich dann neu. Weiterhin keine npm-Pakete.
-- deploy.sh: vor git pull eine Sicherung data/backups/pre-deploy-<JJJJMMTT-HHMM>/ anlegen.
-- Tests mit node --test (Bordmittel): Server-API, Konfliktfall, Merge-Regel, Migration. Fixture test/fixtures/ mit einem Stand im Prototyp-Format (localStorage-Schlüssel "torjaeger", Struktur siehe Prototyp) und Migration auf das neue Schema ohne Verlust.
-- Phase-0-Testseite (Zähler) ersetzen; /api/state darf entfallen.
+PAKET 1: VORSCHAU (Verdacht, nicht Vorschrift)
+- Auf der NAS wird es einen zweiten Klon geben: /volume1/docker/torjaeger-preview (Branch preview), eigener Container, Port 127.0.0.1:8081, eigener Datenordner data/ in diesem Klon. Live bleibt /volume1/docker/torjaeger (Branch main, Port 8080).
+- Tailscale: Vorschau unter https://energizer.tailfc5923.ts.net:8443 (tailscale serve --bg --https=8443 http://127.0.0.1:8081). Eigener Port = eigener Browser-Speicher, keine Vermischung mit Live.
+- docker-compose.yml und deploy.sh so, dass beide Klone aus demselben Repo laufen: Containername, Port und Vorschau-Kennung je Klon über eine nicht versionierte .env (Beispiel .env.example im Repo) oder gleichwertig. Muss mit docker-compose v1 funktionieren (DSM 7.1.1, Paket Docker).
+- deploy.sh prüft, dass der ausgecheckte Branch zum Klon passt (Live nur main, Vorschau nur preview) und bricht sonst ab.
+- In der Vorschau oben ein deutliches Band "VORSCHAU" (Kennung vom Server, z. B. über /api/health oder /api/config).
+- README: Einrichtung der Vorschau als nummerierte Einzelschritte für Marco, Befehle unverschachtelt, ohne Heredocs.
+
+PAKET 2: ADMIN-BEREICH (Eltern)
+- Zugang: Taste "Eltern" auf der Startseite "Wer spielt?", Eltern-PIN. Kindgerechte Oberfläche bleibt davon unberührt.
+- Konten: anlegen, umbenennen, zurücksetzen (vorher Sicherung), löschen (Server verschiebt nach data/trash/, Wiederherstellen aus dem Papierkorb möglich, nie hart löschen), Ligen je Konto freigeben/sperren, Probe-Kontingent sehen.
+- Lernstand je Konto: Trefferquote je Thema (letzte 10 und gesamt), letzte Spiele (Datum, Liga, Modus, Ergebnis, Dauer), Trainingstage, genutzte Tipps (siehe Paket 3).
+- Einstellungen: PIN ändern (alte PIN nötig), pro Konto: Ton, Aufgaben pro Runde (6/8/10), Schnupper-Regeln (Aufgabenzahl, 1x pro Tag an/aus), Tipp-Zeit (siehe Paket 3).
+- Sicherungen und System: Liste der Sicherungen auf der NAS (Tagessicherungen, pre-deploy, Papierkorb) mit Datum und Größe; Wiederherstellen je Konto (legt vorher Sicherung des aktuellen Stands an); App-, Server- und Schemaversion; letzter Abgleich je Gerät mit änderbarem Gerätenamen (Server führt eine Geräteliste: deviceId, Name, zuletzt gesehen).
+- Heikle Admin-Aktionen (löschen, wiederherstellen, zurücksetzen, PIN ändern) prüft der Server selbst gegen die PIN (Hash und Salz liegen in data/settings.json); Client-Prüfung allein reicht dafür nicht.
+
+PAKET 3: AVATARE
+a) Spieler-Avatar je Konto:
+- Baukasten: Frisur (mindestens 6), Haarfarbe, Hautton (mehrere Töne), Trikotfarbe, Hosenfarbe, Rückennummer, Name auf dem Trikot, Schuhfarbe, Mannschaftsname und Vereinsfarben. Eigene, schlichte SVG-Figur (keine bekannten Figuren oder Vereinslogos nachbilden). Fertige Vorlagen zum schnellen Start. Kein fester Jungen/Mädchen-Modus, alles frei wählbar.
+- Der Avatar schießt die Tore: richtig = Schuss ins Netz, falsch = zufällig Pfosten, Latte oder knapp vorbei. prefers-reduced-motion beachten.
+- Avatar auf der Kachel in "Wer spielt?" und in der Torszene. Beim ersten Öffnen eines Kontos ohne Avatar: Baukasten anbieten (überspringbar).
+b) Trainer-Avatar (Marco, der Vater):
+- Eigene kleine Figur (Trainer mit z. B. Kappe/Pfeife), Aussehen und Name im Admin einstellbar (Vorgabe "Trainer Papa"), gilt für alle Konten.
+- Ist in jeder Aufgabe mit einer Hilfe-Taste präsent. Tippen gibt gestufte Hilfe: 1. Tipp (Denkanstoß, z. B. die vorhandenen hint-Texte), 2. Erklärung des Lösungswegs an einem ähnlichen Beispiel. Die Hilfe verrät nie die Lösung vor dem Antworten.
+- Nach der Antwort erklärt der Trainer (bestehende ex-Texte) in einer Sprechblase.
+- Ist eine Aufgabe zu lange offen (Vorgabe 45 Sekunden ohne Eingabe, je Konto im Admin einstellbar oder aus), meldet sich der Trainer von selbst freundlich mit einem Tipp-Angebot.
+- Hilfe kostet keine Punkte; Nutzung je Aufgabe und Thema wird in den stats vermerkt und im Lernstand angezeigt.
+- Kurze Sätze, kindgerecht, Deutsch, keine Gedankenstriche.
+
+DATENMODELL
+- Neue Felder (Avatar, Trainer, Konto-Einstellungen, Tipp-Nutzung, Geräteliste) mit schemaVersion 2 und Migration 1 nach 2 ohne Verlust, inklusive Test mit einem Stand im Format 1.0.0 (Emils echter Stand hat Format 1). Unbekanntes bleibt erhalten. Merge-Regeln für die neuen Felder in SPEC.md festhalten (Aussehen: neuester gewinnt; Tipp-Zähler: je Gerät summieren).
+- APP_VERSION und SW-VERSION auf 1.1.0 erhöhen.
 
 NICHT-ZIELE
-- Keine Einführung, kein Avatar, keine gestaltete Startseite "Wer spielt?" (Phase 2). Höchstens eine schlichte Kontoauswahl, siehe OFFEN.
-- Keine neuen Spielmodi (Spiel auf Zeit, Klassenarbeit, Turnier) und keine neuen Aufgabenarten (Phasen 3 und 4).
-- Keine Liga für Klasse 1 (Phase 6).
-- Kein Preview-Container, kein Branch preview (Phase 1b, eigener Auftrag).
-- Keine Änderungen auf der Synology, kein git push, kein Deploy. Das macht Marco.
-- Keine npm-Abhängigkeiten, kein Build-Tool, kein Framework.
-- Kein Import alter Spielstände aus dem Claude-Artifact (es gibt keinen echten Stand; Start bei null).
+- Keine Einführungstour und keine gestaltete Startseite über die Avatar-Kacheln hinaus (Phase 2b).
+- Keine neuen Spielmodi, keine neuen Aufgabenarten, keine Liga Klasse 1.
+- Kein Merge nach main, kein git push, keine Änderungen auf der NAS. Das macht Marco mit Cowork Schritt für Schritt.
+- Keine npm-Abhängigkeiten, kein Build-Tool, kein Framework, keine externen Ressourcen.
+- Keine Sprachausgabe/Audio-Stimme für den Trainer.
 
 ENTSCHIEDEN, nicht mehr zur Debatte
-- Betrieb: Synology "energizer" (DS918+, DSM 7.1.1, Paket Docker mit docker-compose v1, NICHT Container Manager). docker-compose.yml muss mit docker-compose v1 kompatibel bleiben.
-- Zugriff nur über Tailscale: https://energizer.tailfc5923.ts.net (tailscale serve auf 127.0.0.1:8080). Kein DDNS, keine Portfreigabe.
-- Home-Bildschirm-Web-App auf iPad und iPhone, Spielstand lokal zuerst, automatischer Abgleich. Kein manueller Export/Import (verworfen, zu fehleranfällig). "Datei lokal öffnen und in iCloud speichern" geht unter iOS nicht (verworfen). Keine eigene iOS-App.
-- Eltern-PIN gilt auf allen Geräten und für alle Konten.
-- Updates dürfen nie einen Spielstand zurücksetzen: Daten nur in data/ (nie im Repo, nie im Image), Sicherung vor Deploy, schemaVersion + Migration, Unbekanntes erhalten.
-- Mehrere Konten (Emil, später Nichte in Klasse 1). Aussehen je Konto frei wählbar, kein fester Mädchen-Modus (kommt in Phase 2).
-- Texte Deutsch, kindgerecht, keine Gedankenstriche.
-- Server ohne Zusatzpakete (Node 20, Bordmittel).
+- Reihenfolge heute: Vorschau, Admin, Avatar (Marco, 29.09.2026). Admin und Avatar werden zuerst in der Vorschau getestet.
+- Admin-Umfang: alle vier Bereiche (Konten, Lernstand, Einstellungen, Sicherungen und System).
+- Vorschau als zweiter Klon auf der NAS mit Port 8081/8443 und eigenem Datenordner; Branch preview = Vorschau, main = Live.
+- Trainer-Avatar für Marco mit Hilfe-Taste, gestuften Tipps, Erklärungen und Meldung nach zu langer Pause (Marco, 29.09.2026).
+- Aussehen je Konto frei wählbar, kein fester Mädchen-Modus.
+- Updates setzen nie einen Spielstand zurück (Sicherung vor Deploy, Migration, Unbekanntes erhalten).
+- Betrieb: energizer DS918+, DSM 7.1.1, Docker-Paket mit docker-compose v1; Zugriff nur über Tailscale.
 
 OFFEN, darf die annehmende Seite entscheiden
-- Ob Phase 1 schon eine schlichte Kontoauswahl (nur Namen, Anlegen mit Eltern-PIN) zeigt. Pflicht ist nur, dass Datenmodell und API mehrere Konten tragen. Empfehlung: schlicht ja, damit sich der Abgleich mit zwei Konten testen lässt.
-- Modulaufteilung von app/js/, Name und Aufbau der Migrationsfunktionen.
-- Hash-Verfahren der PIN (Web Crypto SHA-256 mit Salz reicht; es geht um Kinderschutz, nicht um Hochsicherheit).
-- Ob Schriften per Skript geladen oder manuell abgelegt werden (Marco kann Dateien liefern, falls kein Netz).
+- Technik der Vorschau-Konfiguration (.env, Umgebungsvariablen, zwei Compose-Dateien), solange docker-compose v1 läuft und die Einrichtung für Marco einfach bleibt.
+- Genaue Frisuren, Farbpaletten, Figurstil und Animationsablauf (kindgerecht, klar, flott).
+- Aufbau der Admin-Oberfläche (Reiter oder Kacheln), solange auf iPad gut bedienbar.
+- Wie der Trainer bei Aufgabentypen ohne hint-Text einen sinnvollen ersten Tipp bekommt (je Generator ergänzen).
 
 ABNAHME
-- node --test läuft grün.
-- Lokal: node server/server.js, http://localhost:8080 zeigt das Spiel; eine Runde spielen; Seite neu laden: Punkte und Stand unverändert.
-- Server stoppen: App lädt aus dem Service Worker weiter und ist spielbar; nach Serverstart gleicht sie sich ohne Zutun ab.
-- Zwei Browser-Profile auf dasselbe Konto: beide offline spielen, dann online: kein Punkt und keine Antwort geht verloren (Test deckt das ab).
-- Fixture im Prototyp-Format wird ohne Datenverlust migriert.
-- deploy.sh legt vor dem Pull data/backups/pre-deploy-... an (Trockentest oder Test dokumentiert).
-- Keine externen Requests: grep nach http(s):// in app/ findet nur Kommentare/Lizenztexte.
-- README (Einrichtung, Update, Datenablage), CHANGELOG.md (neu) und SPEC.md (neu, beschreibt den gebauten Stand) aktuell.
-- Commits sauber und sprechend, Arbeitsbaum am Ende sauber (prototype/ und .handover/ committet oder bewusst begründet).
+- node --test grün, inklusive neuer Tests: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb löschen und wiederherstellen, Wiederherstellen aus Sicherung, Merge der neuen Felder, deploy.sh Branch-Prüfung.
+- Lokal zwei Instanzen parallel startbar (Live 8080, Vorschau 8081 mit Band "VORSCHAU"), getrennte Daten.
+- Admin: alle vier Bereiche funktionieren lokal; heikle Aktionen ohne gültige PIN werden vom Server abgelehnt.
+- Avatar: Baukasten speichert je Konto, erscheint auf der Kachel und schießt in der Torszene (Treffer und drei Fehlschuss-Varianten).
+- Trainer: Hilfe-Taste mit zwei Stufen, Erklärung nach Antwort, Meldung nach eingestellter Zeit, abschaltbar.
+- Keine externen Requests in app/. Texte ohne Gedankenstriche.
+- SPEC.md, CHANGELOG.md (1.1.0), README.md (inkl. Vorschau-Einrichtung) aktuell. Arbeitsbaum am Ende sauber, alles auf preview.
 Tests Pflicht: ja
 
 RESTPOSTEN, kategorisiert
 - Echter Blocker: keiner bekannt.
-- Bewusst offen: Hyper Backup auf der NAS vorerst nicht eingerichtet (Entscheidung Marco); Halbzeitlänge, Klassenarbeit-Umfang, Turnier-Takt (Phase 3).
-- Kosmetischer Rest: Tailscale auf der NAS 1.58.2, Update irgendwann.
+- Bewusst offen: Hyper Backup nicht eingerichtet (Entscheidung Marco); Emils Konto enthält Testrunden von Marco (entscheidet Marco selbst im Admin).
+- Kosmetischer Rest: Tailscale auf der NAS 1.58.2.
 
 DOKU-ZUSTÄNDIGKEIT
-Repo trägt die Wahrheit über den Code (SPEC.md, CHANGELOG.md, README.md). Vault (C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\) trägt Absicht, Entscheidungen und Verlauf und wird von Cowork gepflegt; dort nichts schreiben. Rückweg: nach Abschluss einen kurzen Cross-Handover zurück an Cowork mit Annahmekorrekturen, verworfenen Wegen, kategorisierten Restposten, Anker (Commit, Arbeitsbaum) und den Schritten, die Marco für Push, Deploy und iPad-Test ausführen muss (einzeln, unverschachtelt, ohne Heredocs).
+Repo trägt die Wahrheit über den Code (SPEC.md, CHANGELOG.md, README.md). Vault (C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\) trägt Absicht, Entscheidungen, Verlauf und wird von Cowork gepflegt; dort nichts schreiben. Rückweg: kurzer Cross-Handover zurück an Cowork (Annahmekorrekturen, verworfene Wege, kategorisierte Restposten, Anker mit Commit auf preview und Arbeitsbaum) plus die Schritte für Marco: Push von preview, Vorschau auf der NAS einrichten, Test, später Merge nach main und Live-Deploy. Schritte einzeln, Befehle unverschachtelt, ohne Heredocs.
 
 ERSTER SCHRITT
 Anker prüfen, nicht arbeiten.
