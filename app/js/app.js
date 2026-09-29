@@ -11,7 +11,7 @@ import {createAdminApi,adminError} from "./adminapi.js";
 import {adminHTML} from "./admin.js";
 import {avatarBuilderHTML} from "./avatarui.js";
 import {pickShot} from "./avatardraw.js";
-import {cleanLook,cleanTrainer,lookOf,templateLook,defaultTrainer} from "./avatar.js";
+import {cleanLook,cleanTrainer,lookOf,templateLook,startLook,withBody,defaultTrainer,defaultTrainer2} from "./avatar.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML} from "./views.js";
@@ -83,7 +83,7 @@ function maybeOfferAvatar(){
 }
 function openAvatar(first){
   const s=S();
-  UI.av={first,name:s.profile.name,look:cleanLook(lookOf(s.profile))};
+  UI.av={first,step:first?"gender":"build",name:s.profile.name,look:cleanLook(lookOf(s.profile))};
   view="avatar";render();window.scrollTo(0,0);
 }
 
@@ -187,6 +187,7 @@ function startRound(li,mode,trial){
   commit((s,c)=>applySel(s,c,li));
   G={li,mode,trial,pool,len,i:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now()};
   nextTask();view="play";render();window.scrollTo(0,0);
+  armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
 function nextTask(){
   const t=nextTopic(S(),G.pool,G.last);G.last=t;
@@ -195,7 +196,8 @@ function nextTask(){
   armIdle();
 }
 // ----- Trainer: Angebot nach langer Pause, gestufte Hilfe -----
-let idleT=null;
+let idleT=null,autoT=null;
+const AUTO_MS=1800; // so lange bleibt das Overlay nach einer richtigen Antwort
 function armIdle(){
   clearTimeout(idleT);
   if(view!=="play"||!G||G.done||G.offerDone||G.helpLevel>0)return;
@@ -212,7 +214,7 @@ function helpStep(){
   commit((s,c)=>applyHelp(s,c,{topic,level})); // Hilfe kostet keine Punkte, wird nur vermerkt
   render();
 }
-const trainer=()=>cleanTrainer(globalRec.state.trainer);
+const trainers=()=>[cleanTrainer(globalRec.state.trainer,1),cleanTrainer(globalRec.state.trainer2,2)];
 function answer(val){
   if(G.done)return;const T=G.task;let ok;
   if(T.type==="num")ok=Number(val)===T.a;else if(T.type==="pair")ok=Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];else ok=val===T.a;
@@ -224,8 +226,12 @@ function answer(val){
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
   tone(ok?[523,659,784]:[220,180],ok?.12:.18,S().settings.sound);
   render();
+  if(ok){ // richtig: kurzes Overlay, dann geht es von allein weiter (Tippen aufs Overlay ist schneller)
+    const g=G;clearTimeout(autoT);
+    autoT=setTimeout(()=>{if(view==="play"&&G===g&&G.done&&G.ok)next();},AUTO_MS);
+  }
 }
-function next(){G.i++;if(G.i>=G.len){finish();return;}nextTask();render();}
+function next(){clearTimeout(autoT);G.i++;if(G.i>=G.len){finish();return;}nextTask();render();}
 function finish(){
   const c=G.res.filter(Boolean).length,n=G.len,win=!G.trial&&c/n>=.6,perfect=!G.trial&&c===n&&n>=5;
   G.bonus=(win?20:0)+(perfect?30:0);G.pts+=G.bonus;
@@ -239,7 +245,7 @@ function env(){return{hasPin:!!globalRec.state.pin,syncText:syncText(),updateRea
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
   root.innerHTML=bandHTML(UI.preview)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null})),UI,env())
-    :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainer()):resultHTML(S(),G,UI));
+    :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):resultHTML(S(),G,UI));
   bind();
 }
 function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
@@ -276,7 +282,7 @@ const validName=n=>typeof n==="string"&&n.trim().length>0;
 function adminModel(){
   const A=UI.admin;
   const list=accounts.map(a=>({id:a.id,name:a.rec.state?a.rec.state.profile.name:a.name,state:a.rec.state})).sort((x,y)=>String(x.name).localeCompare(String(y.name),"de"));
-  return{trainer:A.tr,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
+  return{tr1:A.tr1,tr2:A.tr2,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
     server:A.server,deviceId,appVersion:APP_VERSION,persistent:store.persistent,previewLabel:UI.preview,schema:{app:SCHEMA_VERSION,global:GLOBAL_SCHEMA_VERSION}};
 }
 const adminRec=id=>{const a=accounts.find(x=>x.id===id);return a&&a.rec.state?a.rec:null;};
@@ -295,7 +301,7 @@ async function openAdmin(pin){
   if(local.upgrade)await setGlobalPin(local.upgrade);
   if(srv.status===200&&!local.ok)scheduleSync(0);
   UI.adminAsk=false;UI.adminMsg="";
-  UI.admin={pin,tr:cleanTrainer(globalRec.state.trainer),tab:"accounts",msg:srv.status===0?{t:"err",text:"Kein Kontakt zum Server. Sicherungen, Zurücksetzen und Löschen gehen nur mit Verbindung."}:null,sel:null,server:{state:"loading",backups:null,devices:null,config:null},moreDaily:false};
+  UI.admin={pin,tr1:cleanTrainer(globalRec.state.trainer,1),tr2:cleanTrainer(globalRec.state.trainer2,2),tab:"accounts",msg:srv.status===0?{t:"err",text:"Kein Kontakt zum Server. Sicherungen, Zurücksetzen und Löschen gehen nur mit Verbindung."}:null,sel:null,server:{state:"loading",backups:null,devices:null,config:null},moreDaily:false};
   view="admin";render();window.scrollTo(0,0);
 }
 async function loadServerLists(){
@@ -347,6 +353,8 @@ function bindAvatar($){
   const set=patch=>{grab();UI.av.look=Object.assign({},UI.av.look,patch);render();};
   const pairs=[["data-avhc","hairColor"],["data-avskin","skin"],["data-avshirt","shirt"],["data-avshorts","shorts"],["data-avboots","boots"],["data-avc1","c1"],["data-avc2","c2"]];
   for(const [attr,key] of pairs)document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>set({[key]:b.getAttribute(attr)}));
+  document.querySelectorAll("[data-avbody]").forEach(b=>b.onclick=()=>{grab();const body=b.dataset.avbody;
+    UI.av.look=UI.av.step==="gender"?startLook(body,UI.av.name):withBody(UI.av.look,body);UI.av.step="build";render();window.scrollTo(0,0);});
   document.querySelectorAll("[data-avhair]").forEach(b=>b.onclick=()=>set({hair:Number(b.dataset.avhair)}));
   document.querySelectorAll("[data-avtpl]").forEach(b=>b.onclick=()=>{grab();UI.av.look=templateLook(Number(b.dataset.avtpl),UI.av.name);render();});
   document.querySelectorAll("[data-avnum]").forEach(b=>b.onclick=()=>set({number:String((Number(UI.av.look.number)+Number(b.dataset.avnum)+100)%100)}));
@@ -379,14 +387,17 @@ function bindAdmin($){
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
   document.querySelectorAll("[data-apin]").forEach(b=>b.onclick=adminChangePin);
   // Trainer (gilt für alle Konten)
-  const grabTr=()=>{const i=$("trName");if(i)A.tr.name=i.value;};
-  const trSet=patch=>{grabTr();A.tr.look=Object.assign({},A.tr.look,patch);render();};
-  for(const [attr,key] of [["data-atrcap","cap"],["data-atrjacket","jacket"],["data-atrskin","skin"],["data-atrhair","hairColor"]])document.querySelectorAll("["+attr+"]").forEach(b=>b.onclick=()=>trSet({[key]:b.getAttribute(attr)}));
-  document.querySelectorAll("[data-atrbeard]").forEach(b=>b.onclick=()=>trSet({beard:Number(b.dataset.atrbeard)}));
-  document.querySelectorAll("[data-atrdefault]").forEach(b=>b.onclick=()=>{A.tr=cleanTrainer(defaultTrainer());render();});
-  document.querySelectorAll("[data-atrsave]").forEach(b=>b.onclick=async()=>{grabTr();
-    applyTrainer(globalRec.state,ctx(),A.tr);globalRec.dirty=true;await store.put("global",globalRec);scheduleSync(300);
-    A.tr=cleanTrainer(globalRec.state.trainer);adminSay("ok","Der Trainer ist gespeichert. Er gilt für alle Konten.");render();});
+  const key=w=>w===2?"tr2":"tr1";
+  const grabTr=()=>{for(const w of [1,2]){const i=$("trName"+w);if(i&&A[key(w)])A[key(w)].name=i.value;}};
+  document.querySelectorAll("[data-atr]").forEach(b=>b.onclick=()=>{
+    const p=b.dataset.atr.split(":"),w=Number(p[0]),k=p[1],v=p.slice(2).join(":");grabTr();
+    const num=["hair","glasses","beard","earrings"].includes(k);
+    A[key(w)].look=Object.assign({},A[key(w)].look,{[k]:num?Number(v):v});render();});
+  document.querySelectorAll("[data-atrdefault]").forEach(b=>b.onclick=()=>{const w=Number(b.dataset.atrdefault);A[key(w)]=cleanTrainer(w===2?defaultTrainer2():defaultTrainer(),w);render();});
+  document.querySelectorAll("[data-atrsave]").forEach(b=>b.onclick=async()=>{
+    const w=Number(b.dataset.atrsave);grabTr();
+    applyTrainer(globalRec.state,ctx(),A[key(w)],w);globalRec.dirty=true;await store.put("global",globalRec);scheduleSync(300);
+    A[key(w)]=cleanTrainer(globalRec.state[w===2?"trainer2":"trainer"],w);adminSay("ok",(w===2?"Die Trainerin":"Der Trainer")+" ist gespeichert. Das gilt für alle Konten.");render();});
   document.querySelectorAll("[data-areload]").forEach(b=>b.onclick=loadServerLists);
   document.querySelectorAll("[data-amore]").forEach(b=>b.onclick=()=>{A.moreDaily=!A.moreDaily;render();});
   document.querySelectorAll("[data-adrename]").forEach(b=>b.onclick=()=>{adminReset();A.renamingDevice=b.dataset.adrename;render();const i=$("devIn");if(i)i.focus();});
@@ -399,8 +410,9 @@ function bind(){
   document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const [li,m]=b.dataset.play.split(":");startRound(Number(li),m,false);});
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
-  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);view="home";UI.celebrate="";render();window.scrollTo(0,0);};
+  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);view="home";UI.celebrate="";render();window.scrollTo(0,0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false);};
+  if($("ovl"))$("ovl").onclick=next;
   if($("coachHelp"))$("coachHelp").onclick=helpStep;
   if($("coachYes"))$("coachYes").onclick=helpStep;
   if($("coachNo"))$("coachNo").onclick=()=>{G.offer=false;render();};

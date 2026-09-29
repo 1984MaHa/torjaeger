@@ -21,13 +21,14 @@ Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start oh
 - Spiele speichern ihre Dauer.
 
 ### Avatar und Trainer
-- Avatar je Konto: Baukasten mit 8 Frisuren, Haarfarbe, 6 Hauttönen, Trikot-, Hosen- und Schuhfarbe, Rückennummer, Name auf dem Trikot, Mannschaftsname, Vereinsfarben und 8 Vorlagen. Kein fester Jungen- oder Mädchen-Modus. Erscheint auf der Kachel, in der Kabine und in der Torszene. Beim ersten Öffnen eines Kontos ohne Avatar wird der Baukasten angeboten (überspringbar).
-- Torszene: richtig = Schuss ins Netz, falsch = zufällig Pfosten, Latte oder knapp vorbei. `prefers-reduced-motion` wird beachtet.
-- Trainer (Vorgabe „Trainer Papa“, Name und Aussehen im Eltern-Bereich, gilt für alle Konten): Hilfe-Taste in jeder Aufgabe mit zwei Stufen (1. Tipp, 2. Erklärung an einem ähnlichen Beispiel, nie die Lösung), Erklärung nach der Antwort in einer Sprechblase, freundliches Angebot nach der Tipp-Zeit (Vorgabe 45 Sekunden, je Konto einstellbar oder aus). Hilfe kostet keine Punkte, die Nutzung steht je Thema im Lernstand.
+- Avatar je Konto: Der Baukasten beginnt mit der Wahl **Junge oder Mädchen**, danach je 8 passende Frisuren, 4 Vorlagen, Haar-, Haut-, Trikot-, Hosen- und Schuhfarbe, Rückennummer, Name auf dem Trikot, Mannschaftsname und Vereinsfarben. Figuren im Comic-Stil mit Kontur, Schattierung und Glanzlichtern (Gesicht mit Augen, Brauen, Mund). Erscheint auf der Kachel, in der Kabine und in der Torszene. Beim ersten Öffnen eines Kontos ohne Avatar wird der Baukasten angeboten (überspringbar).
+- Torszene neu: Stadion mit Publikum, Tor mit Netz, der Spieler von hinten. Richtig: kurzes Overlay „Tor!“, danach geht es nach 1,8 Sekunden von allein zur nächsten Aufgabe (ohne Erklärung, ohne Weiter-Taste). Falsch: zufällig Pfosten, Latte oder knapp vorbei, jeweils mit lustiger Sprechblase (PLING!, BONG!, Uups!). Das Vereinsschild steht nicht mehr in der Szene. `prefers-reduced-motion` wird beachtet.
+- Trainer und Trainerin (Vorgaben „Trainer“ und „Trainerin“, nach Fotos gezeichnet, Name und Aussehen im Eltern-Bereich, gilt für alle Konten): Hilfe-Taste in jeder Aufgabe mit zwei Stufen (1. Tipp vom Trainer, 2. Erklärung an einem ähnlichen Beispiel von der Trainerin, nie die Lösung), Erklärung nach einer falschen Antwort in einer Sprechblase (abwechselnd), freundliches Angebot nach der Tipp-Zeit (Vorgabe 45 Sekunden, je Konto einstellbar oder aus). Hilfe kostet keine Punkte, die Nutzung steht je Thema im Lernstand.
+- Behoben: Das Angebot des Trainers nach der Tipp-Zeit kam bei der ersten Aufgabe einer Runde nie (der Timer wurde gestartet, bevor die Ansicht umgeschaltet war).
 - Neue Tipp-Texte für alle Aufgabenarten, die keinen hatten. Einige alte Tipps nannten Beispielwörter, die als Lösung vorkommen konnten (Doppelte Mitlaute, i oder ie, Adjektive steigern), sie sind ersetzt.
 
 ### Datenmodell (Schemaversion 2)
-- Neu im Konto: `profile.avatar`, `profile.avatarAsked`, `settings.perRound`, `trialN`, `trialDaily`, `hintAfter`, `stats.<Thema>.help`, `stats.<Thema>.last[].h`, `history[].dur`. Global: `trainer`.
+- Neu im Konto: `profile.avatar` (mit `body`), `profile.avatarAsked`, `settings.perRound`, `trialN`, `trialDaily`, `hintAfter`, `stats.<Thema>.help`, `stats.<Thema>.last[].h`, `history[].dur`. Global: `trainer` und `trainer2`.
 - Migration 1 nach 2 ohne Verlust (Unbekanntes bleibt, Eingabe unverändert), migrierter Stand geht zurück auf den Server.
 - Zusammenführen: Aussehen und Trainer neuester gewinnt, Tipp-Zähler je Gerät summieren. Regeln in SPEC.md.
 
@@ -37,7 +38,7 @@ Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start oh
 - Versionen: App 1.1.0 (`app/js/version.js`, `sw.js`), Server 1.1.0, `package.json` 1.1.0.
 
 ### Tests
-95 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
+97 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
 
 ## 1.0.0 (Phase 1, Umzug)
 Erste spielbare Fassung im Repo. Der Prototyp läuft jetzt als Home-Bildschirm-Web-App.

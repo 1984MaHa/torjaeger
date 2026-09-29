@@ -1,19 +1,30 @@
-// Oberfläche für Aussehen: Baukasten für den Spieler und Einstellung für den Trainer.
+// Oberfläche für Aussehen: Baukasten für den Spieler (beginnt mit Junge oder Mädchen) und Einstellung für Trainer und Trainerin.
 // Reine Darstellung. Farbwerte kommen nur aus den Paletten in avatar.js, Texte laufen durch esc().
-import {HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,CAP_COLORS,JACKET_COLORS,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook} from "./avatar.js";
+import {BODIES,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,SHORTS_COLORS,BOOT_COLORS,JACKET_COLORS,TRAINER_HAIR,COLOR_NAMES,TEMPLATES,cleanLook,cleanTrainerLook,templateLook,startLook} from "./avatar.js";
 import {avatarSVG,crestSVG,trainerSVG} from "./avatardraw.js";
 import {esc} from "./util.js";
 
 const swatches=(attr,colors,cur,label)=>`<div class="sws" role="group" aria-label="${label}">${colors.map(c=>`<button class="sw ${c===cur?"on":""}" ${attr}="${c}" style="background:${c}" aria-label="${COLOR_NAMES[c]||c}" aria-pressed="${c===cur}"></button>`).join("")}</div>`;
 const field=(label,inner)=>`<div class="avfield"><span class="avlabel">${label}</span>${inner}</div>`;
 
-// D = {look, name, first}. look ist der Entwurf, gespeichert wird erst mit „Fertig“.
+// Erster Schritt: Junge oder Mädchen
+function genderStep(D){
+  const tiles=BODIES.map(([b,label])=>`<button class="gender" data-avbody="${b}" aria-label="${label}">${avatarSVG(startLook(b,D.name),{px:190,label})}<span>${label}</span></button>`).join("");
+  return `<div><h1 class="title">Dein Spieler</h1><p class="lead">Wer bist du? Tippe auf dein Bild.</p></div>
+  <section class="panel"><div class="genders">${tiles}</div></section>
+  <div class="row"><button class="btn ghost" id="avSkip">Später</button></div>`;
+}
+
+// D = {look, name, first, step}. look ist der Entwurf, gespeichert wird erst mit „Fertig“.
 export function avatarBuilderHTML(D){
+  if(D.step==="gender")return genderStep(D);
   const l=cleanLook(D.look);
-  const tpls=TEMPLATES.map((t,i)=>`<button class="tpl" data-avtpl="${i}" aria-label="Vorlage ${esc(t.name)}">${avatarSVG(templateLook(i,D.name),{crop:"bust",px:58,label:"Vorlage "+t.name})}<span>${esc(t.name)}</span></button>`).join("");
-  const hair=HAIR_STYLES.map((n,i)=>`<button class="hairb ${i===l.hair?"on":""}" data-avhair="${i}" aria-pressed="${i===l.hair}" aria-label="Frisur ${esc(n)}">${avatarSVG({...l,hair:i},{crop:"head",px:54,label:"Frisur "+n})}<span>${esc(n)}</span></button>`).join("");
+  const tpls=TEMPLATES.map((t,i)=>({t,i})).filter(x=>x.t.look.body===l.body).map(({t,i})=>`<button class="tpl" data-avtpl="${i}" aria-label="Vorlage ${esc(t.name)}">${avatarSVG(templateLook(i,D.name),{crop:"bust",px:84,label:"Vorlage "+t.name})}<span>${esc(t.name)}</span></button>`).join("");
+  const hair=HAIR_STYLES[l.body].map((n,i)=>`<button class="hairb ${i===l.hair?"on":""}" data-avhair="${i}" aria-pressed="${i===l.hair}" aria-label="Frisur ${esc(n)}">${avatarSVG({...l,hair:i},{crop:"head",px:74,label:"Frisur "+n})}<span>${esc(n)}</span></button>`).join("");
+  const who=`<span class="seg">${BODIES.map(([b,label])=>`<button class="segb ${b===l.body?"on":""}" data-avbody="${b}" aria-pressed="${b===l.body}">${label}</button>`).join("")}</span>`;
   return `<div><h1 class="title">${D.first?"Dein Spieler":"Spieler ändern"}</h1><p class="lead">${D.first?"Bau dir deinen Spieler. Er schießt deine Tore. Du kannst das auch später machen.":"Ändere deinen Spieler, wie du magst."}</p></div>
-  <section class="panel"><div class="avprev">${avatarSVG(l,{px:200,view:"front"})}${avatarSVG(l,{px:200,view:"back"})}<div class="avcrest">${crestSVG(l,64)}<span>${esc(l.team)}</span></div></div></section>
+  <section class="panel"><div class="avprev">${avatarSVG(l,{px:230,view:"front"})}${avatarSVG(l,{px:230,view:"back"})}<div class="avcrest">${crestSVG(l,64)}<span>${esc(l.team)}</span></div></div>
+    <div class="row" style="justify-content:center;margin-top:8px">${who}</div></section>
   <section class="panel"><h3>Schneller Start</h3><p class="note">Tippe auf eine Vorlage. Danach kannst du alles ändern.</p><div class="tpls">${tpls}</div></section>
   <section class="panel"><h3>Aussehen</h3>
     ${field("Frisur",`<div class="hairs">${hair}</div>`)}
@@ -35,17 +46,23 @@ export function avatarBuilderHTML(D){
   <div class="row"><button class="btn" id="avSave">Fertig</button><button class="btn ghost" id="${D.first?"avSkip":"avCancel"}">${D.first?"Später":"Abbrechen"}</button></div>`;
 }
 
-// T = {name, look}. Wird im Eltern-Bereich (Einstellungen) angezeigt.
-export function trainerPanelHTML(T){
-  const l=cleanTrainerLook(T&&T.look),name=T&&typeof T.name==="string"?T.name:"Trainer Papa";
-  return `<section class="panel"><h3>Trainer</h3>
-    <p class="note">Der Trainer ist in jeder Aufgabe da und hilft. Er sieht bei allen Konten gleich aus.</p>
-    <div class="avprev">${trainerSVG(l,{px:130})}</div>
-    ${field("Name",`<input id="trName" type="text" maxlength="16" autocomplete="off" value="${esc(name)}" aria-label="Name des Trainers" class="avinput">`)}
-    ${field("Kappe",swatches("data-atrcap",CAP_COLORS,l.cap,"Farbe der Kappe"))}
-    ${field("Jacke",swatches("data-atrjacket",JACKET_COLORS,l.jacket,"Farbe der Jacke"))}
-    ${field("Hautton",swatches("data-atrskin",SKIN_TONES,l.skin,"Hautton"))}
-    ${field("Haarfarbe",swatches("data-atrhair",HAIR_COLORS,l.hairColor,"Haarfarbe"))}
-    ${field("Bart",`<span class="seg"><button class="segb ${l.beard?"":"on"}" data-atrbeard="0" aria-pressed="${!l.beard}">Ohne</button><button class="segb ${l.beard?"on":""}" data-atrbeard="1" aria-pressed="${!!l.beard}">Mit Bart</button></span>`)}
-    <div class="row"><button class="btn sm" data-atrsave>Trainer speichern</button><button class="btn ghost sm" data-atrdefault>Zurück zur Vorgabe</button></div></section>`;
+// Ein- und Aus-Schalter
+const toggle=(which,key,on,label)=>`<span class="seg"><button class="segb ${on?"":"on"}" data-atr="${which}:${key}:0" aria-pressed="${!on}">Ohne ${label}</button><button class="segb ${on?"on":""}" data-atr="${which}:${key}:1" aria-pressed="${!!on}">Mit ${label}</button></span>`;
+
+// T = {name, look}, which = 1 (Trainer) oder 2 (Trainerin). Wird im Eltern-Bereich (Einstellungen) angezeigt.
+export function trainerPanelHTML(T,which=1){
+  const l=cleanTrainerLook(T&&T.look,which),name=T&&typeof T.name==="string"?T.name:(which===2?"Trainerin":"Trainer");
+  const hairs=`<span class="seg">${TRAINER_HAIR.map((n,i)=>`<button class="segb ${i===l.hair?"on":""}" data-atr="${which}:hair:${i}" aria-pressed="${i===l.hair}">${n}</button>`).join("")}</span>`;
+  return `<section class="panel"><h3>${which===2?"Trainerin":"Trainer"}</h3>
+    ${which===1?`<p class="note">Trainer und Trainerin helfen in jeder Aufgabe. Sie sehen bei allen Konten gleich aus.</p>`:""}
+    <div class="avprev">${trainerSVG(l,{px:150,which})}</div>
+    ${field("Name",`<input id="trName${which}" type="text" maxlength="16" autocomplete="off" value="${esc(name)}" aria-label="Name" class="avinput">`)}
+    ${field("Frisur",hairs)}
+    ${field("Haarfarbe",swatches("data-atr-c",HAIR_COLORS.map(c=>c),l.hairColor,"Haarfarbe").replace(/data-atr-c="([^"]+)"/g,(m,c)=>`data-atr="${which}:hairColor:${c}"`))}
+    ${field("Hautton",swatches("data-atr-c",SKIN_TONES,l.skin,"Hautton").replace(/data-atr-c="([^"]+)"/g,(m,c)=>`data-atr="${which}:skin:${c}"`))}
+    ${field("Jacke",swatches("data-atr-c",JACKET_COLORS,l.jacket,"Farbe der Jacke").replace(/data-atr-c="([^"]+)"/g,(m,c)=>`data-atr="${which}:jacket:${c}"`))}
+    ${field("Brille",toggle(which,"glasses",l.glasses,"Brille"))}
+    ${field("Bart",toggle(which,"beard",l.beard,"Bart"))}
+    ${field("Ohrringe",toggle(which,"earrings",l.earrings,"Ohrringen"))}
+    <div class="row"><button class="btn sm" data-atrsave="${which}">${which===2?"Trainerin":"Trainer"} speichern</button><button class="btn ghost sm" data-atrdefault="${which}">Zurück zur Vorgabe</button></div></section>`;
 }

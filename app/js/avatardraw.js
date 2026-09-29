@@ -1,90 +1,135 @@
-// Zeichnen der Figuren: Spieler, Wappen, Trainer und die Torszene. Alles eigene, einfache Formen
-// (keine bekannten Figuren, keine Vereinslogos). Koordinaten: Spieler 100 breit und 170 hoch.
-// Alle Farben und Texte laufen vorher durch cleanLook bzw. cleanTrainerLook und esc.
+// Zeichnen der Figuren: Spieler, Wappen, Trainer und die Torszene. Alles eigene Formen
+// (keine bekannten Figuren, keine Vereinslogos). Alle Farben und Texte laufen vorher durch
+// cleanLook bzw. cleanTrainerLook und esc. Stil: Comic mit dunkler Kontur, Schattierung und Glanzlichtern.
 import {esc} from "./util.js";
 import {cleanLook,cleanTrainerLook,COLOR_NAMES} from "./avatar.js";
 
-const INK="#16271c";
+const OUT="#2b2320";
 const FONT="Lilita One, Arial Rounded MT Bold, Arial, sans-serif";
+const ST=`stroke="${OUT}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"`;
+const clamp=v=>Math.max(0,Math.min(255,Math.round(v)));
+function mix(h,to,t){const a=parseInt(h.slice(1),16),b=parseInt(to.slice(1),16);const c=s=>clamp(((a>>s)&255)*(1-t)+((b>>s)&255)*t);return"#"+[16,8,0].map(s=>c(s).toString(16).padStart(2,"0")).join("");}
+const dark=(h,t=.22)=>mix(h,"#000000",t),light=(h,t=.3)=>mix(h,"#ffffff",t);
 const lum=h=>{const n=parseInt(h.slice(1),16);return(0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))/255;};
-const textOn=h=>lum(h)>0.6?INK:"#ffffff";
+const textOn=h=>lum(h)>0.6?OUT:"#ffffff";
 
-// Haare. behind wird vor dem Körper gezeichnet, top nach dem Kopf (Vorderansicht) bzw. nach dem Trikot (Rückansicht).
-function hairParts(style,c,view){
-  const front=view==="front",o=style===7?' opacity=".55"':"";
-  const capFront=`<path d="M31 33 Q30 11 50 11 Q70 11 69 33 Q66 22 50 22 Q34 22 31 33Z" fill="${c}"${o}/>`;
-  const capBack=`<path d="M31 37 Q29 10 50 10 Q71 10 69 37 Q68 47 50 48 Q32 47 31 37Z" fill="${c}"${o}/>`;
-  const cap=front?capFront:capBack;
-  const dots=(pts,r)=>pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${c}"/>`).join("");
-  let behind="",top=cap;
-  if(style===1)top=cap+dots([[38,12],[50,8],[62,12],[44,10],[56,10]],6);
-  else if(style===2){
-    top=cap+dots([[33,26],[37,16],[46,11],[56,11],[64,16],[68,26]],7)+(front?dots([[40,22],[50,20],[60,22]],5.5):dots([[34,40],[66,40],[42,45],[58,45],[50,46]],6));
+// ---------- Haare ----------
+// len: Länge (0 kurz, 1 Kinn, 2 Schulter, 3 lang). fr: Stirnpartie. ex: Zusatz.
+const STYLES={
+  j:[{len:0,fr:"side"},{len:0,fr:"tufts"},{len:0,fr:"spiky"},{len:0,fr:"curly"},{len:0,fr:"swoop"},{len:0,fr:"stubble"},{len:0,fr:"part"},{len:1,fr:"side"}],
+  m:[{len:0,fr:"side",ex:"tail"},{len:1,fr:"bangs",ex:"braids"},{len:3,fr:"bangs"},{len:0,fr:"side",ex:"bun"},{len:1,fr:"bangs"},{len:2,fr:"curly"},{len:2,fr:"side",ex:"bow"},{len:0,fr:"bangs"}]
+};
+const circles=(pts,r,c)=>pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${p[2]||r}" fill="${c}" ${ST}/>`).join("");
+function hairParts(def,c,acc,view){
+  const front=view==="front",hs=dark(c,.3),stub=def.fr==="stubble";
+  const fill=`fill="${c}"${stub?' fill-opacity=".55"':""}`,line=stub?'stroke="none"':ST;
+  const shape=d=>`<path d="${d}" ${fill} ${line}/>`;
+  const capBack="M33 52 C28 14 46 6 60 6 C74 6 92 14 87 52 C86 63 76 69 60 69 C44 69 34 63 33 52Z";
+  const capFront={
+    side:"M34 47 C30 18 46 9 60 9 C76 9 90 18 86 47 C84 37 79 30 71 27 C60 35 45 35 34 47Z",
+    part:"M34 47 C30 18 46 9 60 9 C76 9 90 18 86 47 C85 36 80 29 66 25 C58 33 42 36 34 47Z",
+    bangs:"M33 48 C29 17 46 8 60 8 C76 8 91 17 87 48 L86 36 C74 29 46 29 34 36Z"
+  };
+  const base=capFront[def.fr]||capFront.side;
+  const mass=[null,"M32 44 C26 76 30 86 42 84 L78 84 C90 86 94 76 88 44Z","M31 42 C22 84 24 104 38 104 L82 104 C96 104 98 84 89 42Z","M31 42 C20 90 22 128 38 130 L82 130 C98 128 100 90 89 42Z"][def.len];
+  const massBack=[null,"M32 44 C26 70 30 84 42 84 L78 84 C90 84 94 70 88 44Z","M31 42 C22 70 24 90 40 92 L80 92 C96 90 98 70 89 42Z","M31 42 C22 70 24 90 40 92 L80 92 C96 90 98 70 89 42Z"][def.len];
+  let behind="",top="";
+  // Länge: bei Vorderansicht hinter dem Körper, bei Rückansicht über dem Trikot
+  if(front&&mass)behind+=shape(mass);
+  if(!front&&massBack)top+=shape(massBack);
+  // Zusätze
+  if(def.ex==="tail"){
+    if(front)behind+=shape("M78 20 C106 18 112 52 98 74 C93 82 88 84 84 80 C92 64 90 44 76 34Z")+`<circle cx="80" cy="25" r="4.4" fill="${acc}" ${ST}/>`;
+    else top+=shape("M50 12 C54 4 66 4 70 12 C80 40 76 84 64 96 C61 99 59 99 56 96 C44 84 40 40 50 12Z")+`<circle cx="60" cy="15" r="4.6" fill="${acc}" ${ST}/>`;
   }
-  else if(style===3){
-    if(front)behind=`<path d="M64 16 Q92 18 86 46 Q82 58 75 61 Q80 40 66 28Z" fill="${c}"/>`;
-    else top=cap+`<path d="M44 18 Q50 12 56 18 Q62 46 56 62 Q50 68 44 62 Q38 46 44 18Z" fill="${c}"/><circle cx="50" cy="20" r="3.2" fill="#e5484d"/>`;
+  if(def.ex==="braids"){
+    const chain=(x,ys)=>ys.map((y,i)=>`<ellipse cx="${x+(i%2?1.6:-1.6)}" cy="${y}" rx="6" ry="7" fill="${c}" ${ST}/>`).join("");
+    if(front)behind+=chain(30,[64,73,82,91,100])+`<circle cx="30" cy="108" r="4.6" fill="${acc}" ${ST}/>`+chain(90,[64,73,82,91,100])+`<circle cx="90" cy="108" r="4.6" fill="${acc}" ${ST}/>`;
+    else top+=chain(41,[76,84,92])+`<circle cx="41" cy="100" r="4.2" fill="${acc}" ${ST}/>`+chain(79,[76,84,92])+`<circle cx="79" cy="100" r="4.2" fill="${acc}" ${ST}/>`;
   }
-  else if(style===4){
-    const chain=(x,ys)=>ys.map(y=>`<circle cx="${x}" cy="${y}" r="4.6" fill="${c}"/>`).join("");
-    if(front)behind=chain(26,[46,54,62,70])+chain(74,[46,54,62,70]);
-    else top=cap+chain(31,[52,60,68,76])+chain(69,[52,60,68,76]);
+  // Kopfhaar
+  if(front){
+    if(def.fr==="curly"){
+      top+=circles([[36,34,8.5],[38,22,8.5],[47,14,8.5],[59,11,8.5],[71,13,8.5],[81,20,8.5],[85,32,8.5],[46,28,7],[58,26,7],[70,28,7]],8,c);
+      if(def.len>=2)top+=circles([[31,52,7.5],[30,66,7.5],[30,80,7.5],[89,52,7.5],[90,66,7.5],[90,80,7.5]],7.5,c);
+    }else{
+      if(def.fr==="spiky")top+=shape("M35 30 L37 6 L47 20 L53 2 L60 18 L67 2 L73 20 L83 6 L85 30Z");
+      if(def.fr==="tufts")top+=circles([[42,14],[54,8],[66,8],[78,14]],7.5,c);
+      top+=shape(base);
+      if(def.fr==="swoop")top+=shape("M42 24 C44 2 74 0 88 22 C74 13 58 16 46 30Z");
+      if(def.fr==="part")top+=`<path d="M60 10 Q58 19 66 25" stroke="${hs}" stroke-width="1.8" fill="none"/>`;
+      if(def.len>=2&&def.fr!=="curly")top+=shape("M31 46 C27 66 28 84 32 96 L40 90 C36 76 36 60 38 48Z")+shape("M89 46 C93 66 92 84 88 96 L80 90 C84 76 84 60 82 48Z");
+      if(def.len===1)top+=shape("M32 46 C29 62 30 74 34 80 L40 74 C37 64 37 54 38 47Z")+shape("M88 46 C91 62 90 74 86 80 L80 74 C83 64 83 54 82 47Z");
+    }
+    if(!stub)top+=`<path d="M42 21 Q56 12 74 20" stroke="#fff" stroke-opacity=".38" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M52 14 Q49 23 45 30" stroke="${hs}" stroke-opacity=".55" stroke-width="1.6" fill="none"/><path d="M66 13 Q69 20 73 26" stroke="${hs}" stroke-opacity=".55" stroke-width="1.6" fill="none"/>`;
+  }else{
+    let back=shape(capBack);
+    if(def.fr==="curly")back+=circles([[35,34,8.5],[37,20,8.5],[47,12,8.5],[59,9,8.5],[71,11,8.5],[82,18,8.5],[86,32,8.5],[36,50,8],[84,50,8],[44,60,8],[60,64,8],[76,60,8]],8,c);
+    if(def.fr==="spiky")back=shape("M35 30 L37 6 L47 20 L53 2 L60 18 L67 2 L73 20 L83 6 L85 30Z")+back;
+    if(def.fr==="tufts")back=circles([[42,10],[54,5],[66,5],[78,10]],7.5,c)+back;
+    if(def.fr==="swoop")back+=shape("M42 22 C44 2 74 0 88 20 C74 12 58 14 46 28Z");
+    top=back+top+(stub?"":`<path d="M60 10 L60 40" stroke="${hs}" stroke-opacity=".5" stroke-width="1.6"/><path d="M42 18 Q56 9 76 17" stroke="#fff" stroke-opacity=".32" stroke-width="3.4" fill="none" stroke-linecap="round"/>`);
   }
-  else if(style===5){
-    if(front)behind=`<path d="M31 30 Q29 12 50 12 Q71 12 69 30 L75 78 Q50 86 25 78Z" fill="${c}"/>`;
-    else top=`<path d="M31 37 Q29 10 50 10 Q71 10 69 37 L72 70 Q50 77 28 70Z" fill="${c}"/>`;
-  }
-  else if(style===6)top=cap+`<circle cx="50" cy="8" r="7.5" fill="${c}"/>`;
+  if(def.ex==="bun")top+=`<circle cx="60" cy="8" r="11" fill="${c}" ${ST}/><path d="M50 12 Q60 17 70 12" stroke="${acc}" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M53 4 Q58 0 64 3" stroke="#fff" stroke-opacity=".4" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  if(def.ex==="bow")top+=`<path d="M60 14 L78 5 L78 23Z M60 14 L42 5 L42 23Z" fill="${acc}" ${ST}/><circle cx="60" cy="14" r="4.6" fill="${dark(acc,.2)}" ${ST}/>`;
   return{behind,top};
 }
 
-// Spieler als Gruppe (ohne svg-Hülle). view: front oder back (mit Name und Rückennummer auf dem Trikot).
+// ---------- Spieler ----------
+// Spieler als Gruppe (ohne svg-Hülle), 120 breit und 182 hoch. view: front oder back (mit Name und Rückennummer).
 export function figureG(look,view="front"){
-  const l=cleanLook(look),front=view==="front";
-  const tx=textOn(l.shirt),hp=hairParts(l.hair,l.hairColor,view);
-  const nameText=l.shirtName,ns=Math.max(4.5,Math.min(8,34/(Math.max(1,nameText.length)*0.62)));
-  const numS=l.number.length>1?22:26;
-  const arm=(x,s)=>{ // s = -1 links, 1 rechts; x = Schulterpunkt
-    return `<path d="M${x} 57 Q${x+s*9} 58 ${x+s*12} 66 L${x+s*16} 84 Q${x+s*11} 88 ${x+s*5} 86 L${x} 72Z" fill="${l.shirt}"/>`
-      +`<path d="M${x+s*11.5} 79 L${x+s*16.5} 81.5 L${x+s*16} 85.5 Q${x+s*11} 89 ${x+s*5.5} 86.5 L${x+s*5.5} 83Z" fill="${l.c2}"/>`
-      +`<rect x="${s<0?x-21:x+11}" y="84" width="10" height="17" rx="5" fill="${l.skin}"/>`;
-  };
-  let g=`<ellipse cx="50" cy="167" rx="30" ry="4" fill="#000" opacity=".18"/>`;
+  const l=cleanLook(look),front=view==="front",girl=l.body==="m";
+  const def=STYLES[l.body][l.hair],hp=hairParts(def,l.hairColor,l.c2,view);
+  const skD=dark(l.skin,.16),sk=l.skin,tx=textOn(l.shirt);
+  const nameText=l.shirtName,ns=Math.max(5,Math.min(9,40/(Math.max(1,nameText.length)*0.62)));
+  const numS=l.number.length>1?24:28;
+  let g=`<ellipse cx="60" cy="179" rx="36" ry="4.5" fill="#000" opacity=".2"/>`;
   g+=hp.behind;
   // Beine, Stutzen, Schuhe
-  g+=`<rect x="30" y="126" width="15" height="34" rx="6" fill="${l.skin}"/><rect x="55" y="126" width="15" height="34" rx="6" fill="${l.skin}"/>`;
-  g+=`<rect x="30" y="141" width="15" height="19" rx="5" fill="${l.shirt}"/><rect x="55" y="141" width="15" height="19" rx="5" fill="${l.shirt}"/>`;
-  g+=`<rect x="30" y="141" width="15" height="4" fill="${l.c2}"/><rect x="55" y="141" width="15" height="4" fill="${l.c2}"/>`;
-  g+=`<rect x="26" y="156" width="22" height="10" rx="5" fill="${l.boots}"/><rect x="52" y="156" width="22" height="10" rx="5" fill="${l.boots}"/>`;
-  // Arme mit Händen, Rumpf
-  g+=arm(30,-1)+arm(70,1);
-  g+=`<path d="M30 57 Q50 50 70 57 L73 105 L27 105Z" fill="${l.shirt}"/>`;
+  g+=`<rect x="43" y="148" width="14" height="26" rx="4" fill="${sk}" ${ST}/><rect x="63" y="148" width="14" height="26" rx="4" fill="${sk}" ${ST}/>`;
+  g+=`<rect x="42" y="158" width="16" height="16" rx="3" fill="${l.shirt}" ${ST}/><rect x="62" y="158" width="16" height="16" rx="3" fill="${l.shirt}" ${ST}/>`;
+  g+=`<path d="M42 160 H58 M62 160 H78" stroke="${l.c2}" stroke-width="4"/>`;
+  g+=`<path d="M32 172 Q32 166 42 166 L52 166 Q58 166 58 172 L58 176 Q58 180 53 180 L37 180 Q32 180 32 176Z" fill="${l.boots}" ${ST}/><path d="M62 172 Q62 166 68 166 L78 166 Q88 166 88 172 L88 176 Q88 180 83 180 L67 180 Q62 180 62 176Z" fill="${l.boots}" ${ST}/>`;
+  g+=`<path d="M34 176.5 H56 M64 176.5 H86" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>`;
+  // Rumpf mit Schatten
+  g+=`<path d="M40 78 Q60 71 80 78 L85 130 Q60 136 35 130Z" fill="${l.shirt}" ${ST}/>`;
+  g+=`<path d="M70 79 L80 78 L85 130 Q78 132 72 132Z" fill="#000" opacity=".13"/>`;
   // Hose mit Streifen in der zweiten Vereinsfarbe
-  g+=`<path d="M27 102 L73 102 L77 131 L53 131 L50 117 L47 131 L23 131Z" fill="${l.shorts}"/>`
-    +`<path d="M27 102 L31 102 L27.5 131 L23 131Z" fill="${l.c2}"/><path d="M73 102 L69 102 L72.5 131 L77 131Z" fill="${l.c2}"/>`;
-  // Hals und Kopf
-  g+=`<rect x="44" y="47" width="12" height="11" fill="${l.skin}"/>`;
-  g+=`<circle cx="32" cy="34" r="3.6" fill="${l.skin}"/><circle cx="68" cy="34" r="3.6" fill="${l.skin}"/><circle cx="50" cy="32" r="18" fill="${l.skin}"/>`;
+  g+=`<path d="M37 126 L83 126 L89 153 L64 153 L60 139 L56 153 L31 153Z" fill="${l.shorts}" ${ST}/>`
+    +`<path d="M37 126 L41.5 126 L36.5 153 L31 153Z" fill="${l.c2}"/><path d="M83 126 L78.5 126 L83.5 153 L89 153Z" fill="${l.c2}"/><path d="M60 139 L64 153 L89 153 L83 126 L74 126Z" fill="#000" opacity=".1"/>`;
+  // Arme: Ärmel, Manschetten, Hände
+  g+=`<rect x="22" y="106" width="10" height="14" rx="4" fill="${sk}" ${ST}/><circle cx="27" cy="123" r="6.4" fill="${sk}" ${ST}/><rect x="88" y="106" width="10" height="14" rx="4" fill="${sk}" ${ST}/><circle cx="93" cy="123" r="6.4" fill="${sk}" ${ST}/>`;
+  g+=`<path d="M41 79 Q31 81 27 93 L22 109 Q29 114 37 110 L42 96Z" fill="${l.shirt}" ${ST}/><path d="M79 79 Q89 81 93 93 L98 109 Q91 114 83 110 L78 96Z" fill="${l.shirt}" ${ST}/>`;
+  g+=`<path d="M22.6 107 Q29 112 36.4 108.6 L35.6 104.6 Q29 108 23.6 103Z" fill="${l.c2}"/><path d="M97.4 107 Q91 112 83.6 108.6 L84.4 104.6 Q91 108 96.4 103Z" fill="${l.c2}"/>`;
+  // Hals, Ohren, Kopf
+  g+=`<rect x="52" y="64" width="16" height="16" rx="4" fill="${skD}" ${ST}/>`;
+  g+=`<ellipse cx="34" cy="49" rx="4.6" ry="6" fill="${sk}" ${ST}/><ellipse cx="86" cy="49" rx="4.6" ry="6" fill="${sk}" ${ST}/><ellipse cx="34.6" cy="49.5" rx="1.9" ry="3" fill="${skD}"/><ellipse cx="85.4" cy="49.5" rx="1.9" ry="3" fill="${skD}"/>`;
+  g+=`<ellipse cx="60" cy="42" rx="26" ry="27" fill="${sk}" ${ST}/>`;
   if(front){
-    g+=`<path d="M43 55 L50 64 L57 55Z" fill="${l.skin}"/><path d="M42 55 L50 65 L58 55" stroke="${l.c2}" stroke-width="2.4" fill="none" stroke-linejoin="round"/>`;
+    g+=`<path d="M50 77 L60 92 L70 77Z" fill="${sk}"/><path d="M47 76 L60 94 L73 76" stroke="${l.c2}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
     g+=hp.top;
-    g+=`<circle cx="42" cy="34" r="2.4" fill="${INK}"/><circle cx="58" cy="34" r="2.4" fill="${INK}"/><path d="M43 41 Q50 47.5 57 41" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
-      +`<circle cx="37.5" cy="40" r="3" fill="#ff8a80" opacity=".35"/><circle cx="62.5" cy="40" r="3" fill="#ff8a80" opacity=".35"/>`;
-    g+=`<text x="50" y="92" text-anchor="middle" font-family="${FONT}" font-size="${numS-2}" fill="${tx}">${esc(l.number)}</text>`;
+    const eye=(x)=>`<ellipse cx="${x}" cy="46" rx="${girl?5.6:5.2}" ry="${girl?6.6:6.1}" fill="#fff" stroke="${OUT}" stroke-width="1.5"/><circle cx="${x}" cy="47" r="${girl?4.2:3.8}" fill="#4a3426"/><circle cx="${x}" cy="47" r="2" fill="#120c08"/><circle cx="${x+1.5}" cy="44.6" r="1.4" fill="#fff"/>`;
+    g+=eye(48)+eye(72);
+    g+=`<path d="M42.5 39.5 Q48 35.5 54 39" stroke="${dark(l.hairColor,.35)}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M66 39 Q72 35.5 77.5 39.5" stroke="${dark(l.hairColor,.35)}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    if(girl)g+=`<path d="M42 41 Q48 37.6 54.5 41.5 M65.5 41.5 Q72 37.6 78 41" stroke="${OUT}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M43 42 L40 39.6 M77 42 L80 39.6" stroke="${OUT}" stroke-width="1.6" stroke-linecap="round"/>`;
+    g+=`<path d="M60 51 Q57.6 56 61 57" stroke="${skD}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    g+=`<path d="M50.5 60 Q60 71 69.5 60Z" fill="#8f2f2b" ${ST}/><path d="M52.6 60.6 Q60 66.4 67.4 60.6 L66.6 63 Q60 68.4 53.4 63Z" fill="#fff"/>`;
+    g+=`<circle cx="43" cy="58" r="4.4" fill="#ff7e7e" opacity=".3"/><circle cx="77" cy="58" r="4.4" fill="#ff7e7e" opacity=".3"/>`;
+    g+=`<text x="60" y="114" text-anchor="middle" font-family="${FONT}" font-size="${numS-2}" fill="${tx}" fill-opacity=".95">${esc(l.number)}</text>`;
   }else{
-    g+=`<path d="M42 55 Q50 60 58 55" stroke="${l.c2}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
-    g+=`<text x="50" y="76" text-anchor="middle" font-family="${FONT}" font-size="${ns}" fill="${tx}">${esc(nameText)}</text>`;
-    g+=`<text x="50" y="101" text-anchor="middle" font-family="${FONT}" font-size="${numS}" fill="${tx}">${esc(l.number)}</text>`;
+    g+=`<path d="M49 78 Q60 86 71 78" stroke="${l.c2}" stroke-width="3.6" fill="none" stroke-linecap="round"/>`;
     g+=hp.top;
+    g+=`<text x="60" y="103" text-anchor="middle" font-family="${FONT}" font-size="${ns}" fill="${tx}">${esc(nameText)}</text>`;
+    g+=`<text x="60" y="128" text-anchor="middle" font-family="${FONT}" font-size="${numS}" fill="${tx}">${esc(l.number)}</text>`;
   }
   return g;
 }
-const ariaLook=l=>`Spieler mit Trikot ${COLOR_NAMES[l.shirt]||"bunt"} und Nummer ${l.number}`;
+const ariaLook=l=>`${l.body==="m"?"Spielerin":"Spieler"} mit Trikot ${COLOR_NAMES[l.shirt]||"bunt"} und Nummer ${l.number}`;
 
 // Vollständige Grafik. crop: "full" (ganze Figur), "bust" (bis zum Gürtel, für Kacheln), "head" (Frisuren-Auswahl).
 export function avatarSVG(look,{view="front",px=100,crop="full",label}={}){
   const l=cleanLook(look);
-  const vb=crop==="head"?"10 0 80 64":crop==="bust"?"8 2 84 106":"0 0 100 170";
+  const vb=crop==="head"?"14 0 92 80":crop==="bust"?"8 2 104 140":"0 0 120 184";
   const [,,w,h]=vb.split(" ").map(Number);
   return `<svg class="avsvg" viewBox="${vb}" width="${Math.round(px*w/h)}" height="${px}" role="img" aria-label="${esc(label||ariaLook(l))}">${figureG(l,view)}</svg>`;
 }
@@ -92,23 +137,42 @@ export function avatarSVG(look,{view="front",px=100,crop="full",label}={}){
 // Wappen aus den beiden Vereinsfarben
 export function crestSVG(look,px=40){
   const l=cleanLook(look);
-  return `<svg viewBox="0 0 40 46" width="${Math.round(px*40/46)}" height="${px}" role="img" aria-label="Wappen von ${esc(l.team)}"><path d="M4 4 H36 V24 Q36 38 20 44 Q4 38 4 24Z" fill="${l.c1}"/><path d="M20 4 H36 V24 Q36 38 20 44Z" fill="${l.c2}"/><path d="M4 4 H36 V24 Q36 38 20 44 Q4 38 4 24Z" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="20" cy="22" r="6.5" fill="#fff" stroke="${INK}" stroke-width="2"/></svg>`;
+  return `<svg viewBox="0 0 40 46" width="${Math.round(px*40/46)}" height="${px}" role="img" aria-label="Wappen von ${esc(l.team)}"><path d="M4 4 H36 V24 Q36 38 20 44 Q4 38 4 24Z" fill="${l.c1}"/><path d="M20 4 H36 V24 Q36 38 20 44Z" fill="${l.c2}"/><path d="M4 4 H36 V24 Q36 38 20 44 Q4 38 4 24Z" fill="none" stroke="${OUT}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="20" cy="22" r="6.5" fill="#fff" stroke="${OUT}" stroke-width="2"/></svg>`;
 }
 
-// ---------- Trainer ----------
-export function trainerSVG(look,{px=64,label}={}){
-  const l=cleanTrainerLook(look);
-  let g=`<ellipse cx="50" cy="127" rx="34" ry="3.5" fill="#000" opacity=".15"/>`;
-  g+=`<path d="M20 128 Q18 84 50 80 Q82 84 80 128Z" fill="${l.jacket}"/><path d="M50 84 L50 128" stroke="#fff" stroke-width="2.2" opacity=".8"/>`;
-  g+=`<rect x="43" y="66" width="14" height="16" fill="${l.skin}"/>`;
-  g+=`<circle cx="30" cy="54" r="4" fill="${l.skin}"/><circle cx="70" cy="54" r="4" fill="${l.skin}"/><circle cx="50" cy="52" r="20" fill="${l.skin}"/>`;
-  g+=`<path d="M30 48 Q29 58 33 63 L35 48Z" fill="${l.hairColor}"/><path d="M70 48 Q71 58 67 63 L65 48Z" fill="${l.hairColor}"/>`;
-  if(l.beard)g+=`<path d="M32 58 Q34 76 50 78 Q66 76 68 58 Q60 68 50 68 Q40 68 32 58Z" fill="${l.hairColor}"/>`;
-  g+=`<circle cx="42" cy="54" r="2.4" fill="${INK}"/><circle cx="58" cy="54" r="2.4" fill="${INK}"/><path d="M43 61 Q50 67 57 61" stroke="${l.beard?"#fff":INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
-  g+=`<path d="M28 46 Q28 22 50 22 Q72 22 72 46Z" fill="${l.cap}"/><path d="M24 47 Q50 38 76 47 Q76 53 50 51 Q24 53 24 47Z" fill="${l.cap}" stroke="#000" stroke-opacity=".2" stroke-width="1.5"/>`;
-  g+=`<circle cx="50" cy="33" r="5.5" fill="#fff" stroke="${INK}" stroke-width="1.6"/><path d="M50 29 L53 32 L52 36 L48 36 L47 32Z" fill="${INK}"/>`;
-  g+=`<path d="M40 82 Q50 100 60 82" stroke="${INK}" stroke-width="2" fill="none"/><rect x="44" y="96" width="14" height="9" rx="4.5" fill="#ffc83d" stroke="${INK}" stroke-width="1.6"/><circle cx="48" cy="100.5" r="1.8" fill="${INK}"/>`;
-  return `<svg class="avsvg" viewBox="0 0 100 130" width="${Math.round(px*100/130)}" height="${px}" role="img" aria-label="${esc(label||"Trainer mit Kappe und Pfeife")}">${g}</svg>`;
+// ---------- Trainer und Trainerin (nach den Fotos) ----------
+export function trainerSVG(look,{px=72,label,which=1}={}){
+  const l=cleanTrainerLook(look,which),sk=l.skin,skD=dark(sk,.15),j=l.jacket,jL=light(j,.2),hc=l.hairColor,hd=dark(hc,.3);
+  let g=`<ellipse cx="60" cy="146" rx="44" ry="4" fill="#000" opacity=".16"/>`;
+  if(l.hair===3)g+=`<path d="M28 60 C18 90 22 112 36 120 L84 120 C98 112 102 90 92 60Z" fill="${hc}" ${ST}/>`;
+  g+=`<path d="M12 150 Q10 108 42 100 L78 100 Q110 108 108 150Z" fill="${j}" ${ST}/>`;
+  g+=`<path d="M46 99 L60 124 L74 99Z" fill="#dfe3e8" ${ST}/><path d="M38 101 L52 127 L60 119 L46 99Z" fill="${jL}" ${ST}/><path d="M82 101 L68 127 L60 119 L74 99Z" fill="${jL}" ${ST}/><path d="M60 128 L60 150" stroke="${jL}" stroke-width="2.2"/>`;
+  g+=`<path d="M50 84 L50 103 Q60 111 70 103 L70 84Z" fill="${skD}" ${ST}/>`;
+  g+=`<ellipse cx="33" cy="62" rx="4.8" ry="6.8" fill="${sk}" ${ST}/><ellipse cx="87" cy="62" rx="4.8" ry="6.8" fill="${sk}" ${ST}/>`;
+  g+=`<ellipse cx="60" cy="58" rx="27" ry="30" fill="${sk}" ${ST}/>`;
+  if(l.beard)g+=`<path d="M34 64 C36 88 48 91 60 91 C72 91 84 88 86 64 C80 77 70 75 60 75 C50 75 40 77 34 64Z" fill="${hc}" ${ST}/>`;
+  // Haare
+  if(l.hair===0)g+=`<path d="M44 33 Q60 23 76 33" stroke="#fff" stroke-opacity=".38" stroke-width="4.2" fill="none" stroke-linecap="round"/>`;
+  if(l.hair===1)g+=`<path d="M33 56 C30 26 46 15 60 15 C74 15 90 26 87 56 C85 44 78 38 60 38 C42 38 35 44 33 56Z" fill="${hc}" ${ST}/><path d="M44 24 Q60 16 76 24" stroke="#fff" stroke-opacity=".3" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if(l.hair===2)g+=`<path d="M33 58 C29 24 46 12 62 12 C80 12 92 26 87 58 C85 44 78 34 66 30 C56 40 42 42 33 58Z" fill="${hc}" ${ST}/><path d="M62 13 Q60 22 66 30" stroke="${hd}" stroke-width="1.8" fill="none"/><path d="M44 22 Q60 13 78 22" stroke="#fff" stroke-opacity=".3" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if(l.hair===3){
+    g+=`<path d="M31 66 C25 26 44 11 62 11 C84 11 96 30 90 66 C88 50 84 40 74 33 C62 28 46 34 40 54 C38 60 35 64 31 66Z" fill="${hc}" ${ST}/>`;
+    g+=`<path d="M31 62 C27 86 30 106 40 114 L47 100 C41 90 39 76 41 60Z" fill="${hc}" ${ST}/><path d="M89 62 C93 86 90 106 80 114 L73 100 C79 90 81 76 79 60Z" fill="${hc}" ${ST}/>`;
+    g+=`<path d="M52 18 Q40 28 38 46" stroke="${hd}" stroke-opacity=".6" stroke-width="1.8" fill="none"/><path d="M70 16 Q84 22 86 40" stroke="#fff" stroke-opacity=".4" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  }
+  // Gesicht
+  const eye=x=>`<ellipse cx="${x}" cy="55" rx="5.4" ry="5.8" fill="#fff" stroke="${OUT}" stroke-width="1.4"/><circle cx="${x+.4}" cy="55.6" r="3.7" fill="${l.eyes}"/><circle cx="${x+.4}" cy="55.6" r="1.8" fill="#10151c"/><circle cx="${x+1.8}" cy="53.6" r="1.2" fill="#fff"/>`;
+  g+=`<path d="M40 45 Q47 41 55 44 M65 44 Q73 41 80 45" stroke="${l.hair===0?dark(hc,.15):hd}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  g+=eye(47)+eye(73);
+  g+=`<path d="M60 59 Q56 67 61 68" stroke="${skD}" stroke-width="2.1" fill="none" stroke-linecap="round"/>`;
+  g+=l.smile?`<path d="M46 73 Q60 88 74 73Z" fill="#8f2f2b" ${ST}/><path d="M48.6 73.6 Q60 80.6 71.4 73.6 L70.4 76.8 Q60 83.4 49.6 76.8Z" fill="#fff"/>`
+            :`<path d="M49 75 Q60 83 71 75" stroke="${OUT}" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M53 78 Q60 82 67 78" stroke="#c96a6a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".6"/>`;
+  g+=`<circle cx="41" cy="70" r="4.6" fill="#ff7e7e" opacity=".24"/><circle cx="79" cy="70" r="4.6" fill="#ff7e7e" opacity=".24"/>`;
+  if(l.glasses)g+=`<rect x="34" y="44" width="25" height="19" rx="5.5" fill="#9bb7e6" fill-opacity=".16" stroke="#15161a" stroke-width="3.2"/><rect x="61" y="44" width="25" height="19" rx="5.5" fill="#9bb7e6" fill-opacity=".16" stroke="#15161a" stroke-width="3.2"/><path d="M59 51 H61" stroke="#15161a" stroke-width="2.6"/><path d="M34 50 L29 48.6 M86 50 L91 48.6" stroke="#8a8f98" stroke-width="2.6" stroke-linecap="round"/><path d="M38 47 L44 47" stroke="#fff" stroke-opacity=".5" stroke-width="1.8" stroke-linecap="round"/>`;
+  if(l.earrings)g+=`<circle cx="32" cy="76" r="6" fill="none" stroke="#c5cad3" stroke-width="2.2"/><circle cx="88" cy="76" r="6" fill="none" stroke="#c5cad3" stroke-width="2.2"/>`;
+  // Pfeife
+  g+=`<path d="M46 101 Q60 128 74 101" stroke="#20242a" stroke-width="1.9" fill="none"/><rect x="52" y="122" width="16" height="10.5" rx="5" fill="#ffc83d" ${ST}/><circle cx="57" cy="127.4" r="1.9" fill="${OUT}"/>`;
+  return `<svg class="avsvg" viewBox="0 0 120 150" width="${Math.round(px*120/150)}" height="${px}" role="img" aria-label="${esc(label||(which===2?"Trainerin":"Trainer"))}">${g}</svg>`;
 }
 
 // ---------- Torszene ----------
@@ -117,35 +181,50 @@ export function trainerSVG(look,{px=64,label}={}){
 export const SHOT_KINDS=["goal","post","bar","wide"];
 export const SHOT_TEXT={goal:"Tor!",post:"Pfosten!",bar:"Latte!",wide:"Knapp vorbei"};
 const SHOT_ARIA={goal:"Der Ball fliegt ins Tor.",post:"Der Ball trifft den Pfosten.",bar:"Der Ball trifft die Latte.",wide:"Der Ball fliegt knapp am Tor vorbei."};
+const POP_TEXT={post:"PLING!",bar:"BONG!",wide:"Uups!"};
 
 // Richtig: Tor. Falsch: zufällig Pfosten, Latte oder knapp vorbei. Seite zufällig (-1 links, 1 rechts).
 export function pickShot(ok,rnd=Math.random){
   return{kind:ok?"goal":["post","bar","wide"][Math.floor(rnd()*3)%3],side:rnd()<.5?-1:1};
 }
-// Ballbahn in Bildpunkten der Szene (340 mal 230). end ist der Endpunkt ohne Bewegung (reduzierte Bewegung).
+// Ballbahn in Bildpunkten der Szene (340 mal 230), s ist der Maßstab (Perspektive).
+// end ist der Endpunkt ohne Bewegung (reduzierte Bewegung).
 export function shotPath(kind,side){
-  const s={x:178,y:208};
-  if(kind==="goal")return{start:s,end:{x:170+side*42,y:58}};
-  if(kind==="post")return{start:s,hit:{x:side>0?249:91,y:58},end:{x:side>0?278:62,y:124}};
-  if(kind==="bar")return{start:s,hit:{x:170+side*38,y:15},end:{x:170+side*38,y:15},out:{x:170+side*72,y:-30}};
-  return{start:s,hit:{x:170+side*70,y:36},end:{x:side>0?296:44,y:66}};
+  const s={x:188,y:205,s:1};
+  if(kind==="goal")return{start:s,end:{x:170+side*36,y:62,s:.62}};
+  if(kind==="post")return{start:s,hit:{x:side>0?238:102,y:62,s:.66},end:{x:side>0?276:64,y:132,s:.95}};
+  if(kind==="bar")return{start:s,hit:{x:170+side*34,y:32,s:.68},end:{x:170+side*34,y:32,s:.68},out:{x:170+side*62,y:-24,s:.5}};
+  return{start:s,hit:{x:170+side*80,y:44,s:.64},end:{x:side>0?318:22,y:66,s:.58}};
 }
+const CROWD=["#e5484d","#ffc83d","#f4f4f4","#2f6fde","#34a853","#ff8a00"];
 export function sceneSVG(look,shot){
   const l=cleanLook(look),k=SHOT_KINDS.includes(shot&&shot.kind)?shot.kind:"goal",side=shot&&shot.side<0?-1:1,p=shotPath(k,side);
-  const px=o=>`${Math.round(o.x)}px`,py=o=>`${Math.round(o.y)}px`;
-  const vars=`--sx:${px(p.start)};--sy:${py(p.start)};--ex:${px(p.end)};--ey:${py(p.end)}`+(p.hit?`;--hx:${px(p.hit)};--hy:${py(p.hit)}`:"")+(p.out?`;--ox:${px(p.out)};--oy:${py(p.out)}`:"");
-  let net="";
-  for(let x=94;x<=246;x+=12)net+=`<line x1="${x}" y1="18" x2="${x}" y2="86"/>`;
-  for(let y=18;y<=86;y+=12)net+=`<line x1="94" y1="${y}" x2="246" y2="${y}"/>`;
-  const team=l.team,tw=Math.round(team.length*7.2+40);
+  const pt=(n,o)=>`--${n}x:${Math.round(o.x)}px;--${n}y:${Math.round(o.y)}px;--${n}s:${o.s}`;
+  const vars=[pt("s",p.start),pt("e",p.end),p.hit?pt("h",p.hit):"",p.out?pt("o",p.out):""].filter(Boolean).join(";");
+  let crowd="";
+  for(let r=0;r<3;r++)for(let i=0;i<40;i++)crowd+=`<circle cx="${(4+r*4+i*8.6).toFixed(1)}" cy="${46+r*7}" r="3.1" fill="${CROWD[(i*5+r*3)%CROWD.length]}"/>`;
+  let stripes="";
+  for(let i=0;i<8;i++)if(i%2)stripes+=`<polygon points="${170+(i-4)*22},72 ${170+(i-3)*22},72 ${170+(i-3)*80},230 ${170+(i-4)*80},230" fill="#fff" opacity=".07"/>`;
+  let mesh="";
+  for(let x=114;x<=226;x+=9.3)mesh+=`<line x1="${x.toFixed(1)}" y1="40" x2="${x.toFixed(1)}" y2="88"/>`;
+  for(let y=40;y<=88;y+=8)mesh+=`<line x1="114" y1="${y}" x2="226" y2="${y}"/>`;
+  const pop=POP_TEXT[k]?(()=>{
+    const c=k==="post"?{x:side>0?290:50,y:70}:k==="bar"?{x:side>0?92:248,y:20}:{x:side>0?250:90,y:108};
+    return `<g class="pop"><ellipse cx="${c.x}" cy="${c.y}" rx="${POP_TEXT[k].length*5.4+12}" ry="15" fill="#fff" stroke="${OUT}" stroke-width="2.4"/><text x="${c.x}" y="${c.y+5.5}" text-anchor="middle" font-family="${FONT}" font-size="17" fill="#e5484d">${POP_TEXT[k]}</text></g>`;
+  })():"";
   return `<svg class="scene sc-${k}" viewBox="0 0 340 230" role="img" aria-label="${esc(SHOT_ARIA[k])}">`
-    +`<rect width="340" height="230" fill="#4fae63"/><rect y="0" width="340" height="40" fill="#57b96b"/><rect y="86" width="340" height="44" fill="#57b96b"/><rect y="176" width="340" height="54" fill="#57b96b"/>`
-    +`<rect x="94" y="18" width="152" height="68" fill="#1d5b30" opacity=".28"/><g stroke="#fff" stroke-opacity=".55" stroke-width="1">${net}</g><rect class="netfx" x="94" y="18" width="152" height="68" fill="#fff" opacity="0"/>`
-    +`<line x1="40" y1="86" x2="300" y2="86" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>`
-    +`<rect x="88" y="12" width="6" height="76" rx="2" fill="#fff"/><rect x="246" y="12" width="6" height="76" rx="2" fill="#fff"/><rect x="88" y="12" width="164" height="6" rx="2" fill="#fff"/>`
-    +`<ellipse cx="170" cy="150" rx="5" ry="2.5" fill="#fff" opacity=".8"/>`
-    +`<g class="pl"><g transform="translate(119 116) scale(.62)">${figureG(l,"back")}</g></g>`
-    +`<g class="ballpos" style="${vars}"><g class="ballspin"><circle r="8" fill="#fff" stroke="${INK}" stroke-width="1.6"/><polygon points="0,-4 3.8,-1.2 2.4,3.2 -2.4,3.2 -3.8,-1.2" fill="${INK}"/></g></g>`
-    +`<g><rect x="6" y="198" width="${tw}" height="24" rx="12" fill="${l.c1}"/><circle cx="19" cy="210" r="7" fill="${l.c2}" stroke="#fff" stroke-width="1.5"/><text x="32" y="215.5" font-family="${FONT}" font-size="14" fill="${textOn(l.c1)}">${esc(team)}</text></g>`
+    +`<defs><linearGradient id="scSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eb6ff"/><stop offset="1" stop-color="#d8f0ff"/></linearGradient>`
+    +`<linearGradient id="scGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f9a4f"/><stop offset="1" stop-color="#5cc06c"/></linearGradient>`
+    +`<linearGradient id="scPost" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e3e8ec"/><stop offset="1" stop-color="#b9c2c9"/></linearGradient>`
+    +`<radialGradient id="scBall" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d5dde3"/></radialGradient></defs>`
+    +`<rect width="340" height="74" fill="url(#scSky)"/><ellipse cx="60" cy="18" rx="30" ry="8" fill="#fff" opacity=".85"/><ellipse cx="84" cy="14" rx="20" ry="7" fill="#fff" opacity=".85"/><ellipse cx="280" cy="24" rx="26" ry="7" fill="#fff" opacity=".8"/>`
+    +`<rect y="38" width="340" height="34" fill="#2d3f5c"/>${crowd}<rect y="66" width="340" height="8" fill="#e5484d"/><rect x="0" y="66" width="70" height="8" fill="#ffc83d"/><rect x="140" y="66" width="70" height="8" fill="#2f6fde"/><rect x="270" y="66" width="70" height="8" fill="#ffc83d"/>`
+    +`<rect y="74" width="340" height="156" fill="url(#scGrass)"/>${stripes}`
+    +`<g stroke="#fff" stroke-opacity=".7" stroke-width="2" fill="none"><path d="M0 93 H340"/><path d="M52 93 L28 150 H312 L288 93"/><path d="M96 93 L88 114 H252 L244 93"/></g><ellipse cx="170" cy="176" rx="5" ry="2.4" fill="#fff" opacity=".85"/>`
+    +`<rect x="114" y="40" width="112" height="48" fill="#0d2a17" opacity=".3"/><g stroke="#fff" stroke-opacity=".55" stroke-width="1">${mesh}<path d="M102 32 L114 40 M238 32 L226 40 M102 92 L114 88 M238 92 L226 88"/></g><rect class="netfx" x="106" y="34" width="128" height="58" fill="#fff" opacity="0"/>`
+    +`<rect x="98" y="28" width="7" height="66" rx="2" fill="url(#scPost)" stroke="${OUT}" stroke-width="1.4"/><rect x="235" y="28" width="7" height="66" rx="2" fill="url(#scPost)" stroke="${OUT}" stroke-width="1.4"/><rect x="98" y="28" width="144" height="7" rx="2" fill="url(#scPost)" stroke="${OUT}" stroke-width="1.4"/>`
+    +`<g class="pl"><g transform="translate(122 84) scale(.8)">${figureG(l,"back")}</g></g>`
+    +`<g class="ballpos" style="${vars}"><g class="ballspin"><circle r="9" fill="url(#scBall)" stroke="${OUT}" stroke-width="1.6"/><polygon points="0,-4.5 4.3,-1.4 2.7,3.6 -2.7,3.6 -4.3,-1.4" fill="${OUT}"/><path d="M0 -4.5 V-9 M4.3 -1.4 L8.6 -2.8 M2.7 3.6 L5.3 7.3 M-2.7 3.6 L-5.3 7.3 M-4.3 -1.4 L-8.6 -2.8" stroke="${OUT}" stroke-width="1.4" fill="none"/></g><ellipse cx="-3" cy="-4.4" rx="2.8" ry="1.7" fill="#fff" opacity=".75"/></g>`
+    +pop
     +`</svg>`;
 }

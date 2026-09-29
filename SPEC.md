@@ -21,16 +21,17 @@ Es gibt zwei Betriebsarten aus demselben Repo: **Live** (Branch `main`, Port 808
 - Konten: schlichte Auswahl „Wer spielt?“ mit Avatar-Kacheln. Neues Konto nur mit Eltern-PIN (beim allerersten Konto wird die PIN festgelegt). Die PIN (4 Ziffern) gilt für alle Konten und Geräte.
 
 ### Avatar (Spieler)
-- `avatar.js` (Daten, Paletten, Vorlagen, Prüfung `cleanLook`), `avatardraw.js` (SVG), `avatarui.js` (Baukasten), keine externen Ressourcen, keine bekannten Figuren oder Vereinslogos.
-- Baukasten: Frisur (8), Haarfarbe (9), Hautton (6), Trikotfarbe (10), Hosenfarbe (8), Schuhfarbe (7), Rückennummer (0 bis 99), Name auf dem Trikot (bis 10 Zeichen), Mannschaftsname (bis 20), Vereinsfarben 1 und 2 (Wappen, Ärmelbündchen, Hosenstreifen, Stutzenrand, Namensschild in der Szene). 8 Vorlagen zum schnellen Start. Kein fester Jungen- oder Mädchen-Modus, alles frei wählbar.
+- `avatar.js` (Daten, Paletten, Vorlagen, Prüfung `cleanLook`), `avatardraw.js` (SVG), `avatarui.js` (Baukasten), keine externen Ressourcen, keine bekannten Figuren oder Vereinslogos. Stil: Comic mit dunkler Kontur, Schattierung und Glanzlichtern.
+- Der Baukasten beginnt mit der Wahl **Junge oder Mädchen** (`look.body`, `j` oder `m`). Danach gibt es je 8 passende Frisuren (Junge: Kurz, Wuschel, Igel, Locken, Tolle, Stoppel, Seitenscheitel, Surfer; Mädchen: Pferdeschwanz, Zöpfe, Lang, Dutt, Bob, Lockenmähne, Halbzopf, Pony) und 4 Vorlagen. Ein Umschalter wechselt später zwischen Junge und Mädchen (Farben, Nummer, Name und Mannschaft bleiben, die Frisur wird die erste der neuen Liste).
+- Weiter: Haarfarbe (10), Hautton (6), Trikotfarbe (10), Hosenfarbe (8), Schuhfarbe (7), Rückennummer (0 bis 99), Name auf dem Trikot (bis 10 Zeichen), Mannschaftsname (bis 20), Vereinsfarben 1 und 2 (Wappen, Ärmelbündchen, Hosenstreifen, Stutzenrand). Alle Farben frei wählbar.
 - Erscheint auf der Kachel in „Wer spielt?“, in der Kabine und in der Torszene. Konten ohne Avatar bekommen eine feste Vorgabe aus dem Namen. Beim ersten Öffnen eines Kontos ohne Avatar wird der Baukasten einmal angeboten (überspringbar, `profile.avatarAsked`). „Mein Spieler“ in der Kabine öffnet ihn jederzeit.
-- Torszene (Ansicht von hinten, Tor und Netz vor dem Spieler): richtig = Schuss ins Netz, falsch = zufällig Pfosten, Latte oder knapp vorbei (Seite zufällig). Der Ausgang wird beim Antworten gewürfelt (`G.shot`). Mit `prefers-reduced-motion` gibt es keine Bewegung, der Ball liegt sofort am Endpunkt und der Text nennt den Ausgang („Tor!“, „Pfosten!“, „Latte!“, „Knapp vorbei“).
+- Torszene (Stadion mit Publikum, Tor mit Netz und Perspektive, der Spieler von hinten; das Vereinsschild steht nicht in der Szene): **richtig** = kurzes Overlay „Tor!“ mit der Szene und den Punkten, danach geht es nach 1,8 Sekunden von allein zur nächsten Aufgabe (Tippen aufs Overlay oder Eingabetaste geht schneller, keine Erklärung, keine Weiter-Taste). **Falsch** = zufällig Pfosten („PLING!“), Latte („BONG!“) oder knapp vorbei („Uups!“) mit lustiger Sprechblase (Seite zufällig), darunter die Erklärung der Trainer und die Weiter-Taste. Der Ausgang wird beim Antworten gewürfelt (`G.shot`). Mit `prefers-reduced-motion` gibt es keine Bewegung, der Ball liegt sofort am Endpunkt, die Sprechblase ist sofort da und der Text nennt den Ausgang.
 
 ### Trainer (Hilfe)
-- `coach.js`. Eine Trainer-Figur (Kappe, Pfeife; Aussehen und Name global, im Eltern-Bereich änderbar, Vorgabe „Trainer Papa“) ist in jeder Aufgabe da.
-- Hilfe-Taste, zwei Stufen: 1. Tipp (`hint` der Aufgabe, jede Aufgabenart hat einen), 2. Erklärung an einem ähnlichen Beispiel (eine zweite Aufgabe desselben Generators mit anderer Lösung, samt Bild und `ex`). Die Lösung der echten Aufgabe kommt nie im Text vor (`leaks()`, Beispiel wird sonst neu gewürfelt, zuletzt allgemeiner Text). Tests prüfen das für alle Aufgabenarten.
-- Nach der Antwort erklärt der Trainer in einer Sprechblase (`ex`, bei falscher Antwort mit „Richtig ist: …“).
-- Ist eine Aufgabe länger als die Tipp-Zeit ohne Eingabe (Vorgabe 45 Sekunden, je Konto 20 bis 90 oder aus) offen, bietet der Trainer freundlich einen Tipp an (einmal je Aufgabe). Jede Eingabe schiebt die Zeit nach hinten.
+- `coach.js`. Zwei Figuren sind in jeder Aufgabe da: **Trainer** (Vorgabe nach dem Foto: Glatze, schwarze Brille, dunkle Jacke, Pfeife) und **Trainerin** (blond, schulterlang, Creolen, Pfeife). Namen und Aussehen (Frisur, Haarfarbe, Hautton, Jacke, Brille, Bart, Ohrringe) sind global und im Eltern-Bereich änderbar (Vorgaben „Trainer“ und „Trainerin“).
+- Hilfe-Taste, zwei Stufen: 1. Tipp vom Trainer (`hint` der Aufgabe, jede Aufgabenart hat einen), 2. Erklärung an einem ähnlichen Beispiel von der Trainerin (eine zweite Aufgabe desselben Generators mit anderer Lösung, samt Bild und `ex`). Die Lösung der echten Aufgabe kommt nie im Text vor (`leaks()`, Beispiel wird sonst neu gewürfelt, zuletzt allgemeiner Text). Tests prüfen das für alle Aufgabenarten.
+- Nach einer falschen Antwort erklären Trainer und Trainerin abwechselnd (von Aufgabe zu Aufgabe) in einer Sprechblase (`ex` mit „Richtig ist: …“).
+- Ist eine Aufgabe länger als die Tipp-Zeit ohne Eingabe (Vorgabe 45 Sekunden, je Konto 20 bis 90 oder aus) offen, bietet Trainer oder Trainerin (abwechselnd) freundlich einen Tipp an (einmal je Aufgabe, auch bei der ersten Aufgabe einer Runde). Jede Eingabe schiebt die Zeit nach hinten.
 - Hilfe kostet keine Punkte. Genutzt wird je Thema gezählt (`stats.<Thema>.help`) und in den letzten 10 Antworten vermerkt (`h`). Der Lernstand im Eltern-Bereich zeigt es.
 
 ## Datenmodell (schemaVersion 2)
@@ -44,11 +45,11 @@ Konto-Stand (`data/profiles/<id>.json`, Feld `state`):
 | `history` | je Spiel `{id, t, d, liga, mode, trial, c, n, pts, dur?}` (`dur` in Sekunden), höchstens 200 |
 | `settings` | `sound`, `t`, `perRound` (6, 8, 10), `trialN` (Schnupper-Aufgaben), `trialDaily` (nur einmal pro Tag), `hintAfter` (Tipp-Zeit in Sekunden, 0 = aus) |
 
-`profile.avatar`: `{v, hair (0 bis 7), hairColor, skin, shirt, shorts, boots (Hexfarben), number, shirtName, team, c1, c2, t}`. Alle Werte laufen beim Lesen durch `cleanLook` (falsche Werte werden ersetzt, Texte bereinigt).
+`profile.avatar`: `{v, body (j oder m), hair (0 bis 7, Index in der Liste der Auswahl), hairColor, skin, shirt, shorts, boots (Hexfarben), number, shirtName, team, c1, c2, t}`. Ein Avatar ohne `body` (frühe Vorschau) gilt als Junge. Alle Werte laufen beim Lesen durch `cleanLook` (falsche Werte werden ersetzt, Texte bereinigt).
 
 Anzeigewerte (Punkte, Spiele, Siege, Sticker) sind die Summe über `progress.dev`. Jedes Gerät schreibt nur seinen eigenen Zähler.
 
-Global (`data/settings.json`, Feld `settings`): `schemaVersion` (2), `pin` (`algo`, `salt`, `hash`, `t`), `trainer` (`name`, `look {cap, skin, jacket, hairColor, beard}`, `t`), `updatedAt`. Die Kontenliste ergibt sich aus den Dateien in `data/profiles/`.
+Global (`data/settings.json`, Feld `settings`): `schemaVersion` (2), `pin` (`algo`, `salt`, `hash`, `t`), `trainer` und `trainer2` (Trainer und Trainerin: `name`, `look {hair, hairColor, skin, jacket, eyes, glasses, beard, earrings, smile}`, `t`), `updatedAt`. Die Kontenliste ergibt sich aus den Dateien in `data/profiles/`.
 
 Geräteliste (`data/devices.json`, nur Server, eigenes Format `{version:1, devices:{<deviceId>:{name, kind, firstSeen, lastSeen, lastPush}}}`): siehe Server.
 
@@ -57,7 +58,7 @@ Dateiformat auf dem Server: `{id, name, rev, savedAt, device, schemaVersion, sta
 ### Migration
 `model.js`: `migrateProfile` hebt Stände auf `SCHEMA_VERSION`, immer auf einer Kopie (die Eingabe bleibt unverändert). Unbekannte Felder bleiben erhalten.
 - Stufe 0 ist das Prototypformat (localStorage-Schlüssel `torjaeger`, Struktur ohne `meta`): `migratePrototype` überführt es ohne Verlust und erhält unbekannte Felder. Die App importiert keine Prototyp-Stände, die Funktion ist für Tests und Werkzeuge da.
-- Stufe 1 nach 2 (App 1.1.0, Stand im Format 1.0.0 wie Emils echter Stand): ergänzt `profile.avatar` (`null`) und `profile.avatarAsked` (`false`) und füllt die neuen `settings`-Felder mit Vorgaben (vorhandene Werte wie `sound` und `t` bleiben). `stats.help` und `history.dur` entstehen erst bei Nutzung. Global: `trainer` bekommt die Vorgabe.
+- Stufe 1 nach 2 (App 1.1.0, Stand im Format 1.0.0 wie Emils echter Stand): ergänzt `profile.avatar` (`null`) und `profile.avatarAsked` (`false`) und füllt die neuen `settings`-Felder mit Vorgaben (vorhandene Werte wie `sound` und `t` bleiben). `stats.help` und `history.dur` entstehen erst bei Nutzung. Global: `trainer` und `trainer2` bekommen die Vorgabe (ein nie geänderter Eintrag mit `t` 0 wird immer durch die aktuelle Vorgabe ersetzt).
 - Ein migrierter Stand geht beim nächsten Abgleich zurück auf den Server (Konto und global), damit dort die neue Schemaversion steht und ältere Apps nichts überschreiben.
 - Neue Stufen: Eintrag in `PROFILE_MIGRATIONS` und `SCHEMA_VERSION` erhöhen. Ein Stand mit neuerer Schemaversion als die App kennt wird nie verändert, die App lädt sich neu.
 - Test: `test/schema2.test.mjs` mit `test/fixtures/state-v1.json` (Format 1.0.0).
@@ -78,7 +79,7 @@ Dateiformat auf dem Server: `{id, name, rev, savedAt, device, schemaVersion, sta
 - Trainingstage und Verlauf: Vereinigung.
 - Ligen-Freigaben: je Liga der neuere Stand (`t`). Sind Freigabezustand gleich, zählt der größere Probetraining-Verbrauch, `trial` ist das spätere Datum. Name und Einstellungen: der neuere Stand.
 - **Aussehen** (`profile.avatar`): der neuere Stand gewinnt, nach dem eigenen `avatar.t` (nicht nach `profile.t`, Name und Aussehen ändern sich also unabhängig). Bei Gleichstand entscheidet die Textform, unabhängig von der Reihenfolge. Hat nur ein Stand einen Avatar, bleibt er. `avatarAsked` ist wahr, sobald ein Stand es meldet.
-- **Trainer** (global): der neuere Stand gewinnt (`trainer.t`), PIN und Trainer werden getrennt entschieden.
+- **Trainer und Trainerin** (global): je der neuere Stand gewinnt (`trainer.t`, `trainer2.t`), PIN, Trainer und Trainerin werden getrennt entschieden.
 - Zurücksetzen (`meta.resetAt`): der Stand mit dem späteren Zurücksetzen gewinnt vollständig, auch gegen ältere ungesendete Spiele auf anderen Geräten. Wiederherstellen aus einer Sicherung setzt `resetAt` ebenfalls auf „jetzt“, damit alle Geräte den Stand übernehmen.
 - Sticker sind ein Zähler je Gerät (nicht „neuester gewinnt“), damit bei parallelem Spielen kein Sticker verloren geht. Angezeigt wird höchstens die Zahl der vorhandenen Sticker.
 - Unbekannte Felder bleiben erhalten. Global: neuere PIN (`pin.t`) gewinnt.

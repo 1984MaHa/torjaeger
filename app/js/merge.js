@@ -12,7 +12,7 @@
 // Das Ergebnis ist unabhängig von der Reihenfolge und ändert sich nicht, wenn man erneut zusammenführt.
 import {clone} from "./util.js";
 import {SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,defaultLg} from "./model.js";
-import {defaultTrainer} from "./avatar.js";
+import {defaultTrainer,defaultTrainer2} from "./avatar.js";
 import {canon} from "./util.js";
 import {MASTER_N} from "./content.js";
 
@@ -110,6 +110,7 @@ export function mergeGlobal(local,remote){
   out.schemaVersion=GLOBAL_SCHEMA_VERSION;
   out.pin=clone(lt>=rt?local.pin:remote.pin);
   out.trainer=clone(newerBy(local.trainer||defaultTrainer(),remote.trainer||defaultTrainer()));
+  out.trainer2=clone(newerBy(local.trainer2||defaultTrainer2(),remote.trainer2||defaultTrainer2()));
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
   return out;
 }

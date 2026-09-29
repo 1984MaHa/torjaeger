@@ -92,7 +92,7 @@ function settingsTab(A){
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
-  return `${acct}${trainerPanelHTML(A.trainer)}${pin}`;
+  return `${acct}${trainerPanelHTML(A.tr1,1)}${trainerPanelHTML(A.tr2,2)}${pin}`;
 }
 
 // ---------- Sicherungen und System ----------

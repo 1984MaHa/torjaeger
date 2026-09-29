@@ -5,7 +5,7 @@ import fs from "node:fs";
 import {migrateProfile,migrateGlobal,newProfile,newGlobal,total,answersOf,helpOf,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION} from "../app/js/model.js";
 import {mergeProfile,mergeGlobal} from "../app/js/merge.js";
 import {applyAnswer,applyHelp,applyAvatar,applyRename,applySettings,applyRoundEnd,applyTrainer,applyReset,settingsOf,canTrial,roundLen,trialLen,winNeed,leagueState,budgetOf} from "../app/js/rules.js";
-import {cleanLook,defaultTrainer,TEMPLATES,HAIR_STYLES} from "../app/js/avatar.js";
+import {cleanLook,defaultTrainer,defaultTrainer2,TEMPLATES,HAIR_STYLES} from "../app/js/avatar.js";
 import {todayKey} from "../app/js/util.js";
 
 const v1=()=>JSON.parse(fs.readFileSync(new URL("./fixtures/state-v1.json",import.meta.url),"utf8"));
@@ -52,8 +52,13 @@ test("Migration: schon vorhandene neue Felder werden nicht überschrieben",()=>{
 test("Globale Migration: Trainer bekommt Vorgabe, PIN bleibt",()=>{
   const g=migrateGlobal({schemaVersion:1,pin:{algo:"sha256-salt",salt:"s",hash:"h",t:5},updatedAt:9,extra:1});
   assert.equal(g.schemaVersion,2);assert.equal(g.pin.hash,"h");assert.equal(g.extra,1);
-  assert.equal(g.trainer.name,"Trainer Papa");assert.equal(g.trainer.t,0);
-  assert.deepEqual(newGlobal().trainer,defaultTrainer());
+  assert.equal(g.trainer.name,"Trainer");assert.equal(g.trainer.t,0);assert.equal(g.trainer2.name,"Trainerin");
+  assert.deepEqual(newGlobal().trainer,defaultTrainer());assert.deepEqual(newGlobal().trainer2,defaultTrainer2());
+  // ein nie geänderter Trainer aus der ersten Vorschau (t 0, alter Name) bekommt die neue Vorgabe, ein geänderter bleibt
+  const alt=migrateGlobal({schemaVersion:2,pin:null,updatedAt:1,trainer:{name:"Trainer Papa",look:{cap:"#e5484d"},t:0}});
+  assert.equal(alt.trainer.name,"Trainer");assert.equal(alt.trainer2.name,"Trainerin");
+  const eigen=migrateGlobal({schemaVersion:2,pin:null,updatedAt:1,trainer:{name:"Coach",look:{},t:77},trainer2:{name:"Coachin",look:{},t:88}});
+  assert.equal(eigen.trainer.name,"Coach");assert.equal(eigen.trainer2.name,"Coachin");
 });
 
 test("Neue Regeln: Einstellungen prüfen, Runde, Schnuppern, Sieg-Schwelle",()=>{
@@ -139,14 +144,16 @@ test("Merge: Einstellungen je Konto, neuerer Stand",()=>{
 test("Merge global: Trainer neuester gewinnt, PIN und Trainer getrennt",()=>{
   const a=newGlobal(1000),b=newGlobal(1000);
   a.pin={algo:"sha256-salt",salt:"s",hash:"neu",t:500};b.pin={algo:"sha256-salt",salt:"s",hash:"alt",t:100};
-  applyTrainer(b,dev("B",2000),{name:"Coach Marco",look:{cap:"#2f6fde"}});
+  applyTrainer(b,dev("B",2000),{name:"Coach Marco",look:{jacket:"#2f6fde"}},1);
+  applyTrainer(a,dev("A",3000),{name:"Coach Ina",look:{hairColor:"#e6c15a"}},2);
   const m=mergeGlobal(a,b),m2=mergeGlobal(b,a);
-  assert.equal(m.pin.hash,"neu");assert.equal(m.trainer.name,"Coach Marco");assert.equal(m.trainer.look.cap,"#2f6fde");
+  assert.equal(m.pin.hash,"neu");assert.equal(m.trainer.name,"Coach Marco");assert.equal(m.trainer.look.jacket,"#2f6fde");
   assert.equal(m2.trainer.name,"Coach Marco");assert.equal(m2.pin.hash,"neu");
+  assert.equal(m.trainer2.name,"Coach Ina");assert.equal(m2.trainer2.name,"Coach Ina");   // Trainer und Trainerin werden getrennt entschieden
   // alter Stand ohne Trainer
   const old={schemaVersion:1,pin:null,updatedAt:5};
   assert.equal(mergeGlobal(old,b).trainer.name,"Coach Marco");
-  assert.equal(mergeGlobal(old,old).trainer.name,"Trainer Papa");
+  assert.equal(mergeGlobal(old,old).trainer.name,"Trainer");assert.equal(mergeGlobal(old,old).trainer2.name,"Trainerin");
 });
 
 test("Zurücksetzen behält Aussehen und Einstellungen",()=>{
@@ -156,7 +163,7 @@ test("Zurücksetzen behält Aussehen und Einstellungen",()=>{
 });
 
 test("Avatar-Prüfung: ungültige Werte werden ersetzt, mindestens 6 Frisuren",()=>{
-  assert.ok(HAIR_STYLES.length>=6);assert.ok(TEMPLATES.length>=6);
+  assert.ok(HAIR_STYLES.j.length>=6&&HAIR_STYLES.m.length>=6);assert.ok(TEMPLATES.length>=6);
   const l=cleanLook({hair:99,hairColor:"rot",skin:"#FFE0C7",shirt:"javascript:1",number:"1234",shirtName:"<b>emil</b>",team:"x".repeat(50),c1:null});
   assert.equal(l.hair,TEMPLATES[0].look.hair);assert.equal(l.hairColor,TEMPLATES[0].look.hairColor);assert.equal(l.skin,"#ffe0c7");
   assert.equal(l.shirt,TEMPLATES[0].look.shirt);assert.equal(l.number,"12");assert.ok(!/[<>]/.test(l.shirtName));assert.ok(l.team.length<=20);

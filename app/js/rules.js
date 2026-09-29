@@ -133,8 +133,9 @@ export function applyAvatar(s,ctx,look){
 }
 export function applyAvatarAsked(s,ctx){if(!s.profile.avatarAsked){s.profile.avatarAsked=true;touch(s,ctx);}}
 // Trainer (global, gilt für alle Konten). g ist der globale Stand.
-export function applyTrainer(g,ctx,{name,look}){
-  g.trainer={name:cleanText(name,16,"Trainer Papa"),look:cleanTrainerLook(look),t:ctx.now};
+// which: 1 = Trainer, 2 = Trainerin
+export function applyTrainer(g,ctx,{name,look},which=1){
+  g[which===2?"trainer2":"trainer"]={name:cleanText(name,16,which===2?"Trainerin":"Trainer"),look:cleanTrainerLook(look,which),t:ctx.now};
   g.updatedAt=ctx.now;
 }
 export function applySel(s,ctx,li){s.progress.sel=li;touch(s,ctx);}

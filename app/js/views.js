@@ -2,7 +2,7 @@
 import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,topicsOf} from "./content.js";
 import {ballSVG} from "./svg.js";
 import {avatarSVG,sceneSVG,SHOT_TEXT} from "./avatardraw.js";
-import {lookOf,defaultTrainer} from "./avatar.js";
+import {lookOf,defaultTrainer,defaultTrainer2} from "./avatar.js";
 import {rightText,coachHTML} from "./coach.js";
 import {total} from "./model.js";
 import {esc} from "./util.js";
@@ -97,18 +97,21 @@ function inputHTML(T,G){
   if(!G.done)h+=`<button class="btn" id="tapok" ${G.pickIdx<0?'disabled style="opacity:.5"':""}>${T.tapLabel}</button>`;return h;
 }
 
-export function playHTML(s,G,trainer=defaultTrainer()){
+export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   const T=G.task,c=G.res.filter(Boolean).length,m=G.res.length-c,L=LIGEN[G.li];
   const dots=Array.from({length:G.len},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?"ok":"no"):i===G.i?"now":""}"></i>`).join("");
-  let fb="";if(G.done){
-    const shot=G.shot||{kind:G.ok?"goal":"wide",side:1};
-    fb=`<div class="fb ${G.ok?"ok":"no"}">${sceneSVG(lookOf(s.profile),shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span>${G.ok?`<span class="plus">+${G.gain}${G.gain>10?" Serie!":""}</span>`:""}</div></div>`;
-    fb+=coachHTML({T,G,trainer})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;}
-  const coach=G.done?"":coachHTML({T,G,trainer});
+  // Richtig: kurzes Overlay (Tor!), danach geht es von allein weiter. Falsch: witziger Fehlschuss, Erklärung, Weiter-Taste.
+  let fb="",overlay="";
+  if(G.done){
+    const shot=G.shot||{kind:G.ok?"goal":"wide",side:1},look=lookOf(s.profile);
+    if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt">${SHOT_TEXT.goal}</div>${sceneSVG(look,shot)}<div class="ovlplus">+${G.gain}${G.gain>10?" Serie!":""}</div></div></div>`;
+    else fb=`<div class="fb no">${sceneSVG(look,shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;
+  }
+  const coach=G.done?"":coachHTML({T,G,trainers});
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
     <div class="score">${esc(s.profile.name)} <em>${c}</em> : <em>${m}</em> ${G.rival}</div><div class="dots">${dots}</div></div>
     <section class="card"><div class="tag">${L.name}${G.trial?" · Schnuppern":""} · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}</div>
-    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${coach}${inputHTML(T,G)}${fb}</section>
+    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${coach}${inputHTML(T,G)}${fb}</section>${overlay}
     <p class="lead small" style="color:#fff">Lies zuerst das gelb markierte Wort. Dann erst schießen!</p>`;
 }
 

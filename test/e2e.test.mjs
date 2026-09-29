@@ -1,9 +1,10 @@
 // Ende-zu-Ende: die echte app.js mit einem kleinen Fake-DOM gegen einen echten Server.
-// Konto anlegen, Avatar bauen, eine Runde mit Trainer-Hilfe spielen, Eltern-Bereich (Einstellungen, Trainer, Zurücksetzen, Löschen).
+// Konto anlegen, Junge oder Mädchen wählen, Avatar bauen, eine Runde mit Trainer-Hilfe spielen (Angebot schon bei der ersten Aufgabe,
+// richtige Antwort geht von allein weiter, falsche zeigt den Fehlschuss), Eltern-Bereich (Einstellungen, Trainer, Zurücksetzen, Löschen).
 // Prüft, was die Tests der einzelnen Module nicht sehen: dass die Verdrahtung in app.js läuft.
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {startServer,api} from "./helpers.mjs";
+import {api} from "./helpers.mjs";
 import server from "../server/server.js";
 import fs from "node:fs";
 import os from "node:os";
@@ -11,9 +12,10 @@ import path from "node:path";
 
 // ---------- Fake-DOM ----------
 let html="",els=[];
-const unref=(f,realFn)=>(fn,ms,...a)=>{const t=realFn(fn,ms,...a);if(t&&t.unref)t.unref();return t;};
-globalThis.setInterval=unref(null,globalThis.setInterval);
-globalThis.setTimeout=unref(null,globalThis.setTimeout);
+const realSetTimeout=globalThis.setTimeout,realSetInterval=globalThis.setInterval;
+// Timer nicht am Leben halten. Lange Wartezeiten der App in ganzen Sekunden (zum Beispiel die 45 Sekunden Tipp-Zeit) laufen 100 mal schneller.
+globalThis.setTimeout=(fn,ms,...a)=>{const t=realSetTimeout(fn,ms>=10000&&ms%1000===0?ms/100:ms,...a);if(t&&t.unref)t.unref();return t;};
+globalThis.setInterval=(fn,ms,...a)=>{const t=realSetInterval(fn,ms,...a);if(t&&t.unref)t.unref();return t;};
 function parse(){
   els=[];
   for(const m of html.matchAll(/<([a-z][\w-]*)\b([^>]*)>/g)){
@@ -35,7 +37,7 @@ const realFetch=globalThis.fetch;
 let BASE="";
 globalThis.fetch=(u,o)=>realFetch(String(u).startsWith("/")?BASE+u:u,o);
 
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const sleep=ms=>new Promise(r=>realSetTimeout(r,ms));
 async function until(cond,what,ms=4000){const t=Date.now();while(Date.now()-t<ms){if(cond())return;await sleep(15);}assert.fail("Zeitüberschreitung: "+what+"\n"+html.replace(/<svg[\s\S]*?<\/svg>/g,"<svg/>").slice(0,1500));}
 const has=t=>html.includes(t);
 const byId=id=>{const e=els.find(x=>x.id===id);assert.ok(e,"Element fehlt: #"+id);return e;};
@@ -57,52 +59,71 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await until(()=>has("preview-band"),"Band VORSCHAU");        // Kennung vom Server
     assert.ok(has(">VORSCHAU<"));
 
-    // ----- Konto anlegen (PIN wird festgelegt), Baukasten wird angeboten -----
+    // ----- Konto anlegen (PIN wird festgelegt). Der Baukasten beginnt mit Junge oder Mädchen -----
     await clickId("acctNew");byId("acctName").value="Emil";byId("acctPin").value="1234";
     await clickId("acctCreate");
     await until(()=>has("Dein Spieler"),"Baukasten beim ersten Öffnen");
-    assert.ok(has('id="avSkip"')&&has("Später")&&(html.match(/data-avhair=/g)||[]).length>=6);
-    await clickData("avtpl","2");
+    assert.ok(has("Junge")&&has("Mädchen")&&has('id="avSkip"')&&!has("data-avhair"),"erst die Auswahl");
+    assert.equal(els.filter(e=>"avbody" in e.dataset).length,2);
+    await clickData("avbody","m");
+    assert.ok((html.match(/data-avhair=/g)||[]).length>=6&&has("Pferdeschwanz")&&!has("Wuschel"),"Frisuren für Mädchen");
+    assert.equal((html.match(/data-avtpl=/g)||[]).length,4);
+    await clickData("avtpl","5");                                    // Vorlage Wald (Mädchen)
     byId("avShirtName").value="Emil";byId("avTeam").value="Die Wirbel";
-    await clickData("avhair","4");                                   // Zöpfe, liest dabei die Eingaben
+    await clickData("avhair","4");                                   // Bob, liest dabei die Eingaben
     await clickData("avnum","1");
     assert.ok(has("Die Wirbel")&&has('class="numv"'));
+    await clickData("avbody","j");                                   // Wechsel zu Junge: Farben und Namen bleiben, Frisurenliste ist neu
+    assert.ok(has("Wuschel")&&!has("Pferdeschwanz")&&has("Die Wirbel"));
+    await clickData("avbody","m");await clickData("avhair","2");
     await clickId("avSave");
     await until(()=>has("Hallo Emil"),"Kabine nach Speichern");
     assert.ok(has('id="avEdit"')&&has("avsvg"));
 
-    // ----- Eine Runde: Hilfe in zwei Stufen, Torszene, Erklärung im Sprechblase -----
+    // ----- Eine Runde -----
     await clickData("play","0:math");
     await until(()=>has("Aufgabe 1 von 8"),"Aufgabe 1");
-    assert.ok(has('id="coachHelp"')&&has("Trainer Papa"));
+    // das Angebot des Trainers kommt von allein, schon bei der ersten Aufgabe (Tipp-Zeit 45 Sekunden, hier 100 mal schneller)
+    await until(()=>has('id="coachYes"'),"Angebot des Trainers bei der ersten Aufgabe",3000);
+    assert.ok(has("Soll ich dir einen Tipp geben"));
+    await clickId("coachNo");
+    assert.ok(has('id="coachHelp"')&&has("Trainer")&&has("Trainerin")&&!has("coachYes"));
     assert.ok(!has("Trainer-Tipp anzeigen"));
     await clickId("coachHelp");
-    assert.ok(has("Tipp:")&&has("Noch mehr Hilfe"));
+    assert.ok(has("Noch mehr Hilfe")&&has('class="bubble"'));
     await clickId("coachHelp");
     assert.ok(has("So geht das")||has("kleinen Schritten"));
     assert.ok(!has('id="coachHelp"'),"nach Stufe 2 keine weitere Stufe");
-    let done=0,sawKinds=new Set();
+    let done=0,autoNext=0,wrong=0,right=0;
     for(let i=0;i<8;i++){
       await until(()=>has(`Aufgabe ${i+1} von 8`),"Aufgabe "+(i+1));
       if(i>0&&i<3){await clickId("coachHelp");}                     // Tipp bei weiteren Aufgaben
       // beantworten, egal ob richtig: je nach Aufgabenart
       if(els.some(e=>"c" in e.dataset))await click(els.find(e=>"c" in e.dataset));
       else if(els.some(e=>"w" in e.dataset)){await click(els.find(e=>"w" in e.dataset));await clickId("tapok");}
-      else{for(let tries=0;tries<3&&!has('id="next"');tries++){await clickData("k","1");await clickData("k","ok");}}
-      await until(()=>has('id="next"'),"Antwort "+(i+1));
-      const kind=/class="scene sc-(\w+)"/.exec(html);assert.ok(kind,"Torszene fehlt");sawKinds.add(kind[1]);
-      assert.ok(has("bubble")&&has("class=\"fb "),"Trainer erklärt nach der Antwort");
+      else{for(let tries=0;tries<3&&!has('id="next"')&&!has('id="ovl"');tries++){await clickData("k","1");await clickData("k","ok");}}
+      await until(()=>has('id="next"')||has('id="ovl"'),"Antwort "+(i+1));
+      if(has('id="ovl"')){
+        right++;
+        assert.ok(has("Tor!")&&has("sc-goal")&&!has('id="next"')&&!has('class="bubble"'),"richtig: Overlay, keine Weiter-Taste");
+        if(autoNext<2&&i<7){autoNext++;await until(()=>has(`Aufgabe ${i+2} von 8`),"automatisch weiter nach dem Overlay",4000);}   // ohne Tippen
+        else await clickId("ovl");                                    // Tippen aufs Overlay geht schneller
+      }else{
+        wrong++;
+        assert.ok(/class="scene sc-(post|bar|wide)"/.test(html),"falsch: witziger Fehlschuss");
+        assert.ok(has('class="bubble"')&&has("Richtig ist")&&has("class=\"pop\""),"falsch: Erklärung und Sprechblase");
+        await clickId("next");
+      }
       done++;
-      await clickId("next");
     }
     await until(()=>has("Zur Kabine"),"Ergebnis");
-    assert.equal(done,8);
+    assert.equal(done,8);assert.equal(right+wrong,8);
     await sleep(900);                                               // Abgleich mit dem Server
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
     assert.equal(st.meta.schemaVersion,2);
-    assert.equal(st.profile.avatar.hair,4);assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatar.number.length>0,true);assert.equal(st.profile.avatarAsked,true);
+    assert.equal(st.profile.avatar.body,"m");assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
     assert.ok(helped.reduce((n,h)=>n+h.t1,0)>=3&&helped.reduce((n,h)=>n+h.t2,0)>=1&&helped.reduce((n,h)=>n+h.n,0)>=1,"Hilfe wurde gezählt: "+JSON.stringify(helped));
@@ -121,19 +142,23 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     assert.ok(has("Zurücksetzen")&&has("Löschen")&&has("Umbenennen"));
     // Lernstand
     await clickData("atab","stand");assert.ok(has("Letzte Spiele")&&has("Letzte 10")&&has("Trainingstage"));
-    // Einstellungen: 6 Aufgaben pro Runde, Trainer umbenennen
+    // Einstellungen: 6 Aufgaben pro Runde, Trainer und Trainerin einstellen
     await clickData("atab","settings");
     await clickData("aset","perRound:6");await clickData("aset","hintAfter:0");
     assert.ok(has('aria-pressed="true"'));
-    byId("trName").value="Coach Marco";await clickData("atrcap","#2f6fde");
+    assert.ok(has('id="trName1"')&&has('id="trName2"')&&has("Trainerin"));
+    byId("trName1").value="Coach Marco";await clickData("atr","1:jacket:#2f6fde");
     assert.ok(has("Coach Marco"));
-    await clickData("atrsave",undefined,200);
+    await clickData("atr","2:earrings:0");await clickData("atrsave","1",200);
     assert.ok(has("Der Trainer ist gespeichert"));
-    await sleep(900);
+    await clickData("atrsave","2",200);
+    assert.ok(has("Die Trainerin ist gespeichert"));
+    for(let n=0;n<200&&((await get(`/api/profiles/${id}/state`)).state.settings.perRound!==6||!(await get("/api/settings")).settings.trainer2);n++)await sleep(25);   // warten, bis der Abgleich fertig ist
     st=(await get(`/api/profiles/${id}/state`)).state;
     assert.equal(st.settings.perRound,6);assert.equal(st.settings.hintAfter,0);
     const g=(await get("/api/settings")).settings;
-    assert.equal(g.trainer.name,"Coach Marco");assert.equal(g.trainer.look.cap,"#2f6fde");assert.equal(g.schemaVersion,2);
+    assert.equal(g.trainer.name,"Coach Marco");assert.equal(g.trainer.look.jacket,"#2f6fde");assert.equal(g.trainer.look.glasses,1);
+    assert.equal(g.trainer2.name,"Trainerin");assert.equal(g.trainer2.look.earrings,0);assert.equal(g.schemaVersion,2);
     // PIN ändern
     byId("aOldPin").value="1234";byId("aNewPin").value="4321";await clickData("apin",undefined,200);
     await until(()=>has("Die neue PIN gilt"),"PIN geändert");
@@ -151,7 +176,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await clickData("ado",undefined);await sleep(300);
     assert.ok(has("zurückgesetzt"));
     st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.history.length,0);assert.equal(st.profile.avatar.hair,4);assert.equal(st.profile.name,"Emil M.");
+    assert.equal(st.history.length,0);assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.name,"Emil M.");
     await clickData("aask","delete:"+id);await clickData("ado",undefined);await sleep(300);
     assert.ok(has("Papierkorb"));assert.ok(!has('data-arename="'+id+'"'));
     assert.equal((await api(BASE,"GET",`/api/profiles/${id}/state`)).status,410);

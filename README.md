@@ -150,8 +150,8 @@ Beim Auslieferen einer neuen App-Version die Version in **beiden** Dateien erhö
 
 ## Eltern-Bereich, Avatar, Trainer
 - **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).
-- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten (überspringbar). Später über „Mein Spieler“ in der Kabine. Der Avatar steht auf der Kachel und schießt die Tore.
-- **Trainer:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp, dann Erklärung). Name und Aussehen im Eltern-Bereich unter Einstellungen. Die Tipp-Zeit je Konto ebenda.
+- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten, zuerst mit der Wahl Junge oder Mädchen (überspringbar). Später über „Mein Spieler“ in der Kabine. Der Avatar steht auf der Kachel und schießt die Tore.
+- **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Name und Aussehen beider im Eltern-Bereich unter Einstellungen. Die Tipp-Zeit je Konto ebenda. Richtige Antworten zeigen kurz ein Overlay und gehen von allein weiter.
 
 ## Abnahme Version 1.1.0 (in der Vorschau)
 1. `node --test` grün.

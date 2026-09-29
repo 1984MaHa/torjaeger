@@ -7,7 +7,7 @@
 //   stats     je Thema: tot (Antworten je Gerät: a, c), last (letzte 10 Antworten {t, ok, d, h?}) und help (je Gerät: n, t1, t2)
 //   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?}
 //   settings  sound, t, perRound, trialN, trialDaily, hintAfter
-// Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer (name, look, t).
+// Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
 //
 // Zähler stehen je Gerät getrennt. Jedes Gerät schreibt nur seinen eigenen Zähler, die
@@ -15,7 +15,7 @@
 // Zusammenführen zählt nichts doppelt.
 import {PROBE} from "./content.js";
 import {clone} from "./util.js";
-import {defaultTrainer} from "./avatar.js";
+import {defaultTrainer,defaultTrainer2} from "./avatar.js";
 
 export const SCHEMA_VERSION=2;        // Konto-Stand
 export const GLOBAL_SCHEMA_VERSION=2; // globale Einstellungen
@@ -35,7 +35,7 @@ export function newProfile({id,name,deviceId,now=Date.now()}){
     settings:defaultSettings()
   };
 }
-export function newGlobal(now=Date.now()){return{schemaVersion:GLOBAL_SCHEMA_VERSION,pin:null,updatedAt:now,trainer:defaultTrainer()};}
+export function newGlobal(now=Date.now()){return{schemaVersion:GLOBAL_SCHEMA_VERSION,pin:null,updatedAt:now,trainer:defaultTrainer(),trainer2:defaultTrainer2()};}
 
 export const defaultLg=()=>({probe:false,spent:0,open:false,trial:"",t:0});
 export function lgOf(s,id){return s.progress.lg[id]||(s.progress.lg[id]=defaultLg());}
@@ -75,7 +75,9 @@ export function migrateGlobal(g){
   if(v>GLOBAL_SCHEMA_VERSION)throw new UnsupportedSchema(v);
   g.schemaVersion=GLOBAL_SCHEMA_VERSION;
   if(g.pin===undefined)g.pin=null;
-  if(!g.trainer||typeof g.trainer!=="object")g.trainer=defaultTrainer(); // 1 -> 2
+  // 1 -> 2: Trainer und Trainerin. Ein nie geänderter Eintrag (t 0) bekommt immer die aktuelle Vorgabe.
+  if(!g.trainer||typeof g.trainer!=="object"||g.trainer.t===0)g.trainer=defaultTrainer();
+  if(!g.trainer2||typeof g.trainer2!=="object"||g.trainer2.t===0)g.trainer2=defaultTrainer2();
   return g;
 }
 
