@@ -1,0 +1,11 @@
+services:
+  torjaeger:
+    build: .
+    container_name: torjaeger-liga
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"   # nur lokal, von außen nur über tailscale serve (HTTPS)
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Europe/Berlin

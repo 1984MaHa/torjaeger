@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Torjäger-Liga · Test</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1d7337;color:#16271c;font:18px system-ui,sans-serif;padding:16px;box-sizing:border-box}
+  .card{background:#fbfcf7;border-radius:18px;padding:24px;max-width:460px;width:100%;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+  h1{margin:0 0 8px;font-size:1.6rem}
+  button{font:inherit;background:#ffc83d;border:0;border-radius:12px;padding:12px 18px;margin-top:12px;cursor:pointer}
+  .ok{color:#1f8a45;font-weight:700}.bad{color:#b3262b;font-weight:700}
+  code{background:#e6ece7;padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Torjäger-Liga läuft</h1>
+  <p>Phase 0: Diese Testseite prüft HTTPS und den Speicher auf der Synology.</p>
+  <p>Verbindung: <span id="health">wird geprüft …</span></p>
+  <p>Test-Zähler auf der NAS: <b id="count">–</b> <span class="small" id="rev"></span></p>
+  <button id="plus">Zähler +1 speichern</button>
+  <p id="msg"></p>
+  <p style="font-size:.85rem">Test bestanden, wenn der Zähler auf iPad und iPhone denselben Wert zeigt.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);let cur={rev:0,state:null};
+async function load(){
+  try{const h=await (await fetch("/api/health")).json();$("health").innerHTML=h.ok?'<span class="ok">ok</span>':'<span class="bad">Fehler</span>';}
+  catch(e){$("health").innerHTML='<span class="bad">keine Verbindung</span>';}
+  try{cur=await (await fetch("/api/state")).json();$("count").textContent=cur.state&&cur.state.testCounter||0;$("rev").textContent="(Revision "+cur.rev+")";}catch(e){}
+}
+$("plus").onclick=async()=>{
+  const n=(cur.state&&cur.state.testCounter||0)+1;
+  const r=await fetch("/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({baseRev:cur.rev,device:navigator.userAgent.slice(0,60),state:{testCounter:n}})});
+  $("msg").textContent=r.status===200?"Gespeichert.":r.status===409?"Ein anderes Gerät war schneller. Neu geladen.":"Speichern fehlgeschlagen ("+r.status+").";
+  load();
+};
+load();
+</script>
+</body>
+</html>
