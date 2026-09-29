@@ -1,6 +1,6 @@
 // Service Worker: App-Dateien aus dem Cache (cache-first), /api immer direkt ans Netz.
 // Neue Auslieferung: VERSION erhöhen (gleichzeitig js/version.js). Der Worker berührt nie IndexedDB.
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 const CACHE = "torjaeger-app-" + VERSION;
 const FILES = [
   "index.html", "manifest.webmanifest", "css/style.css",

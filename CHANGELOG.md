@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.1.1
+Nur die Versionsnummer ist angehoben (App, Service Worker, Server, package.json). Ohne neue Nummer übernehmen Geräte geänderte Dateien nicht sicher aus dem Cache. Regel: Jede Auslieferung bekommt eine neue Nummer, auch für die Vorschau.
+
 ## 1.1.0 (Vorschau, Eltern-Bereich, Avatar)
 Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start ohne Verlust migriert.
 
