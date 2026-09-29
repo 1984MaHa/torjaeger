@@ -1,5 +1,8 @@
 # Änderungen
 
+## 1.1.5
+- Behoben: Die Sprechblase der Trainer ragte über die weiße Fragenbox hinaus (Rand und Innenabstand wurden nicht zur Breite gerechnet). Lange Wörter brechen um, Bilder in Beispielen werden schmaler.
+
 ## 1.1.4
 - Mehr Vielfalt bei den Avataren: **Kopfform** (5), **Augenform** (3), **Augenbrauen** (3), **Nase** (3), **Sommersprossen**, **Brille** (Rund, Eckig) und **Statur** (Schlank, Normal, Kräftig). Frisuren mit mehr Haarsträhnen. Gespeicherte Avatare sehen unverändert aus.
 - Server: Das atomare Schreiben wiederholt das Umbenennen kurz bei EPERM, EBUSY oder EACCES (kann unter Windows an Virenscannern scheitern, ein Test war dadurch gelegentlich rot).
@@ -58,7 +61,7 @@ Schemaversion 2. Ein bestehender Stand im Format 1.0.0 wird beim ersten Start oh
 - Versionen: App 1.1.0 (`app/js/version.js`, `sw.js`), Server 1.1.0, `package.json` 1.1.0.
 
 ### Tests
-102 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
+103 Tests (vorher 41), neu unter anderem: Migration 1 nach 2 mit Fixture, Admin-API mit falscher und richtiger PIN, Papierkorb, Wiederherstellen, Zurücksetzen, PIN ändern, Merge der neuen Felder, Branch-Prüfung in `deploy.sh`, Tipps und Beispiele nennen nie die Lösung, Ende-zu-Ende-Test mit der echten `app.js`.
 
 ## 1.0.0 (Phase 1, Umzug)
 Erste spielbare Fassung im Repo. Der Prototyp läuft jetzt als Home-Bildschirm-Web-App.

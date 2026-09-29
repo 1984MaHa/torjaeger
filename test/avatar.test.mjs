@@ -131,6 +131,14 @@ test("Torszene: Treffer und drei Fehlschuss-Varianten, beide Seiten, ohne Verein
   clean(sceneSVG(undefined,undefined),"Vorgabe");
 });
 
+test("Sprechblase bleibt in der Fragenbox: Rand und Innenabstand zählen zur Breite",()=>{
+  const lines=CSS.split(String.fromCharCode(10));
+  const bubble=lines.find(l=>l.startsWith(".bubble{"));
+  assert.ok(bubble&&bubble.includes("box-sizing:border-box")&&bubble.includes("max-width:100%")&&bubble.includes("width:100%"));
+  assert.ok(CSS.includes(".bubble .vis svg{max-width:100%"));
+  assert.ok(lines.find(l=>l.startsWith(".coachside{")).includes("box-sizing:border-box"));
+});
+
 test("Bewegung: prefers-reduced-motion schaltet die Szenen-Animationen ab, Ball steht am Endpunkt, Blase sofort da",()=>{
   const start=CSS.indexOf("@media (prefers-reduced-motion:reduce){");assert.ok(start>=0,"Regel fehlt");
   let depth=0,open=CSS.indexOf("{",start),end=open;

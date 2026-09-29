@@ -124,13 +124,15 @@ details summary::-webkit-details-marker{display:none}
 .ovlplus{font-family:var(--display);font-size:1.9rem;color:var(--gold);text-shadow:0 3px 0 rgba(0,0,0,.45)}
 
 /* Trainer und Trainerin: Hilfe-Taste, Sprechblasen */
-.coach{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.coach{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;box-sizing:border-box;max-width:100%;min-width:0}
 .coachfigs{display:flex;gap:6px;flex:0 0 auto}
 .coachfig{display:flex;flex-direction:column;align-items:center;gap:2px;width:64px;opacity:.85;transition:transform .2s}
 .coachfig.talk{opacity:1;transform:translateY(-3px) scale(1.06)}
 .coachname{font-size:.72rem;color:var(--muted);text-align:center;line-height:1.1;overflow-wrap:anywhere}
-.coachside{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.bubble{position:relative;background:#eaf1fd;border:2px solid #cfe0ff;border-radius:14px;padding:8px 14px 10px;font-size:1.08rem;line-height:1.5;width:100%}
+.coachside{flex:1 1 200px;min-width:0;max-width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.bubble{position:relative;background:#eaf1fd;border:2px solid #cfe0ff;border-radius:14px;padding:8px 14px 10px;font-size:1.08rem;line-height:1.5;width:100%;box-sizing:border-box;max-width:100%;overflow-wrap:anywhere}
+.bubble .vis{max-width:100%;overflow-x:auto}
+.bubble .vis svg{max-width:100%;height:auto}
 .bubble .who{display:block;font-family:var(--display);font-size:.9rem;color:var(--sky);margin-bottom:2px}
 .bubble p{margin:0 0 6px}.bubble p:last-child{margin-bottom:0}
 .helpbtn{background:#fff;border:3px solid var(--sky);color:var(--sky);font-family:var(--display);font-size:1.1rem;padding:10px 16px;border-radius:14px;box-shadow:0 4px 0 #b5cdf7}
