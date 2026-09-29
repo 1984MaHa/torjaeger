@@ -1,0 +1,480 @@
+<title>Emils Torjäger-Liga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lilita+One&display=swap">
+<style>
+/* Layout: ein Fußballplatz als Bühne. Oben die Anzeigetafel, in der Mitte die Aufgabe als Taktiktafel, unten die Spieltasten. */
+:root{
+  --pitch:#1d7337; --pitch2:#218040; --chalk:#ffffff; --ink:#16271c; --muted:#5b6b60;
+  --paper:#fbfcf7; --board:#0e1c14; --gold:#ffc83d; --goal:#34c56a; --miss:#e5484d; --sky:#2f6fde;
+  --display:"Lilita One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Andika","Comic Sans MS",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--pitch);background-image:repeating-linear-gradient(90deg,var(--pitch) 0 70px,var(--pitch2) 70px 140px);color:var(--ink);font-family:var(--body);font-size:18px;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+button{font-family:inherit;cursor:pointer;border:0;touch-action:manipulation}
+button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+
+/* Anzeigetafel */
+.board{background:var(--board);color:var(--chalk);border-radius:18px;padding:14px 18px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.board .league{font-family:var(--display);font-size:1.5rem;letter-spacing:.5px}
+.board .sub{font-size:.9rem;opacity:.8}
+.board .pts{font-family:var(--display);font-size:2.2rem;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.board .pts small{display:block;font-family:var(--body);font-size:.8rem;color:var(--chalk);opacity:.8}
+.bar{grid-column:1/-1;height:12px;background:#24392c;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--goal),var(--gold));border-radius:99px;transition:width .6s}
+.icons{display:flex;gap:8px;grid-column:1/-1;justify-content:space-between;align-items:center;font-size:.9rem}
+.pill{background:#24392c;padding:4px 10px;border-radius:99px}
+.snd{background:#24392c;color:var(--chalk);padding:6px 12px;border-radius:99px;font-size:.85rem}
+
+/* Kabine / Start */
+.title{font-family:var(--display);color:var(--chalk);font-size:clamp(2rem,6vw,3.2rem);line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.25);text-wrap:balance;margin:6px 0 0}
+.lead{color:var(--chalk);margin:0;opacity:.95}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mode{background:var(--paper);border-radius:18px;padding:18px;text-align:left;display:flex;gap:14px;align-items:center;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .1s}
+.mode:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.mode b{font-family:var(--display);font-size:1.5rem;display:block;font-weight:400}
+.mode span{color:var(--muted);font-size:.95rem}
+.mode .ic{flex:0 0 56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.6rem;color:#fff}
+.panel{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+.panel h3{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0 0 10px}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.st{aspect-ratio:3/4;border-radius:12px;border:3px dashed #c9d3cb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;text-align:center;font-size:.78rem;color:var(--muted);max-width:100%}
+.st.on{border:3px solid var(--gold);color:var(--ink);background:linear-gradient(160deg,#fff7d6,#ffe79a)}
+.st .n{font-family:var(--display);font-size:1.3rem}
+details summary{cursor:pointer;font-family:var(--display);font-size:1.25rem;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.stat{display:grid;grid-template-columns:minmax(0,1fr) 120px 60px;gap:8px;align-items:center;font-size:.95rem;padding:4px 0;border-bottom:1px solid #e6ece7}
+.stat .b{height:10px;background:#e6ece7;border-radius:99px;overflow:hidden}.stat .b i{display:block;height:100%}
+.stat .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.small{font-size:.9rem;color:var(--muted)}
+.btn{background:var(--gold);color:var(--ink);font-family:var(--display);font-size:1.3rem;padding:14px 22px;border-radius:14px;box-shadow:0 5px 0 #c9951d}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c9951d}
+.btn.ghost{background:var(--paper);box-shadow:0 5px 0 #b8c4bb}
+.btn.warn{background:var(--miss);color:#fff;box-shadow:0 5px 0 #a3282c;font-size:1rem;padding:10px 14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* Spiel */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--chalk);flex-wrap:wrap}
+.score{background:var(--board);border-radius:12px;padding:6px 14px;font-family:var(--display);font-size:1.4rem;display:flex;gap:12px;align-items:center;font-variant-numeric:tabular-nums}
+.score em{font-style:normal;color:var(--gold)}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3)}
+.dots i.ok{background:var(--goal);box-shadow:0 0 0 2px #fff}.dots i.no{background:var(--miss);box-shadow:0 0 0 2px #fff}.dots i.now{background:#fff}
+.card{background:var(--paper);border-radius:20px;padding:20px;box-shadow:0 8px 0 rgba(0,0,0,.22);display:flex;flex-direction:column;gap:16px;min-height:300px}
+.tag{font-size:.8rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.q{font-size:clamp(1.45rem,3.6vw,2rem);line-height:1.35;margin:0}
+.q mark{background:#ffe38a;padding:0 6px;border-radius:6px;color:var(--ink)}
+.vis{display:flex;justify-content:center;overflow-x:auto}
+.ans{min-height:70px;border:4px solid var(--ink);border-radius:14px;font-size:2.4rem;font-family:var(--display);display:flex;align-items:center;justify-content:center;min-width:150px;align-self:center;padding:0 20px;background:#fff;font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:520px;width:100%;align-self:center}
+.pad button{background:#e9f2eb;font-family:var(--display);font-size:1.9rem;padding:14px 0;border-radius:14px;box-shadow:0 4px 0 #b9cabd;color:var(--ink)}
+.pad button:active{transform:translateY(3px);box-shadow:0 1px 0 #b9cabd}
+.pad .ok{background:var(--goal);color:#fff;box-shadow:0 4px 0 #1f8a45}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.choices button{background:#e9f2eb;border-radius:14px;padding:18px 10px;font-size:1.6rem;font-family:var(--body);font-weight:700;box-shadow:0 4px 0 #b9cabd;color:var(--ink)}
+.choices button.right{background:var(--goal);color:#fff}.choices button.wrong{background:var(--miss);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chips button{background:#fff;border:3px solid #cfd9d1;border-radius:12px;padding:10px 14px;font-size:1.5rem;font-family:var(--body);color:var(--ink)}
+.chips button.pick::after{content:".";color:var(--miss);font-weight:700}
+.chips button.pick{border-color:var(--sky)}
+.chips button.right{border-color:var(--goal);background:#e3f7ea}.chips button.wrong{border-color:var(--miss);background:#fde8e8}
+.hintbtn{align-self:flex-start;background:none;color:var(--sky);font-size:1rem;text-decoration:underline;padding:0}
+.hint{background:#eaf1fd;border-radius:12px;padding:10px 14px;font-size:1rem;line-height:1.5}
+.fb{border-radius:16px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.fb.ok{background:#e3f7ea}.fb.no{background:#fde8e8}
+.fb .big{font-family:var(--display);font-size:1.8rem}
+.fb.ok .big{color:#1f8a45}.fb.no .big{color:#b3262b}
+.fb p{margin:0;font-size:1.15rem;flex:1 1 260px;min-width:0}
+.plus{font-family:var(--display);color:#1f8a45;font-size:1.3rem}
+
+/* Torschuss */
+.goalwrap{width:120px;height:74px;position:relative;flex:0 0 auto}
+.goalwrap .ballx{position:absolute;left:4px;bottom:0;width:26px;height:26px}
+.goalwrap.shoot .ballx{animation:shoot .7s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes shoot{0%{transform:translate(0,0) rotate(0)}60%{transform:translate(70px,-34px) rotate(300deg)}100%{transform:translate(78px,-26px) rotate(360deg)}}
+.goalwrap.miss .ballx{animation:miss .7s ease-out forwards}
+@keyframes miss{to{transform:translate(90px,-70px) rotate(200deg);opacity:.2}}
+@media (prefers-reduced-motion:reduce){.goalwrap .ballx{animation:none!important}.bar i{transition:none}}
+
+/* Ergebnis */
+.result{text-align:center;align-items:center}
+.result .final{font-family:var(--display);font-size:clamp(2.4rem,9vw,4rem);line-height:1;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap}
+.result .final .team{font-size:clamp(1.2rem,3.5vw,1.6rem)}
+.result .final small{font-size:1rem;font-family:var(--body);display:block;color:var(--muted)}
+.result h2{font-family:var(--display);font-weight:400;font-size:2rem;margin:0}
+.newst{width:130px;margin:0 auto}
+.confirm{background:#fde8e8;border-radius:12px;padding:10px 12px}
+</style>
+<style>
+/* Ligen */
+.leagues{display:grid;gap:12px}
+.lg{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:0 6px 0 rgba(0,0,0,.2);display:flex;flex-direction:column;gap:12px}
+.lg.locked{background:#dfe8e1}
+.lg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lg-head b{font-family:var(--display);font-weight:400;font-size:1.5rem;display:block;line-height:1.1}
+.lg-head span.k{color:var(--muted);font-size:.95rem}
+.badge{font-size:.85rem;padding:5px 12px;border-radius:99px;font-weight:700;white-space:nowrap}
+.badge.cur{background:var(--gold);color:var(--ink)}
+.badge.done{background:var(--goal);color:#fff}
+.badge.probe{background:var(--sky);color:#fff}
+.badge.wait{background:#f3d7a4;color:var(--ink)}
+.badge.lock{background:#b9c7bd;color:var(--ink)}
+.chipsT{display:flex;flex-wrap:wrap;gap:6px}
+.chipsT span{font-size:.82rem;padding:4px 10px;border-radius:99px;background:#e6ece7;color:var(--muted)}
+.chipsT span.ok{background:#d4f2de;color:#1f6b3a;font-weight:700}
+.modes.sm{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.modes.sm .mode{padding:12px 14px;box-shadow:0 4px 0 rgba(0,0,0,.18);background:#fff;border:2px solid #dfe8e1}
+.modes.sm .mode b{font-size:1.2rem}
+.modes.sm .mode .ic{flex-basis:42px;height:42px;font-size:1.2rem}
+.note{font-size:.95rem;color:var(--muted);margin:0}
+.btn.sm{font-size:1.05rem;padding:10px 16px}
+.pairrow{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-family:var(--display);font-size:1.8rem}
+.pairrow .ans{min-width:110px;cursor:pointer}
+.pairrow .ans.act{border-color:var(--sky);box-shadow:0 0 0 4px #cfe0ff}
+.pin{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pin input{font-size:1.3rem;width:130px;padding:8px 10px;border:2px solid #b9c7bd;border-radius:10px;font-family:var(--body);letter-spacing:4px}
+.parent{border-top:1px solid #e6ece7;margin-top:10px;padding-top:10px;display:grid;gap:10px}
+.parent .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.celebrate{background:#fff4c9;border:3px solid var(--gold);border-radius:14px;padding:12px 14px;font-size:1.15rem}
+h4.gl{margin:12px 0 4px;font-size:1rem}
+</style>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+"use strict";
+// ================= Ligen und Themen =================
+const LIGEN=[
+  {id:"L1",name:"Bambini-Liga",klasse:"Klasse 2",math:["m_read","m_split","m_plaet","m_zehner","m_mal","m_rechnen"],deu:["d_wortart","d_verl","d_satz"]},
+  {id:"L2",name:"Kreisliga",klasse:"Klasse 3",math:["m3_rest","m3_1x1","m3_htz","m3_plus","m3_sach"],deu:["d3_praet","d3_fam","d3_ie","d3_doppel","d3_satzglied"]},
+  {id:"L3",name:"Bezirksliga",klasse:"Klasse 4",math:["m4_stelle","m4_mult","m4_div","m4_runden"],deu:["d4_perfekt","d4_rede","d4_steigern"]}
+];
+const TOPICS={
+  m_read:"Zahlen lesen",m_split:"Zehner und Einer",m_plaet:"Plättchen zaubern",m_zehner:"Zehner oder Einer dazu",m_mal:"Malaufgaben zum Bild",m_rechnen:"Kopfrechnen bis 100",
+  d_wortart:"Wortarten",d_verl:"Verlängern",d_satz:"Satzende finden",
+  m3_rest:"Teilen mit Rest",m3_1x1:"Einmaleins",m3_htz:"Hunderter, Zehner, Einer",m3_plus:"Rechnen bis 1000",m3_sach:"Sachaufgaben mit Rest",
+  d3_praet:"Vergangenheit (Präteritum)",d3_fam:"Wortfamilien",d3_ie:"i oder ie",d3_doppel:"Doppelte Mitlaute",d3_satzglied:"Subjekt und Prädikat",
+  m4_stelle:"Zahlen bis 1 Million",m4_mult:"Malnehmen groß",m4_div:"Teilen groß",m4_runden:"Runden",
+  d4_perfekt:"Perfekt",d4_rede:"Wörtliche Rede",d4_steigern:"Adjektive steigern"};
+const WEAK={m_split:1.3,m_plaet:1.4,m_zehner:1.5,m_mal:1.1,m_rechnen:.9,d_wortart:1.5,d_verl:1.3,d_satz:1.4};
+const STICKERS=["Anstoß","Doppelpass","Flanke","Kopfball","Dribbling","Eckball","Freistoß","Elfmeter","Torwart-Parade","Fallrückzieher","Hattrick","Kapitän","Goldener Schuh","Pokal","Meisterschale","Champions-Stern","Flutlicht","Fankurve","Aufstieg","Derbysieg","Rekordtor","Traumpass","Wembley-Tor","Weltmeister"];
+const RIVALS=["FC Zahlenfuchs","SV Silbenbogen","Rot-Weiß Einmaleins","Kickers Komma","Eintracht Einer","Zehner United","Dynamo Diktat","Borussia Bündel","Hertha Hunderter","Viktoria Verb"];
+const ROUND=8,TRIAL=3,PROBE=20,MASTER_N=10,MASTER_K=8;
+const topicsOf=i=>LIGEN[i].math.concat(LIGEN[i].deu);
+
+const fresh=()=>({points:0,rounds:0,wins:0,stickers:0,stats:{},days:[],history:[],sound:true,pin:"",lg:{L2:{budget:null,open:false,trial:""},L3:{budget:null,open:false,trial:""}},sel:0});
+let S=fresh(),db=null,view="home",G=null,UI={confirmReset:false,parent:false,pinMsg:"",celebrate:""};
+
+// ================= Speicher =================
+function merge(o){const f=fresh();const s=Object.assign(f,o||{});s.lg=Object.assign(fresh().lg,s.lg||{});
+  Object.keys(s.lg).forEach(k=>{s.lg[k]=Object.assign({budget:null,open:false,trial:""},s.lg[k]);});
+  Object.keys(s.stats).forEach(k=>{if(!Array.isArray(s.stats[k].last))s.stats[k].last=[];});return s;}
+function localLoad(){try{const t=localStorage.getItem("torjaeger");if(t)S=merge(JSON.parse(t));}catch(e){}}
+function localSave(){try{localStorage.setItem("torjaeger",JSON.stringify(S));}catch(e){}}
+async function save(rec){localSave();if(!db)return;
+  try{await db.doc("players/emil").set(JSON.parse(JSON.stringify(S)));}catch(e){}
+  if(rec){try{await db.collection("rounds").doc().set(rec);}catch(e){}}}
+async function connect(){
+  try{if(!window.claude||!window.claude.use)return;db=await window.claude.use("db");if(!db)return;
+    const snap=await db.doc("players/emil").get();
+    if(snap.exists){S=merge(JSON.parse(JSON.stringify(snap.data())));localSave();}else if(S.rounds>0)save();
+    if(view==="home")render();}catch(e){}
+}
+
+// ================= Hilfen =================
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+const dkey=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const today=()=>dkey(new Date());
+function streakDays(){const set=new Set(S.days);let n=0;const d=new Date();if(!set.has(today()))d.setDate(d.getDate()-1);
+  while(set.has(dkey(d))){n++;d.setDate(d.getDate()-1);}return n;}
+function hash(p){let h=5381;const s="torjaeger:"+p;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return "h"+h.toString(36);}
+
+// ================= Ligen-Logik =================
+function topicSafe(t){const s=S.stats[t];if(!s||!s.last)return false;const l=s.last.slice(-MASTER_N);return l.length>=MASTER_N&&l.reduce((a,b)=>a+b,0)>=MASTER_K;}
+function safeCount(i){return topicsOf(i).filter(topicSafe).length;}
+function mastered(i){return safeCount(i)===topicsOf(i).length;}
+function state(i){ // open | probe | wait | locked
+  if(i===0)return"open";const l=S.lg[LIGEN[i].id];
+  if(l.open)return"open";if(l.budget!==null)return l.budget>0?"probe":"wait";return"locked";}
+function playable(i){const s=state(i);return s==="open"||s==="probe";}
+function topLeague(){let t=0;LIGEN.forEach((_,i)=>{if(state(i)!=="locked")t=i;});return t;}
+function canTrial(i){return state(i)==="locked"&&i<=topLeague()+2&&S.lg[LIGEN[i].id].trial!==today();}
+function checkPromotions(){let msg="";
+  for(let i=0;i<LIGEN.length-1;i++){const nx=S.lg[LIGEN[i+1].id];
+    if(mastered(i)&&nx.budget===null&&!nx.open){nx.budget=PROBE;msg=`Stark! Die ${LIGEN[i].name} ist durchgespielt. In der ${LIGEN[i+1].name} kannst du jetzt ${PROBE} Aufgaben spielen.`;}}
+  return msg;}
+
+// ================= Klang =================
+let AC=null;
+function tone(fs,dur){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;const t=AC.currentTime+i*dur;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur+.02);});}catch(e){}}
+
+// ================= Grafiken =================
+function ballSVG(s,cls){return `<svg ${cls===false?"":'class="ballx"'} width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#fff" stroke="#16271c" stroke-width="2.5"/><polygon points="20,12 27,17 24.5,25 15.5,25 13,17" fill="#16271c"/><path d="M20 12V3M27 17l9-3M24.5 25l5.5 8M15.5 25L10 33M13 17l-9-3" stroke="#16271c" stroke-width="2.5" fill="none"/></svg>`;}
+function goalSVG(){let s=`<div class="goalwrap" id="gw"><svg width="120" height="74" viewBox="0 0 120 74" aria-hidden="true"><rect x="62" y="6" width="54" height="64" fill="none" stroke="#16271c" stroke-width="4"/>`;
+  for(let i=0;i<6;i++)s+=`<line x1="${62+i*9}" y1="6" x2="${62+i*9}" y2="70" stroke="#16271c" opacity=".35"/>`;for(let i=0;i<7;i++)s+=`<line x1="62" y1="${6+i*9}" x2="116" y2="${6+i*9}" stroke="#16271c" opacity=".35"/>`;
+  return s+`<line x1="0" y1="71" x2="120" y2="71" stroke="#16271c" stroke-width="2"/></svg>${ballSVG(26)}</div>`;}
+function blocksSVG(z,e){const u=18,gap=7,w=10*u+10,h=Math.max(1,z)*(u+gap)+(e?u+16:0)+6;let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${z} Zehnerstangen und ${e} Einerwürfel">`;let y=4;
+  for(let i=0;i<z;i++){for(let k=0;k<10;k++)s+=`<rect x="${5+k*u}" y="${y}" width="${u}" height="${u}" fill="#9fc3a9" stroke="#16271c" stroke-width="1.5"/>`;y+=u+gap;}
+  y=z?y+6:4;for(let k=0;k<e;k++)s+=`<rect x="${5+k*(u+6)}" y="${y}" width="${u}" height="${u}" fill="#ffd66b" stroke="#16271c" stroke-width="1.5"/>`;return s+"</svg>";}
+function stwSVG(z,e){const W=300,H=150,cw=W/2;let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Stellenwerttafel"><rect x="2" y="2" width="${W-4}" height="${H-4}" fill="#fff" stroke="#16271c" stroke-width="3"/><rect x="2" y="2" width="${W-4}" height="34" fill="#e3f0e6" stroke="#16271c" stroke-width="3"/><line x1="${cw}" y1="2" x2="${cw}" y2="${H-2}" stroke="#16271c" stroke-width="3"/><text x="${cw/2}" y="27" text-anchor="middle" font-size="22" font-family="Andika,sans-serif" font-weight="700" fill="#16271c">Z</text><text x="${cw*1.5}" y="27" text-anchor="middle" font-size="22" font-family="Andika,sans-serif" font-weight="700" fill="#16271c">E</text>`;
+  const pl=(n,x0)=>{for(let i=0;i<n;i++)s+=`<circle cx="${x0+22+(i%5)*26}" cy="${62+Math.floor(i/5)*30}" r="10" fill="#16271c"/>`;};pl(z,4);pl(e,cw+4);return s+"</svg>";}
+function fieldSVG(r,c){const d=38,w=c*d+20,h=r*d+20;let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Punktefeld"><rect x="2" y="2" width="${w-4}" height="${h-4}" rx="10" fill="#fff" stroke="#16271c" stroke-width="3"/>`;
+  for(let i=0;i<r;i++)for(let j=0;j<c;j++)s+=`<circle cx="${10+d/2+j*d}" cy="${10+d/2+i*d}" r="12" fill="#16271c"/>`;return s+"</svg>";}
+function groupsSVG(a,b){ // a Punkte in Gruppen zu b
+  const q=Math.floor(a/b),r=a%b,d=22,gw=Math.min(b,5)*d+16,rows=Math.ceil(b/5),gh=rows*d+16,per=Math.max(1,Math.floor(560/(gw+10)));
+  const n=q+(r?1:0),W=Math.min(n,per)*(gw+10),H=Math.ceil(n/per)*(gh+10);let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${a} Punkte">`;
+  for(let g=0;g<n;g++){const x=(g%per)*(gw+10),y=Math.floor(g/per)*(gh+10),cnt=g<q?b:r,full=g<q;
+    s+=`<rect x="${x+1}" y="${y+1}" width="${gw}" height="${gh}" rx="10" fill="${full?"#fff":"#fff4c9"}" stroke="${full?"#16271c":"#c9951d"}" stroke-width="2" stroke-dasharray="${full?"":"6 4"}"/>`;
+    for(let k=0;k<cnt;k++)s+=`<circle cx="${x+9+d/2+(k%5)*d}" cy="${y+9+d/2+Math.floor(k/5)*d}" r="8" fill="#16271c"/>`;}
+  return s+"</svg>";}
+
+// ================= Wortlisten =================
+const NOMEN=[["BALL","der Ball"],["TOR","das Tor"],["TRAINER","der Trainer"],["WIESE","die Wiese"],["TRIKOT","das Trikot"],["SCHUH","der Schuh"],["PFIFF","der Pfiff"],["SONNE","die Sonne"],["SCHAF","das Schaf"],["HUND","der Hund"],["BLUME","die Blume"],["NETZ","das Netz"],["MANNSCHAFT","die Mannschaft"],["KATZE","die Katze"]];
+const VERBEN=[["LAUFEN","ich laufe"],["SPRINGT","er springt"],["SCHIESST","er schießt"],["LIEGT","es liegt"],["KICKT","sie kickt"],["JUBELN","wir jubeln"],["RENNT","er rennt"],["SPIELEN","wir spielen"],["LACHT","sie lacht"],["FÄNGT","er fängt"],["WIRFT","sie wirft"],["PFEIFT","er pfeift"]];
+const ADJ=[["SCHNELL","der schnelle Ball"],["GRÜN","die grüne Wiese"],["RUND","der runde Ball"],["LAUT","der laute Pfiff"],["SCHÖN","das schöne Tor"],["SAFTIG","die saftige Wiese"],["BUNT","das bunte Trikot"],["KLEIN","der kleine Hund"],["MÜDE","der müde Trainer"],["STARK","der starke Torwart"]];
+const VERL=[["Hun_","d","t","der Hund","die Hunde"],["Kin_","d","t","das Kind","die Kinder"],["Wal_","d","t","der Wald","die Wälder"],["Pfer_","d","t","das Pferd","die Pferde"],["Bil_","d","t","das Bild","die Bilder"],["Hem_","d","t","das Hemd","die Hemden"],
+  ["Zel_","t","d","das Zelt","die Zelte"],["Hu_ (auf dem Kopf)","t","d","der Hut","die Hüte"],["Elefan_","t","d","der Elefant","die Elefanten"],["Blat_","t","d","das Blatt","die Blätter"],
+  ["Ber_","g","k","der Berg","die Berge"],["Zwer_","g","k","der Zwerg","die Zwerge"],["Zu_","g","k","der Zug","die Züge"],["We_","g","k","der Weg","die Wege"],["Schran_","k","g","der Schrank","die Schränke"],["Wer_","k","g","das Werk","die Werke"],
+  ["Kor_","b","p","der Korb","die Körbe"],["Sie_","b","p","das Sieb","die Siebe"],["Kal_","b","p","das Kalb","die Kälber"],["gel_","b","p","gelb","die gelbe Karte"]];
+const SAETZE=[["Emil schießt aufs Tor","Der Ball fliegt ins Netz"],["Am Samstag ist ein Spiel","Alle Kinder freuen sich"],["Der Trainer pfeift","Jetzt geht es los"],["Die Sonne scheint","Wir spielen auf der Wiese"],["Mein Trikot ist grün","Es hat die Nummer zehn"],["Die Katze spielt gern","Sie jagt den kleinen Ball"],["Im Frühling gibt es viele Tierkinder","Küken schlüpfen aus den Eiern"],["Der Torwart fängt den Ball","Die Fans jubeln laut"],["Es regnet heute","Wir trainieren in der Halle"],["Emil zieht seine Schuhe an","Dann läuft er auf den Platz"]];
+const PRAET=[["läuft","lief","laufte"],["spielt","spielte","spielen"],["schießt","schoss","schießte"],["rennt","rannte","rennte"],["geht","ging","gehte"],["kommt","kam","kommte"],["fängt","fing","fangte"],["springt","sprang","springte"],["lacht","lachte","lucht"],["ruft","rief","rufte"],["sieht","sah","siehte"],["trinkt","trank","trinkte"],["schreibt","schrieb","schreibte"],["singt","sang","singte"],["wirft","warf","werfte"],["trainiert","trainierte","trainieren"]];
+const FAM=[["fahren",["Fahrer","Fahrrad","Abfahrt"],"Farbe"],["spielen",["Spieler","Spielplatz","verspielt"],"Spiegel"],["lesen",["Leser","Lesebuch","vorlesen"],"Löwe"],["schreiben",["Schrift","Schreibtisch","abschreiben"],"schreien"],["fallen",["Unfall","Falle","gefallen"],"falten"],["laufen",["Läufer","Anlauf","Lauf"],"Laub"],["backen",["Bäcker","Backofen","gebacken"],"Bach"],["schießen",["Schuss","Torschütze","abschießen"],"Schüssel"],["werfen",["Wurf","Einwurf","Werfer"],"Wurst"]];
+const IE=[["L_ed","ie"],["Sp_el","ie"],["T_er","ie"],["W_ese","ie"],["Br_ef","ie"],["Z_el","ie"],["Kn_e","ie"],["n_mand","ie"],["K_nd","i"],["F_sch","i"],["T_sch","i"],["W_nd","i"],["B_ld","i"],["Sch_ff","i"],["M_tte","i"],["Tr_kot","i"]];
+const DOPPEL=[["Ball","Bal",1],["Sonne","Sone",1],["Mutter","Muter",1],["kommen","komen",1],["Teller","Teler",1],["Suppe","Supe",1],["schwimmen","schwimen",1],["Himmel","Himel",1],["Pfiff","Pfif",1],["Mannschaft","Manschaft",1],["Hose","Hosse",0],["Blume","Blumme",0],["Tafel","Taffel",0],["Schule","Schulle",0],["Tor","Torr",0],["Schal","Schall",0]];
+const SG=[["Der Torwart fängt den Ball",1,2],["Emil schießt ein Tor",0,1],["Die Fans singen laut",1,2],["Der Trainer ruft die Kinder",1,2],["Im Winter trainiert die Mannschaft in der Halle",4,2],["Morgen spielt Emil gegen Dynamo",2,1],["Die Sonne scheint auf den Platz",1,2],["Der Schiedsrichter zeigt die gelbe Karte",1,2],["Heute gewinnt unser Team",3,1],["Die Katze jagt den Ball",1,2]];
+const PERF=[["laufen","ich bin gelaufen","ich habe gelaufen","ich bin gelauft"],["spielen","ich habe gespielt","ich bin gespielt","ich habe gespielen"],["schießen","ich habe geschossen","ich bin geschossen","ich habe geschießt"],["fahren","ich bin gefahren","ich habe gefahren","ich bin gefahrt"],["essen","ich habe gegessen","ich bin gegessen","ich habe geesst"],["schwimmen","ich bin geschwommen","ich habe geschwimmt","ich bin geschwimmen"],["schreiben","ich habe geschrieben","ich habe geschreibt","ich bin geschrieben"],["kommen","ich bin gekommen","ich habe gekommen","ich bin gekommt"],["singen","ich habe gesungen","ich habe gesingt","ich bin gesungen"],["springen","ich bin gesprungen","ich habe gesprungen","ich bin gespringt"],["gewinnen","ich habe gewonnen","ich habe gewinnt","ich bin gewonnen"]];
+const REDE=[["Emil","sagt","Ich spiele heute im Tor","."],["Der Trainer","ruft","Alle kommen zu mir","."],["Mama","fragt","Hast du deine Schuhe dabei","?"],["Tim","fragt","Wann beginnt das Spiel","?"],["Die Trainerin","sagt","Heute üben wir Pässe","."],["Emil","ruft","Gib mir den Ball","!"]];
+const STEIG=[["schnell","schneller","am schnellsten","schnellerer"],["groß","größer","am größten","großer"],["gut","besser","am besten","guter"],["viel","mehr","am meisten","vieler"],["hoch","höher","am höchsten","hocher"],["stark","stärker","am stärksten","starker"],["klein","kleiner","am kleinsten","kleinerer"],["laut","lauter","am lautesten","lautster"],["weit","weiter","am weitesten","weiterer"]];
+
+// ================= Aufgaben-Generatoren =================
+const WA_HINT="<b>Nomen:</b> Passt der, die oder das davor?<br><b>Verb:</b> Passt ich, er oder wir davor?<br><b>Adjektiv:</b> Passt es zwischen der und ein Nomen, wie „der ___ Ball“?";
+const GEN={
+  // ---- Klasse 2 ----
+  m_read(){let z=R(0,9),e=R(0,9);if(!z&&!e)e=5;const n=10*z+e;return{type:"num",q:"Welche Zahl ist das?",vis:blocksSVG(z,e),a:n,ex:`${z} Zehner und ${e} Einer sind ${n}.`};},
+  m_split(){const n=Math.random()<.3?R(1,9):R(10,99),Z=Math.floor(n/10),E=n%10,ask=Math.random()<.55?"Z":"E";
+    return{type:"num",q:`Wie viele <mark>${ask==="Z"?"Zehner":"Einer"}</mark> hat die Zahl <b>${n}</b>?`,a:ask==="Z"?Z:E,ex:`${n} = ${Z} Zehner + ${E} Einer.`+(Z===0?" Unter 10 gibt es 0 Zehner.":"")};},
+  m_plaet(){const z=R(1,8),e=R(1,8),n=10*z+e,dazu=Math.random()<.6,valid=dazu?[n+10,n+1]:[n-10,n-1],right=pick(valid);
+    const pool=[10*e+z,dazu?n+2:n-2,dazu?n+11:n-11,dazu?n+20:n-20,n,dazu?n+9:n-9].filter(x=>x>=0&&x<=99&&!valid.includes(x));
+    return{type:"choice",q:`Lege <mark>ein</mark> Plättchen <mark>${dazu?"dazu":"weg"}</mark>. Welche Zahl kann entstehen?`,vis:stwSVG(z,e),choices:[right].concat(shuffle([...new Set(pool)]).slice(0,3)).map(String),a:String(right),
+      ex:`Gelegt ist ${n}. ${dazu?"Dazu":"Weg"} bei Z: ${valid[0]}. ${dazu?"Dazu":"Weg"} bei E: ${valid[1]}.`};},
+  m_zehner(){const unit=Math.random()<.6?"Zehner":"Einer",plus=Math.random()<.55,k=R(1,4);let a,res;
+    if(unit==="Zehner"){a=plus?R(11,99-10*k):R(10*k+1,98);res=plus?a+10*k:a-10*k;}else{a=plus?R(11,95-k):R(k+10,98);res=plus?a+k:a-k;}
+    const op=plus?"+":"−",v=unit==="Zehner"?10*k:k;return{type:"num",q:`${a} ${op} ${k} <mark>${unit}</mark> = ?`,a:res,ex:`${k} ${unit} sind ${v}. ${a} ${op} ${v} = ${res}.`};},
+  m_mal(){let r=R(2,5),c=R(2,6);if(r===c)c=c===6?5:c+1;const ex=`${r} Reihen mit je ${c} Punkten: ${r} · ${c} = ${r*c}.`;
+    if(Math.random()<.5){const right=`${r} · ${c}`;return{type:"choice",q:"Welche <mark>Malaufgabe</mark> passt zum Bild? Zähle die Reihen.",vis:fieldSVG(r,c),choices:[right,`${r} + ${c}`,`${r+1} · ${c}`,`${r} · ${c+1}`],a:right,ex};}
+    return{type:"num",q:"Wie viele Punkte sind es? Rechne mit <mark>mal</mark>.",vis:fieldSVG(r,c),a:r*c,ex};},
+  m_rechnen(){const t=R(0,2);let a,b;
+    if(t===0){do{a=R(12,88);b=R(3,9);}while(a%10+b<10||a+b>99);const s=10-a%10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`Erst bis zum Zehner: ${a} + ${s} = ${a+s}. Dann noch ${b-s}: ${a+b}.`};}
+    if(t===1){do{a=R(21,95);b=R(3,9);}while(a%10>=b);const s=a%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst zum Zehner: ${a} − ${s} = ${a-s}. Dann noch ${b-s} weg: ${a-b}.`};}
+    a=R(40,95);b=R(11,a-5);const bz=b-b%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst die Zehner: ${a} − ${bz} = ${a-bz}. Dann die Einer: ${a-bz} − ${b%10} = ${a-b}.`};},
+  d_wortart(){const k=R(0,2),w=pick([NOMEN,VERBEN,ADJ][k]),names=["Nomen","Verb","Adjektiv"];
+    return{type:"choice",fixed:true,q:`Welche Wortart ist <b>${w[0]}</b>?`,choices:names,a:names[k],ex:`${names[k]}-Probe: „${w[1]}“ passt.`,hint:WA_HINT};},
+  d_verl(){const v=pick(VERL);return{type:"choice",fixed:true,q:`Welcher Buchstabe fehlt? <b>${v[0].replace("_","<mark>_</mark>")}</b>`,choices:[v[1],v[2]].sort(),a:v[1],
+    ex:`Verlängern: ${v[3]} → ${v[4]}. Da hörst du das ${v[1]}.`,hint:"Mach das Wort länger, zum Beispiel mit der Mehrzahl. Dann hörst du den Buchstaben."};},
+  d_satz(){const p=pick(SAETZE),w1=p[0].split(" "),w=w1.concat(p[1].split(" "));
+    return{type:"tap",q:"Wo ist der erste Satz zu Ende? Tippe auf das Wort, nach dem der <mark>Punkt</mark> kommt.",words:w,a:w1.length-1,ex:`Richtig ist: ${p[0]}. ${p[1]}.`,
+      hint:"Lies laut. Wo deine Stimme nach unten geht, ist der Satz zu Ende. Nach dem Punkt geht es groß weiter.",tapLabel:"Punkt setzen!",mark:true};},
+  // ---- Klasse 3 ----
+  m3_rest(){const b=R(2,9),q=R(1,9),r=Math.random()<.8?R(1,b-1):0,a=b*q+r;
+    return{type:"pair",q:`${a} : ${b} = ? <mark>Rest</mark> ?`,vis:groupsSVG(a,b),a:[q,r],labels:["Ergebnis","Rest"],
+      ex:`${q} · ${b} = ${q*b}. Bis ${a} fehlen noch ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`,hint:`Suche die größte Zahl aus der ${b}er-Reihe, die in ${a} passt. Der Rest muss kleiner als ${b} sein.`};},
+  m3_1x1(){const a=R(2,10),b=R(2,10);if(Math.random()<.5)return{type:"num",q:`${a} · ${b} = ?`,a:a*b,ex:`${a} · ${b} = ${a*b}. Tipp: ${a} · ${b} ist dasselbe wie ${b} · ${a}.`};
+    return{type:"num",q:`${a*b} : ${b} = ?`,a:a,ex:`${a} · ${b} = ${a*b}, also ${a*b} : ${b} = ${a}.`};},
+  m3_htz(){const n=R(101,999),H=Math.floor(n/100),Z=Math.floor(n/10)%10,E=n%10,t=R(0,2);
+    if(t===2)return{type:"num",q:`${H} <mark>H</mark> + ${Z} <mark>Z</mark> + ${E} <mark>E</mark> = ?`,a:n,ex:`${H} Hunderter, ${Z} Zehner und ${E} Einer sind ${n}.`};
+    const w=t===0?"Hunderter":"Zehner";return{type:"num",q:`Wie viele <mark>${w}</mark> stehen an der Stelle in <b>${n}</b>?`,a:t===0?H:Z,ex:`${n} = ${H} H + ${Z} Z + ${E} E.`};},
+  m3_plus(){const t=R(0,3);let a,b;
+    if(t===0){a=R(1,6)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(a+b>999)b=100;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`Erst die Hunderter, dann die Zehner: ${a} + ${b} = ${a+b}.`};}
+    if(t===1){a=R(4,9)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(b>a)b=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst die Hunderter weg, dann die Zehner: ${a} − ${b} = ${a-b}.`};}
+    if(t===2){a=R(100,899);b=R(1,9)*10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`${b/10} Zehner dazu: ${a} + ${b} = ${a+b}.`};}
+    a=R(1,9)*100;b=R(1,9)*10+R(1,9);if(b>a)a+=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst ${b-b%10} weg: ${a-(b-b%10)}. Dann noch ${b%10} weg: ${a-b}.`};},
+  m3_sach(){const b=R(3,6);let q=R(3,8),r=R(1,b-1),a=b*q+r;
+    const S1=[`${a} Kinder fahren zum Turnier. In ein Auto passen ${b} Kinder. Wie viele Autos braucht man?`,q+1,`${a} : ${b} = ${q} Rest ${r}. Die ${r} übrigen Kinder brauchen auch ein Auto, also ${q+1} Autos.`],
+      S2=[`Emil verteilt ${a} Sticker gerecht an ${b} Freunde. Wie viele Sticker bekommt jeder?`,q,`${a} : ${b} = ${q} Rest ${r}. Jeder bekommt ${q}, ${r} Sticker bleiben übrig.`],
+      S3=[`Für ${a} Bälle gibt es Netze. In ein Netz passen ${b} Bälle. Wie viele Netze werden ganz voll?`,q,`${a} : ${b} = ${q} Rest ${r}. ${q} Netze werden voll, eins ist nur halb voll.`];
+    const s=pick([S1,S2,S3]);return{type:"num",q:s[0],a:s[1],ex:s[2],hint:"Rechne erst mit Rest. Überlege dann: Braucht der Rest noch etwas extra oder bleibt er übrig?"};},
+  d3_praet(){const v=pick(PRAET);const w=[v[1],v[2],v[0]].filter((x,i,a)=>a.indexOf(x)===i);
+    return{type:"choice",q:`Heute: Emil <b>${v[0]}</b>.<br>Gestern: Emil <mark>___</mark>.`,choices:w,a:v[1],ex:`Heute: er ${v[0]}. Gestern: er ${v[1]}.`,hint:"Sprich den Satz laut: Gestern … Welche Form klingt richtig?"};},
+  d3_fam(){const f=pick(FAM);return{type:"choice",q:`Welches Wort gehört <mark>nicht</mark> zur Wortfamilie <b>${f[0]}</b>?`,choices:f[1].concat([f[2]]),a:f[2],
+    ex:`${f[1].join(", ")} haben alle den Wortstamm von „${f[0]}“. „${f[2]}“ klingt nur ähnlich.`,hint:"Wortfamilien haben denselben Wortstamm und etwas mit derselben Sache zu tun."};},
+  d3_ie(){const w=pick(IE),full=w[0].replace("_",w[1]);return{type:"choice",fixed:true,q:`i oder ie? <b>${w[0].replace("_","<mark>_</mark>")}</b>`,choices:["i","ie"],a:w[1],
+    ex:w[1]==="ie"?`${full}: Das i klingt lang, also schreibt man meistens ie.`:`${full}: Das i klingt kurz, also nur i.`,hint:"Sprich das Wort langsam. Klingt das i lang wie in Biene oder kurz wie in Fisch?"};},
+  d3_doppel(){const w=pick(DOPPEL);return{type:"choice",q:"Welches Wort ist <mark>richtig</mark> geschrieben?",choices:[w[0],w[1]],a:w[0],
+    ex:w[2]?`${w[0]}: Der Selbstlaut vor dem Mitlaut klingt kurz, deshalb kommt der Mitlaut doppelt.`:`${w[0]}: Der Selbstlaut klingt lang, deshalb bleibt der Mitlaut einfach.`,hint:"Klingt der Selbstlaut kurz, wird der Mitlaut danach oft verdoppelt: Ball, Sonne."};},
+  d3_satzglied(){const s=pick(SG),w=s[0].split(" "),subj=Math.random()<.5;
+    return{type:"tap",q:subj?"Tippe auf das Nomen im <mark>Subjekt</mark>. Frag: Wer oder was?":"Tippe auf das <mark>Prädikat</mark>. Frag: Was tut jemand?",words:w,a:subj?s[1]:s[2],
+      ex:subj?`Wer oder was ${w[s[2]]}? ${w[s[1]]}. Das ist das Subjekt.`:`Was tut jemand? ${w[s[2]]}. Das Prädikat ist das Verb im Satz.`,tapLabel:"Das ist es!",hint:"Subjekt: Wer oder was tut etwas? Prädikat: Was tut es? Das Prädikat ist immer ein Verb."};},
+  // ---- Klasse 4 ----
+  m4_stelle(){const n=R(10000,999999),names=[["Zehntausender",10000],["Tausender",1000],["Hunderter",100]],p=pick(names),dg=Math.floor(n/p[1])%10;
+    return{type:"num",q:`Welche Ziffer steht an der <mark>${p[0]}</mark>-Stelle von <b>${fmt(n)}</b>?`,a:dg,ex:`In ${fmt(n)} steht an der ${p[0]}-Stelle die ${dg}.`,hint:"Von rechts: Einer, Zehner, Hunderter, Tausender, Zehntausender, Hunderttausender."};},
+  m4_mult(){const a=R(12,99),b=R(3,9),z=a-a%10,e=a%10;return{type:"num",q:`${a} · ${b} = ?`,a:a*b,ex:`${z} · ${b} = ${z*b} und ${e} · ${b} = ${e*b}. Zusammen ${a*b}.`,hint:`Zerlege ${a} in ${z} und ${e}.`};},
+  m4_div(){const b=R(2,9),q=R(11,40),a=b*q,big=Math.floor(q/10)*10*b;return{type:"num",q:`${a} : ${b} = ?`,a:q,ex:`${big} : ${b} = ${big/b} und ${a-big} : ${b} = ${(a-big)/b}. Zusammen ${q}.`,hint:`Zerlege ${a} in Zahlen, die gut durch ${b} gehen.`};},
+  m4_runden(){const n=R(1001,9989),down=Math.floor(n/100)*100,up=down+100,right=n%100>=50?up:down,wrong=right===up?down:up,z=Math.round(n/10)*10;
+    const ch=[fmt(right),fmt(wrong)];if(z!==right&&z!==wrong)ch.push(fmt(z));
+    return{type:"choice",q:`Runde <b>${fmt(n)}</b> auf <mark>Hunderter</mark>.`,choices:ch,a:fmt(right),ex:`Die Zehnerziffer ist ${Math.floor(n/10)%10}. ${n%100>=50?"Ab 5 wird aufgerundet":"Unter 5 wird abgerundet"}: ${fmt(right)}.`,hint:"Schau auf die Ziffer rechts neben den Hundertern. 0 bis 4: abrunden. 5 bis 9: aufrunden."};},
+  d4_perfekt(){const v=pick(PERF);return{type:"choice",q:`Setze <b>${v[0]}</b> ins <mark>Perfekt</mark>.`,choices:[v[1],v[2],v[3]],a:v[1],ex:`Richtig: ${v[1]}.`,hint:"Perfekt: habe oder bin + ge…-Form. Bei Bewegungen von A nach B oft „bin“."};},
+  d4_rede(){const r=pick(REDE),t=r[2],pz=r[3];const right=`${r[0]} ${r[1]}: „${t}${pz}“`,w1=`${r[0]} ${r[1]} „${t}${pz}“`,w2=`${r[0]} ${r[1]}: ${t}${pz}`,w3=`${r[0]} ${r[1]}: „${t.charAt(0).toLowerCase()+t.slice(1)}${pz}“`;
+    return{type:"choice",q:"Welcher Satz ist mit <mark>wörtlicher Rede</mark> richtig geschrieben?",choices:[right,w1,w2,w3],a:right,small:true,ex:`Nach dem Begleitsatz kommt ein Doppelpunkt. Das Gesagte steht in Anführungszeichen und beginnt groß: ${right}`,hint:"Begleitsatz, Doppelpunkt, „Gesagtes mit großem Anfang und Satzzeichen“."};},
+  d4_steigern(){const s=pick(STEIG),sup=Math.random()<.4;
+    if(sup)return{type:"choice",q:`${s[0]} → ${s[1]} → <mark>___</mark>`,choices:[s[2],"am "+s[3],"am "+s[1]].filter((x,i,a)=>a.indexOf(x)===i),a:s[2],ex:`${s[0]}, ${s[1]}, ${s[2]}.`};
+    return{type:"choice",q:`${s[0]} → <mark>___</mark> → ${s[2]}`,choices:[s[1],s[3],"mehr "+s[0]],a:s[1],ex:`${s[0]}, ${s[1]}, ${s[2]}.`};}
+};
+
+// ================= Auswahl =================
+function weightOf(t){const s=S.stats[t];let w=WEAK[t]||1.2;if(s&&s.last&&s.last.length>=3){const l=s.last.slice(-MASTER_N);w*=0.5+2.2*(1-l.reduce((a,b)=>a+b,0)/l.length);}if(topicSafe(t))w*=.6;return Math.max(.25,w);}
+function nextTopic(pool,last){let tot=0;const ws=pool.map(t=>{const w=weightOf(t)*(t===last?.3:1);tot+=w;return w;});let x=Math.random()*tot;for(let i=0;i<pool.length;i++){x-=ws[i];if(x<=0)return pool[i];}return pool[pool.length-1];}
+
+// ================= Spielablauf =================
+function startRound(li,mode,trial){
+  const L=LIGEN[li],pool=mode==="math"?L.math:mode==="deu"?L.deu:L.math.concat(L.deu);
+  let len=trial?TRIAL:ROUND;const st=state(li);if(!trial&&st==="probe")len=Math.min(ROUND,S.lg[L.id].budget);
+  if(trial){S.lg[L.id].trial=today();}
+  G={li,mode,trial,pool,len,i:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null};
+  S.sel=li;nextTask();view="play";render();window.scrollTo(0,0);
+}
+function nextTask(){const t=nextTopic(G.pool,G.last);G.last=t;G.task=Object.assign({topic:t},GEN[t]());G.input="";G.inp=["",""];G.act=0;G.done=false;G.showHint=false;G.pickIdx=-1;G.given=null;
+  if(G.task.type==="choice"&&!G.task.fixed)G.task.choices=shuffle(G.task.choices);}
+function answer(val){if(G.done)return;const T=G.task;let ok;
+  if(T.type==="num")ok=Number(val)===T.a;else if(T.type==="pair")ok=Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];else ok=val===T.a;
+  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);
+  const st=S.stats[T.topic]||(S.stats[T.topic]={a:0,c:0,last:[]});st.a++;if(ok)st.c++;st.last.push(ok?1:0);st.last=st.last.slice(-MASTER_N);
+  const L=LIGEN[G.li];if(!G.trial&&state(G.li)==="probe")S.lg[L.id].budget=Math.max(0,S.lg[L.id].budget-1);
+  G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
+  if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;tone([523,659,784],.12);}else{G.streak=0;G.gain=0;tone([220,180],.18);}
+  render();requestAnimationFrame(()=>{const gw=document.getElementById("gw");if(gw)gw.classList.add(ok?"shoot":"miss");});}
+function rightText(T){return T.type==="tap"?T.words[T.a]:T.type==="pair"?`${T.a[0]} Rest ${T.a[1]}`:String(T.a);}
+function next(){G.i++;if(G.i>=G.len){finish();return;}nextTask();render();}
+function finish(){
+  const c=G.res.filter(Boolean).length,n=G.len,win=!G.trial&&c/n>=.6,perfect=!G.trial&&c===n&&n>=5;
+  G.bonus=(win?20:0)+(perfect?30:0);G.pts+=G.bonus;S.points+=G.pts;S.rounds++;
+  G.newSticker=null;if(win){S.wins++;if(S.stickers<STICKERS.length){G.newSticker=S.stickers;S.stickers++;}}
+  const d=today();if(!S.days.includes(d)){S.days.push(d);S.days=S.days.slice(-120);}
+  UI.celebrate=checkPromotions();
+  S.history.push({d,liga:LIGEN[G.li].id,mode:G.mode,trial:!!G.trial,c,n,pts:G.pts});S.history=S.history.slice(-40);
+  view="result";render();window.scrollTo(0,0);
+  save({date:new Date().toISOString(),liga:LIGEN[G.li].id,mode:G.mode,trial:!!G.trial,correct:c,total:n,points:G.pts,tasks:G.hist});
+}
+
+// ================= Darstellung =================
+function boardHTML(){const top=topLeague(),L=LIGEN[top],sc=safeCount(top),tot=topicsOf(top).length,pct=Math.round(sc/tot*100);
+  return `<header class="board"><div><div class="league">${L.name} · ${L.klasse}</div><div class="sub">${sc} von ${tot} Themen sicher${top<LIGEN.length-1?` · dann geht es in die ${LIGEN[top+1].name}`:""}</div></div>
+  <div class="pts">${S.points}<small>Punkte</small></div><div class="bar"><i style="width:${pct}%"></i></div>
+  <div class="icons"><span class="pill">${streakDays()} Trainingstage in Folge</span><span class="pill">${S.wins} Siege · ${S.rounds} Spiele</span><button class="snd" id="snd">${S.sound?"Ton an":"Ton aus"}</button></div></header>`;}
+function stickerHTML(i,on){return `<div class="st ${on?"on":""}">${on?ballSVG(34,false):""}<span class="n">${i+1}</span><span>${on?STICKERS[i]:"?"}</span></div>`;}
+function modeBtns(li,small){return `<div class="modes ${small?"sm":""}">
+  <button class="mode" data-play="${li}:math"><span class="ic" style="background:var(--sky)">+</span><span><b>Mathe-Spiel</b></span></button>
+  <button class="mode" data-play="${li}:deu"><span class="ic" style="background:var(--miss)">Aa</span><span><b>Deutsch-Spiel</b></span></button>
+  <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">★</span><span><b>Mix-Spiel</b></span></button></div>`;}
+function leagueCard(i){const L=LIGEN[i],st=state(i),top=topLeague(),ms=mastered(i),l=S.lg[L.id];
+  let badge,body="";
+  if(st==="open"){badge=ms?`<span class="badge done">Durchgespielt</span>`:i===top?`<span class="badge cur">Deine Liga</span>`:`<span class="badge done">Frei</span>`;}
+  else if(st==="probe")badge=`<span class="badge probe">Probetraining: noch ${l.budget} Aufgaben</span>`;
+  else if(st==="wait")badge=`<span class="badge wait">Wartet auf Freigabe</span>`;
+  else badge=`<span class="badge lock">Gesperrt</span>`;
+  const chips=`<div class="chipsT">${topicsOf(i).map(t=>`<span class="${topicSafe(t)?"ok":""}">${topicSafe(t)?"✓ ":""}${TOPICS[t]}</span>`).join("")}</div>`;
+  if(playable(i)){body=chips+modeBtns(i,true);if(st==="probe")body+=`<p class="note">Wenn die ${PROBE} Probe-Aufgaben gespielt sind, können Mama oder Papa die Liga ganz freigeben.</p>`;}
+  else if(st==="wait"){body=chips+`<p class="note">Das Probetraining ist geschafft. Jetzt müssen Mama oder Papa die ${L.name} in der Trainerbank freigeben.</p>`;}
+  else{const prev=LIGEN[i-1];
+    body=`<p class="note">Freispielen: In der ${prev.name} alle Themen sicher schaffen (je ${MASTER_K} von den letzten ${MASTER_N} Aufgaben richtig). Stand: ${safeCount(i-1)} von ${topicsOf(i-1).length}.</p>`+
+      (canTrial(i)?`<div class="row"><button class="btn sm" data-trial="${i}">Schnuppern: ${TRIAL} Aufgaben</button><span class="note">Einmal am Tag</span></div>`:i<=top+2?`<p class="note">Heute schon geschnuppert. Morgen geht es wieder.</p>`:"");}
+  return `<section class="lg ${playable(i)?"":"locked"}"><div class="lg-head"><div><b>${L.name}</b><span class="k">${L.klasse}</span></div>${badge}</div>${body}</section>`;}
+
+function parentHTML(){
+  if(!S.pin)return `<div class="parent"><p class="note">Legt eine Eltern-PIN fest (4 Ziffern). Damit gebt ihr Ligen frei oder setzt den Spielstand zurück.</p>
+    <div class="pin"><input id="pinNew" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Neue PIN"><button class="btn sm" id="pinSet">PIN speichern</button></div>${UI.pinMsg?`<p class="note">${UI.pinMsg}</p>`:""}</div>`;
+  if(!UI.parent)return `<div class="parent"><div class="pin"><input id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Eltern-PIN"><button class="btn sm" id="pinOk">Eltern-Bereich öffnen</button></div>${UI.pinMsg?`<p class="note">${UI.pinMsg}</p>`:""}</div>`;
+  let rows=LIGEN.slice(1).map((L,k)=>{const i=k+1,st=state(i),l=S.lg[L.id];
+    const txt=st==="open"?"ganz frei":st==="probe"?`Probetraining (noch ${l.budget})`:st==="wait"?"Probetraining fertig, wartet auf euch":"gesperrt";
+    return `<div class="prow"><span><b>${L.name}</b> (${L.klasse}): ${txt}</span><span class="row">${st!=="open"?`<button class="btn sm" data-open="${i}">Ganz freigeben</button>`:""}${st!=="locked"?`<button class="btn ghost sm" data-lock="${i}">Wieder sperren</button>`:""}</span></div>`;}).join("");
+  return `<div class="parent">${rows}<div class="row">${UI.confirmReset?`<span>Wirklich alles löschen?</span><button class="btn warn" id="resetYes">Ja, löschen</button><button class="btn ghost sm" id="resetNo">Abbrechen</button>`:`<button class="btn warn" id="reset">Spielstand zurücksetzen</button>`}<button class="btn ghost sm" id="pinClose">Eltern-Bereich schließen</button></div></div>`;}
+
+function homeHTML(){
+  const stats=LIGEN.map((L,i)=>`<h4 class="gl">${L.name} (${L.klasse})</h4>`+topicsOf(i).map(t=>{const s=S.stats[t],l=s&&s.last?s.last.slice(-MASTER_N):[],k=l.reduce((a,b)=>a+b,0),p=l.length?Math.round(k/l.length*100):0,
+    col=!l.length?"#c9d3cb":topicSafe(t)?"var(--goal)":p>=60?"var(--gold)":"var(--miss)";
+    return `<div class="stat"><span>${TOPICS[t]}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"–"}</span></div>`;}).join("")).join("");
+  return boardHTML()+`
+  <div><h1 class="title">Emils Torjäger-Liga</h1><p class="lead">Jedes Spiel hat ${ROUND} Aufgaben. Richtig heißt Tor! Spiel eine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p></div>
+  <div class="leagues">${LIGEN.map((_,i)=>leagueCard(i)).join("")}</div>
+  <section class="panel"><h3>Sammelalbum · ${S.stickers} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<S.stickers)).join("")}</div>
+  <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab 5 von 8 Toren.</p></section>
+  <section class="panel"><details ${UI.parent||UI.pinMsg?"open":""}><summary>Trainerbank (für Mama und Papa)</summary>
+    <p class="small">Zahlen zeigen, wie viele der letzten ${MASTER_N} Aufgaben je Thema richtig waren. Ein Thema ist sicher ab ${MASTER_K} von ${MASTER_N}. Schwache Themen kommen öfter dran.</p>${stats}
+    <p class="small">${db?"Der Spielstand wird online gespeichert. Schließen und neu öffnen verliert nichts.":"Der Spielstand wird in diesem Browser gespeichert."}</p>${parentHTML()}
+  </details></section>`;}
+
+function inputHTML(T){
+  if(T.type==="num"){let h=`<div class="ans" aria-live="polite">${G.done?G.given:(G.input||"&nbsp;")}</div>`;if(!G.done)h+=padHTML();return h;}
+  if(T.type==="pair"){const v=G.done?G.given:G.inp;let h=`<div class="pairrow"><span class="ans ${!G.done&&G.act===0?"act":""}" data-slot="0" role="button" aria-label="${T.labels[0]}">${v[0]||"&nbsp;"}</span><span>Rest</span><span class="ans ${!G.done&&G.act===1?"act":""}" data-slot="1" role="button" aria-label="${T.labels[1]}">${v[1]||"&nbsp;"}</span></div>`;
+    if(!G.done)h+=padHTML();return h;}
+  if(T.type==="choice")return `<div class="choices">${T.choices.map(ch=>{let cl="";if(G.done){if(ch===T.a)cl="right";else if(ch===G.given)cl="wrong";}return `<button class="${cl}" data-c="${ch.replace(/"/g,"&quot;")}" ${G.done?"disabled":""} ${T.small?'style="font-size:1.15rem;font-weight:400"':""}>${ch}</button>`;}).join("")}</div>`;
+  let h=`<div class="chips">${T.words.map((w,i)=>{let cl="";if(G.done){if(i===T.a)cl="right"+(T.mark?" pick":"");else if(i===G.given)cl="wrong";}else if(i===G.pickIdx)cl=T.mark?"pick":"pick";return `<button class="${cl}" data-w="${i}" ${G.done?"disabled":""}>${w}</button>`;}).join("")}</div>`;
+  if(!G.done)h+=`<button class="btn" id="tapok" ${G.pickIdx<0?'disabled style="opacity:.5"':""}>${T.tapLabel}</button>`;return h;}
+function padHTML(){return `<div class="pad">${[1,2,3,"del",4,5,6,0,7,8,9,"ok"].map(k=>k==="del"?`<button data-k="del" aria-label="Löschen">⌫</button>`:k==="ok"?`<button class="ok" data-k="ok">Schuss!</button>`:`<button data-k="${k}">${k}</button>`).join("")}</div>`;}
+
+function playHTML(){const T=G.task,c=G.res.filter(Boolean).length,m=G.res.length-c,L=LIGEN[G.li];
+  const dots=Array.from({length:G.len},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?"ok":"no"):i===G.i?"now":""}"></i>`).join("");
+  let fb="";if(G.done){fb=G.ok?`<div class="fb ok">${goalSVG()}<span class="big">Tor!</span><span class="plus">+${G.gain}${G.gain>10?" Serie!":""}</span><p>${T.ex}</p></div>`
+      :`<div class="fb no">${goalSVG()}<span class="big">Knapp vorbei</span><p><b>Richtig ist: ${rightText(T)}.</b> ${T.ex}</p></div>`;
+    fb+=`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;}
+  const hint=T.hint&&!G.done?(G.showHint?`<div class="hint">${T.hint}</div>`:`<button class="hintbtn" id="hint">Trainer-Tipp anzeigen</button>`):"";
+  return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
+    <div class="score">Emil <em>${c}</em> : <em>${m}</em> ${G.rival}</div><div class="dots">${dots}</div></div>
+    <section class="card"><div class="tag">${L.name}${G.trial?" · Schnuppern":""} · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}</div>
+    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${inputHTML(T)}${hint}${fb}</section>
+    <p class="lead small" style="color:#fff">Lies zuerst das gelb markierte Wort. Dann erst schießen!</p>`;}
+
+function resultHTML(){const c=G.res.filter(Boolean).length,n=G.len,m=n-c,L=LIGEN[G.li];
+  const head=G.trial?"Schnuppertraining vorbei":c===n?"Perfektes Spiel!":c/n>=.6?"Sieg!":c/n>=.5?"Unentschieden":"Heute verloren. Nächstes Mal klappt es!";
+  const st=state(G.li);let info="";
+  if(G.trial)info=`<p>So fühlt sich die ${L.name} an. Freispielen kannst du sie in der ${LIGEN[G.li-1].name}.</p>`;
+  else if(st==="probe")info=`<p>Probetraining in der ${L.name}: noch ${S.lg[L.id].budget} Aufgaben.</p>`;
+  else if(st==="wait")info=`<p>Probetraining geschafft! Jetzt müssen Mama oder Papa die ${L.name} freigeben.</p>`;
+  return boardHTML()+`<section class="card result"><h2>${head}</h2>
+    <div class="final"><span class="team">Emil<small>Heim</small></span><span>${c} : ${m}</span><span class="team">${G.rival}<small>Gast</small></span></div>
+    <p class="q" style="font-size:1.4rem">+${G.pts} Punkte${G.bonus?` (davon ${G.bonus} Bonus)`:""}</p>
+    ${UI.celebrate?`<div class="celebrate">${UI.celebrate}</div>`:""}${info}
+    ${G.newSticker!==null?`<p>Neuer Sticker für dein Album:</p><div class="newst">${stickerHTML(G.newSticker,true)}</div>`:G.trial?"":(c/n>=.6?"<p>Dein Album ist voll. Stark!</p>":"<p>Gewinne ein Spiel, dann bekommst du einen Sticker.</p>")}
+    <div class="row" style="justify-content:center">${!G.trial&&playable(G.li)?`<button class="btn" id="again">Nächstes Spiel</button>`:""}<button class="btn ghost" id="home">Zur Kabine</button></div></section>`;}
+
+function render(){document.getElementById("app").innerHTML=view==="home"?homeHTML():view==="play"?playHTML():resultHTML();bind();}
+function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
+function del(){if(G.task.type==="pair")G.inp[G.act]=G.inp[G.act].slice(0,-1);else G.input=G.input.slice(0,-1);render();}
+function ok(){const T=G.task;if(T.type==="pair"){if(G.act===0&&G.inp[0]!==""&&G.inp[1]===""){G.act=1;render();return;}if(G.inp[0]!==""&&G.inp[1]!=="")answer(G.inp.slice());return;}if(G.input!=="")answer(G.input);}
+function bind(){const $=id=>document.getElementById(id);
+  document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const [li,m]=b.dataset.play.split(":");startRound(Number(li),m,false);});
+  document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
+  if($("snd"))$("snd").onclick=()=>{S.sound=!S.sound;save();render();};
+  if($("home"))$("home").onclick=()=>{view="home";UI.confirmReset=false;UI.celebrate="";render();window.scrollTo(0,0);};
+  if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false);};
+  if($("hint"))$("hint").onclick=()=>{G.showHint=true;render();};
+  if($("next"))$("next").onclick=next;
+  if($("tapok"))$("tapok").onclick=()=>{if(G.pickIdx>=0)answer(G.pickIdx);};
+  document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==="del")del();else if(k==="ok")ok();else typeDigit(k);});
+  document.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{if(!G.done){G.act=Number(b.dataset.slot);render();}});
+  document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>answer(b.dataset.c));
+  document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{G.pickIdx=Number(b.dataset.w);render();});
+  // Eltern
+  if($("pinSet"))$("pinSet").onclick=()=>{const v=$("pinNew").value.trim();if(!/^\d{4}$/.test(v)){UI.pinMsg="Bitte genau 4 Ziffern eingeben.";render();return;}S.pin=hash(v);UI.parent=true;UI.pinMsg="";save();render();};
+  if($("pinOk"))$("pinOk").onclick=()=>{const v=$("pinIn").value.trim();if(hash(v)===S.pin){UI.parent=true;UI.pinMsg="";}else UI.pinMsg="Die PIN stimmt nicht.";render();};
+  if($("pinClose"))$("pinClose").onclick=()=>{UI.parent=false;UI.confirmReset=false;render();};
+  document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{const L=LIGEN[Number(b.dataset.open)];S.lg[L.id].open=true;save();render();});
+  document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{const L=LIGEN[Number(b.dataset.lock)];S.lg[L.id].open=false;S.lg[L.id].budget=null;save();render();});
+  if($("reset"))$("reset").onclick=()=>{UI.confirmReset=true;render();};
+  if($("resetNo"))$("resetNo").onclick=()=>{UI.confirmReset=false;render();};
+  if($("resetYes"))$("resetYes").onclick=()=>{const keep={sound:S.sound,pin:S.pin};S=Object.assign(fresh(),keep);UI.confirmReset=false;save();render();};
+}
+document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&&e.target.tagName==="INPUT")return;
+  if(G.done&&(e.key==="Enter"||e.key===" ")){e.preventDefault();next();return;}if(G.done)return;
+  const T=G.task;if(T.type!=="num"&&T.type!=="pair")return;
+  if(/^[0-9]$/.test(e.key))typeDigit(e.key);else if(e.key==="Backspace")del();else if(e.key==="Enter")ok();});
+
+localLoad();render();connect();
+})();
+</script>
