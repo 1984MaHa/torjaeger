@@ -6,7 +6,7 @@ import {fileURLToPath} from "node:url";
 import {LIGEN,topicsOf} from "../app/js/content.js";
 import {GEN} from "../app/js/generators.js";
 import {newProfile} from "../app/js/model.js";
-import {BODIES,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
+import {BODIES,HATS,HAIR_STYLES,HAIR_COLORS,SKIN_TONES,SHIRT_COLORS,TEMPLATES,TRAINER_HAIR,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf,templateLook,startLook,withBody} from "../app/js/avatar.js";
 import {figureG,avatarSVG,crestSVG,trainerSVG,sceneSVG,pickShot,shotPath,SHOT_KINDS,SHOT_TEXT} from "../app/js/avatardraw.js";
 import {avatarBuilderHTML,trainerPanelHTML} from "../app/js/avatarui.js";
 import {leaks,similarExample,exampleHTML,helpBubblesHTML,coachHTML,rightText,speakerOf,FALLBACK_EXAMPLE} from "../app/js/coach.js";
@@ -30,7 +30,7 @@ test("Baukasten: Junge oder Mädchen, je 8 Frisuren, mehrere Hauttöne, 4 Vorlag
   for(const b of ["j","m"]){assert.ok(HAIR_STYLES[b].length>=6);assert.equal(new Set(HAIR_STYLES[b]).size,HAIR_STYLES[b].length);assert.equal(TEMPLATES.filter(t=>t.look.body===b).length,4);}
   assert.notDeepEqual(HAIR_STYLES.j,HAIR_STYLES.m);
   assert.ok(SKIN_TONES.length>=4);assert.ok(HAIR_COLORS.length>=5);assert.ok(SHIRT_COLORS.length>=6);
-  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","c1","c2","hair","hairColor","number","shirt","shirtName","shorts","skin","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
+  for(const t of TEMPLATES){const l=cleanLook(t.look);assert.deepEqual(Object.keys(l).sort(),["body","boots","c1","c2","hair","hairColor","hat","hatColor","number","shirt","shirtName","shorts","skin","team","v"]);assert.equal(l.body,t.look.body);assert.equal(l.hair,t.look.hair);}
   assert.equal(new Set(TEMPLATES.map(t=>JSON.stringify(t.look))).size,TEMPLATES.length);
 });
 
@@ -243,4 +243,48 @@ test("Aufgabenansicht: richtig = kurzes Overlay ohne Weiter-Taste, falsch = witz
   assert.ok(playHTML(s,{...G,done:true,ok:false,gain:0,res:[false],given:"1",i:7,len:8}).includes("Abpfiff"));
   applyAvatar(s,{deviceId:"d1",now:5},{...TEMPLATES[3].look,shirtName:"Emil"});
   applyAnswer(s,{deviceId:"d1",now:9},{topic:t,ok:true,gain:10,li:0,trial:false,help:1});
+});
+
+test("Realistischere Figuren: eiförmiger Kopf statt Kreis, Gesicht mit Details",()=>{
+  const f=figureG(TEMPLATES[0].look,"front");
+  assert.ok(!/<ellipse cx="60" cy="42" rx="26" ry="27"/.test(f),"kein kreisrunder Kopf mehr");
+  assert.ok(f.includes("M35 40 C35 20 46 12 60 12"),"Kopf mit Wangen und Kinn");
+  assert.ok(f.includes('transform="translate(60 72) scale(.9)'),"Kopf im Verhältnis kleiner");
+  for(const detail of ["M59.6 48.4","M42.5 39.8","M51.5 64"])assert.ok(f.includes(detail),"Gesichtsdetail "+detail);   // Nase, Braue, Mund
+  const t=trainerSVG(defaultTrainer().look,{px:100,which:1});
+  assert.ok(!/<ellipse cx="60" cy="58" rx="27" ry="30"/.test(t)&&t.includes("M33 58 C33 36 46 28 60 28"),"Trainerkopf eiförmig");
+});
+
+test("Ohne Haare und Kopfbedeckungen: Cap, Cap verkehrt, Mütze, Stirnband, Bandana",()=>{
+  assert.deepEqual(HATS,["Keine","Cap","Cap verkehrt","Mütze","Stirnband","Bandana"]);
+  for(const b of ["j","m"]){
+    assert.equal(HAIR_STYLES[b].at(-1),"Ohne Haare");
+    const look={...startLook(b,"Emil")};
+    const bald=figureG({...look,hair:HAIR_STYLES[b].length-1},"front"),withHair=figureG({...look,hair:0},"front");
+    assert.notEqual(bald,withHair);
+    assert.ok(!bald.includes(look.hairColor+'" stroke'),"ohne Haare: keine Haarfläche in Haarfarbe");
+    for(const view of ["front","back"]){
+      const seen=new Set();
+      for(let h=0;h<HATS.length;h++){
+        const svg=avatarSVG({...look,hair:0,hat:h,hatColor:"#2f6fde"},{view,px:100});clean(svg,`${b} Hut ${h} ${view}`);
+        seen.add(figureG({...look,hair:0,hat:h,hatColor:"#2f6fde"},view));
+        if(h>0)assert.ok(svg.includes("#2f6fde"),"Kopfbedeckung trägt die gewählte Farbe");
+      }
+      assert.equal(seen.size,HATS.length,"alle Kopfbedeckungen sehen verschieden aus ("+view+")");
+    }
+    // auch ohne Haare mit Kopfbedeckung
+    clean(avatarSVG({...look,hair:HAIR_STYLES[b].length-1,hat:1},{px:80}),"ohne Haare mit Cap");
+  }
+  // Cap: Schirm vorn sichtbar, verkehrt herum hinten
+  const look=startLook("j","Emil");
+  assert.notEqual(figureG({...look,hat:1},"front"),figureG({...look,hat:2},"front"));
+  assert.notEqual(figureG({...look,hat:1},"back"),figureG({...look,hat:2},"back"));
+  // Prüfung
+  assert.equal(cleanLook({...look,hat:99}).hat,0);assert.equal(cleanLook({...look,hat:3,hatColor:"rot"}).hatColor,"#e5484d");assert.equal(cleanLook({...look,hat:3,hatColor:"#2F6FDE"}).hatColor,"#2f6fde");
+  // Baukasten
+  const h=avatarBuilderHTML({look:{...look,hat:1},name:"Emil",first:false,step:"build"});clean(h.replace(/<input[^>]*>/g,""),"Baukasten mit Cap");
+  assert.equal((h.match(/data-avhat=/g)||[]).length,HATS.length);assert.ok(h.includes("data-avhatc")&&h.includes("Kopfbedeckung"));
+  assert.ok(!avatarBuilderHTML({look:{...look,hat:0},name:"Emil",first:false,step:"build"}).includes("data-avhatc"),"Farbwahl nur mit Kopfbedeckung");
+  // Vorlagen bleiben ohne Kopfbedeckung
+  for(const t of TEMPLATES)assert.equal(cleanLook(t.look).hat,0);
 });

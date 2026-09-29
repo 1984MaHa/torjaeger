@@ -1,7 +1,7 @@
 {
   "name": "torjaeger-liga",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Torjäger-Liga: Lernspiel für Emil. Keine Abhängigkeiten.",
   "scripts": { "test": "node --test" },
   "engines": { "node": ">=20" }

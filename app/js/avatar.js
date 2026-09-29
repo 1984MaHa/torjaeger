@@ -3,9 +3,11 @@
 // alle Farben, Nummer, Name und Mannschaft sind frei wählbar.
 export const BODIES=[["j","Junge"],["m","Mädchen"]];
 export const HAIR_STYLES={
-  j:["Kurz","Wuschel","Igel","Locken","Tolle","Stoppel","Seitenscheitel","Surfer"],
-  m:["Pferdeschwanz","Zöpfe","Lang","Dutt","Bob","Lockenmähne","Halbzopf","Pony"]
+  j:["Kurz","Wuschel","Igel","Locken","Tolle","Stoppel","Seitenscheitel","Surfer","Ohne Haare"],
+  m:["Pferdeschwanz","Zöpfe","Lang","Dutt","Bob","Lockenmähne","Halbzopf","Pony","Ohne Haare"]
 };
+// Kopfbedeckung (eigene Farbe): 0 keine, 1 Cap, 2 Cap verkehrt herum, 3 Mütze, 4 Stirnband, 5 Bandana
+export const HATS=["Keine","Cap","Cap verkehrt","Mütze","Stirnband","Bandana"];
 export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#d9c58a","#b8341f","#22252b","#e75a9c","#2f6fde"];
 export const SKIN_TONES=["#ffe0c7","#f6c9a0","#e3a877","#c68642","#8d5524","#5c3a21"];
 export const SHIRT_COLORS=["#e5484d","#2f6fde","#ffc83d","#34a853","#ff8a00","#8e44ad","#22252b","#f4f4f4","#17b3b3","#f27fb1"];
@@ -44,6 +46,7 @@ export function cleanLook(look,fallback){
   return{
     v:2,body,
     hair:int(l.hair,0,HAIR_STYLES[body].length-1,Math.min(b.hair,HAIR_STYLES[body].length-1)),hairColor:hex(l.hairColor,b.hairColor),skin:hex(l.skin,b.skin),
+    hat:int(l.hat,0,HATS.length-1,b.hat||0),hatColor:hex(l.hatColor,b.hatColor||"#e5484d"),
     shirt:hex(l.shirt,b.shirt),shorts:hex(l.shorts,b.shorts),boots:hex(l.boots,b.boots),
     number:cleanNumber(l.number,b.number),
     shirtName:cleanText(l.shirtName,10,b.shirtName||"").toUpperCase(),
