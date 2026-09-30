@@ -12,7 +12,7 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
 - Start freigegeben ("ja los"). Dann auf seine Anweisung ("ja okay, push") habe ich 1.4.0 nach origin/preview gepusht (81eb864 bis b95703c). Marco hat danach auf der NAS in /volume1/docker/torjaeger-preview das Deploy der Vorschau gemacht und mit 1.4.0 getestet (nach seiner Aussage, Ergebnis unten bei den Rückmeldungen). Kein Merge, kein Branch-Wechsel, keine Anweisung zu main oder Live.
 - 1.4.1 (bda67cf) habe ich auf Marcos Anweisung ("ja push") nach origin/preview gepusht. Marco hat die Vorschau auf der NAS deployed ("deploy ist durch"), getestet und abgenommen ("Wesentlich besser. Passt jetzt so für mich.").
-- Marco hat danach angewiesen, preview auf die Hauptversion (main) zu bringen. Ich habe preview nach main gemergt und main gepusht (Stand siehe 2 und 7). Marco hat danach selbst auf der NAS das Live-Deploy ausgeführt ("deploy und live fertig hier"). Ich habe es nicht ausgeführt und nicht nachgeprüft. Nicht bestätigt: Kontrolle von Emils migriertem Stand auf dem iPad.
+- Marco hat danach angewiesen, preview auf die Hauptversion (main) zu bringen. Ich habe preview nach main gemergt und main gepusht (Stand siehe 2 und 7). Marco hat danach selbst auf der NAS das Live-Deploy ausgeführt ("deploy und live fertig hier"). Ich habe es nicht ausgeführt und nicht nachgeprüft. Marco hat Emils migrierten Stand danach auf dem iPad geprüft: alles passt ("geprüft passt alles").
 - Ausdrücklich NOCH NICHT ausgeführt: Push von preview, Vorschau-Deploy auf der NAS, Abnahme auf dem iPad (auch die von 1.2.1 und 1.3.0), Kontrolle von Emils migriertem Stand, Prüfung von docs/Inhalte-Englisch-Sachkunde.md durch Marco. main und Live sind unberührt (Live läuft weiter 1.2.1).
 - Ich habe die Seite bewusst nicht im Browser oder in der Vorschau geöffnet und keine Screenshots gemacht (Wunsch von Marco, er prüft visuell selbst). Die neuen Ansichten sind nur per Test geprüft: HTML-Ausgabe und eine Ende-zu-Ende-Prüfung der echten app.js mit Fake-DOM. Das Aussehen (CSS, Emoji-Darstellung auf iOS, Kompassrose) ist nicht mit dem Auge gesehen.
 
@@ -61,7 +61,7 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 
 5. RESTPOSTEN
 - Echter Blocker: keiner.
-- Bewusst offen: Avatare auf Vorlagen (pausiert); iPad-Abnahme 1.2.1, 1.3.0, 1.4.0; Emojis und Layout der neuen Ansichten auf dem iPad sehen; Prüfung der Inhalte durch Marco und eine englischkundige Person (Konzept Abschnitt 11: natürliches, altersgerechtes Englisch, hier nur Einzelwörter); Kontrolle von Emils migriertem Stand; Hyper Backup; Testrunden in Emils Konto; Zwischenspeichern laufender Päckchen; Push und Deploy der Vorschau.
+- Bewusst offen: Avatare auf Vorlagen (pausiert); iPad-Abnahme 1.2.1, 1.3.0, 1.4.0; Emojis und Layout der neuen Ansichten auf dem iPad sehen; Prüfung der Inhalte durch Marco und eine englischkundige Person (Konzept Abschnitt 11: natürliches, altersgerechtes Englisch, hier nur Einzelwörter); Hyper Backup; Testrunden in Emils Konto; Zwischenspeichern laufender Päckchen; Push und Deploy der Vorschau.
 - Kosmetisch: Sticker-Motive einfach; Tailscale auf der NAS 1.58.2. Neu: Tippflächen der neuen Aufgabenarten und die Kompassrose sind nur per CSS geplant, nicht am Gerät geprüft. Englisch hat keine Mehrwort-Begriffe und keine Sprechen-Aufgaben (Konzept 7.1 E3-SP). Hör-Aufgabe nur als Bildauswahl.
 
 6. TESTS
@@ -73,7 +73,7 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 
 8. NÄCHSTE SCHRITTE FÜR MARCO
 1. (erledigt von Marco) Live-Deploy auf der NAS.
-2. Auf dem iPad die App neu öffnen ("Jetzt laden" im Banner) und Emils Stand kontrollieren: Punkte, Sticker, Ligen, Aussehen unverändert (Schema 5 wurde beim ersten Start migriert).
+2. (erledigt von Marco) Emils Stand auf dem iPad kontrolliert, alles unverändert.
 3. Die Liste docs/Inhalte-Englisch-Sachkunde.md lesen (mit "unsicher" markierte Stellen) und Korrekturen zurückgeben. Entscheiden, welche weiteren Sachkunde-Themen als "Stoff noch nicht gehabt" (late) markiert werden sollen.
 4. Entscheiden: bei "alle Mathe/Deutsch-Themen aus" kein Aufstieg von selbst (so gebaut); ob Englisch und Sachkunde später in Trainingscamp, Bezirksliga, Mix und Probe-Liga einfließen.
 ```
