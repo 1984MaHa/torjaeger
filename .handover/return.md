@@ -24,6 +24,11 @@
 - Start zeigt immer zuerst "Wer spielt?" mit den Bildern (auch bei nur einem Konto).
 - **PIN des Kindes** (neu, nicht im Auftrag): freiwillig, 4 Ziffern, `profile.pin = {code, t}`, Klartext. Kachel zeigt "(PIN)" und fragt beim Antippen. Kind setzt sie in "Mein Spieler", Eltern sehen, ändern und entfernen sie im Eltern-Bereich bei jedem Konto. Zusammenführen: neuerer Stand gewinnt, Zurücksetzen behält sie. Kein Schemawechsel (Feld optional). Sicherheit bewusst schwach: Komfort, kein Schutz vor Eltern.
 
+## Abnahme und Merge
+- Marco hat 1.5.2 in der Vorschau abgenommen ("passt so für mich") und den Merge nach main angewiesen. Ausgeführt von mir: Fast-Forward-Merge von `preview` nach `main`, Push `main`. **Live-Deploy noch nicht ausgeführt** (macht Marco: `cd /volume1/docker/torjaeger && sudo sh deploy.sh`, `deploy.sh` sichert `data/` vorher).
+- Stand danach: `main`, `preview` und die `origin/*` auf demselben Commit. Live läuft bis zum Deploy weiter 1.4.1, Vorschau 1.5.2.
+- Nach dem Live-Deploy Emils migrierten Stand prüfen (Farben, Nummer, Name, Mannschaft). Emils Nummer und Name kommen aus dem alten Avatar.
+
 ## Zweite Sicht von Marco (Version 1.5.2)
 - Ursache für "sieht aus wie vorher": Service-Worker-Cache. Die Nachbesserung trug dieselbe Nummer 1.5.0, `sw.js` war unverändert. Marco hat mit hartem Neuladen geholfen. Deshalb gab es 1.5.1 und jetzt 1.5.2. **Lehre: jede Auslieferung braucht eine neue Versionsnummer.**
 - Rückennummer stand zu tief: hängt jetzt direkt unter dem Namen und ist größer (Marco hat den Bereich rot eingezeichnet).
