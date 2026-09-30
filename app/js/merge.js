@@ -7,6 +7,8 @@
 //  - Ligen-Freigaben, Name, Einstellungen: der neuere Stand gewinnt.
 //  - Aussehen (profile.avatar) und Trainer (global): der neuere Stand gewinnt, je mit eigenem Zeitstempel.
 //  - Tipp-Nutzung (stats.<Thema>.help) und Kontrolle (stats.<Thema>.ctl): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler).
+//  - Englisch-Stufe (stats.<Thema>.lv): der höhere Wert gewinnt (steigt nie zurück). Begriffsstatistik (stats.<Thema>.terms): je Gerät der größere Wert, angezeigt wird die Summe.
+//  - Themensteuerung (settings.topicMode) ist Teil der Einstellungen: der neuere Stand gewinnt.
 //  - Gewählte aktuelle Liga (progress.cur): der neuere Stand gewinnt (eigener Zeitstempel t).
 //  - Zurücksetzen (meta.resetAt): der Stand mit dem späteren Zurücksetzen gewinnt vollständig.
 //  - Unbekannte Felder bleiben erhalten.
@@ -93,6 +95,8 @@ export function mergeProfile(local,remote){
     stats[t]=Object.assign({},clone(y),clone(x),{tot:mergeDevMap(x.tot,y.tot,aNewer),last:mergeLast(x.last,y.last)});
     if(x.help||y.help)stats[t].help=mergeDevMap(x.help,y.help,aNewer);
     if(x.ctl||y.ctl)stats[t].ctl=mergeDevMap(x.ctl,y.ctl,aNewer);
+    if(x.terms||y.terms)stats[t].terms=mergeDevMap(x.terms,y.terms,aNewer);
+    if(isNum(x.lv)||isNum(y.lv))stats[t].lv=Math.max(isNum(x.lv)?x.lv:1,isNum(y.lv)?y.lv:1);
   }
   out.stats=stats;
 

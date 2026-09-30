@@ -1,10 +1,11 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
-import {LIGEN,RIVALS,BONUS_FIX} from "./content.js";
+import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng} from "./content.js";
 import {GEN} from "./generators.js";
-import {packOf,gradePack} from "./check.js";
+import {packOf,gradePack,isRight,termResults} from "./check.js";
+import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
-import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyTrainer,applyCurrent,applyControl,settingsOf,roundLen,trialLen} from "./rules.js";
+import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore} from "./store.js";
 import {createSync} from "./sync.js";
@@ -180,13 +181,14 @@ async function updateApp(fromSync){
 }
 
 // ================= Spielablauf =================
-// mode: math, deu, mix oder topic (Themenblock als Päckchen mit Kontroll-Pfiff, topic = Thema)
+// mode: math, deu, eng, su, mix (nur Mathe und Deutsch) oder topic (Themenblock als Päckchen mit Kontroll-Pfiff, topic = Thema)
+// Ausgeschaltete Themen (Eltern) kommen nie dran.
 function startRound(li,mode,trial,topic){
-  const L=LIGEN[li];
   let len=trial?trialLen(S()):roundLen(S());
-  if(mode==="topic"&&L.math.concat(L.deu).includes(topic))return startPack(li,topic);
+  if(mode==="topic"&&allTopicsOf(li).includes(topic)&&topicOn(S(),topic))return startPack(li,topic);
   if(mode==="topic")mode="mix";
-  const pool=mode==="math"?L.math:mode==="deu"?L.deu:L.math.concat(L.deu);
+  const pool=activeTopics(S(),poolOf(li,mode));
+  if(!pool.length)return;
   if(!trial&&leagueState(S(),li)==="probe")len=Math.min(roundLen(S()),budgetOf(S(),li));
   if(trial)commit((s,c)=>applyTrial(s,c,li));
   commit((s,c)=>applySel(s,c,li));
@@ -196,16 +198,19 @@ function startRound(li,mode,trial,topic){
 }
 function setTask(T){
   G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;
+  G.pairs=T.type==="match"?T.left.map(()=>-1):null;G.msel=-1;G.sortA=T.type==="sort"?T.cards.map(()=>-1):null;G.ssel=-1;G.ord=[];
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
   armIdle();
 }
 function nextTask(){
   const t=nextTopic(S(),G.pool,G.last);G.last=t;
-  setTask(Object.assign({topic:t},GEN[t]()));
+  setTask(Object.assign({topic:t},GEN[t](levelOpts(t))));
 }
+// Englisch: die Aufgaben folgen der Stufe des Kindes in diesem Thema.
+const levelOpts=t=>isEng(t)?{level:lvOf(S(),t)}:undefined;
 // Themenblock: ein Päckchen zusammenhängender Aufgaben. Keine Rückmeldung, bis der Kontroll-Pfiff vorbei ist.
 function startPack(li,topic){
-  let tasks=packOf(topic);
+  let tasks=packOf(topic,undefined,levelOpts(topic));
   if(leagueState(S(),li)==="probe")tasks=tasks.slice(0,Math.max(1,Math.min(tasks.length,budgetOf(S(),li))));
   commit((s,c)=>applySel(s,c,li));
   G={li,mode:"topic",topic,trial:false,pack:true,phase:"solve",tasks,len:tasks.length,i:0,ans:[],finals:[],helps:[],probeOpen:{},probed:{},ei:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now(),pool:[topic]};
@@ -234,13 +239,12 @@ const trainers=()=>[cleanTrainer(globalRec.state.trainer,1),cleanTrainer(globalR
 function answer(val){
   if(G.done)return;const T=G.task;
   if(G.pack){packAnswer(val);return;}
-  let ok;
-  if(T.type==="num")ok=Number(val)===T.a;else if(T.type==="pair")ok=Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];else ok=val===T.a;
+  const ok=isRight(T,val);
   clearTimeout(idleT);
   G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok);G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.
-  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial,help:G.helpLevel}));
+  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val)}));
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
   tone(ok?[523,659,784]:[220,180],ok?.12:.18,S().settings.sound);
   render();
@@ -266,7 +270,14 @@ function packAnswer(val){
 }
 function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;render();}
 function editAnswer(i){
-  G.phase="edit";G.ei=i;setTask(G.tasks[i]);clearTimeout(idleT);render();window.scrollTo(0,0);
+  G.phase="edit";G.ei=i;setTask(G.tasks[i]);clearTimeout(idleT);prefill(G.tasks[i],G.finals[i]);render();window.scrollTo(0,0);
+}
+// Beim Ändern steht die bisherige Antwort schon da (Zuordnen, Sortieren, Reihenfolge).
+function prefill(T,val){
+  if(!Array.isArray(val))return;
+  if(T.type==="match"&&val.length===T.left.length)G.pairs=val.slice();
+  else if(T.type==="sort"&&val.length===T.cards.length)G.sortA=val.slice();
+  else if(T.type==="order")G.ord=val.slice();
 }
 // Abgeben: alle Antworten zählen jetzt (Endantworten). Mit Kontrolle gibt es Bonus für selbst gefundene Fehler.
 function finishCheck(checked){
@@ -277,7 +288,7 @@ function finishCheck(checked){
     const ok=grade.items[i].ok;let gain=0;
     if(ok){streak++;gain=10+(streak>=3?5:0);}else streak=0;
     G.gains[i]=gain;
-    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0}));
+    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0,lv:T.level||0,terms:termResults(T,G.finals[i])}));
   });
   if(checked){
     const probes=Object.keys(G.probed).length;
@@ -314,6 +325,29 @@ function render(){
   bind();
 }
 function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
+// ----- neue Aufgabenarten: Zuordnen, Bild wählen, Sortieren, Reihenfolge (nur Antippen) -----
+function tapMatchLeft(i){if(G.done)return;if(G.pairs[i]>=0){G.pairs[i]=-1;G.msel=-1;}else G.msel=G.msel===i?-1:i;render();}
+function tapMatchRight(j){if(G.done)return;const owner=G.pairs.indexOf(j);
+  if(owner>=0){G.pairs[owner]=-1;G.msel=-1;}else if(G.msel>=0){G.pairs[G.msel]=j;G.msel=-1;}render();}
+function tapCard(i){if(G.done)return;G.ssel=G.ssel===i?-1:i;render();}
+function tapBasket(j){if(G.done||G.ssel<0)return;G.sortA[G.ssel]=j;G.ssel=-1;render();}
+function tapPlaced(i){if(G.done)return;G.sortA[i]=-1;G.ssel=-1;render();}
+function tapOrder(i){if(G.done)return;const p=G.ord.indexOf(i);if(p>=0)G.ord=G.ord.slice(0,p);else G.ord=G.ord.concat(i);render();}
+function finishNew(){
+  const T=G.task;if(G.done&&!G.pack)return;
+  if(T.type==="match"&&G.pairs.every(x=>x>=0))answer(G.pairs.slice());
+  else if(T.type==="sort"&&G.sortA.every(x=>x>=0))answer(G.sortA.slice());
+  else if(T.type==="order"&&G.ord.length===T.cards.length)answer(G.ord.slice());
+}
+// Nach dem Laden der Stimmen (iPad lädt sie verzögert): Ansicht neu zeichnen, wenn sich die Vorlese-Taste ändert.
+let hadVoice=false;
+function watchVoices(){
+  const ss=globalThis.speechSynthesis;if(!ss||!ss.addEventListener)return;
+  const check=()=>{const now=canSpeak();if(now===hadVoice)return;hadVoice=now;
+    const typing=document.activeElement&&document.activeElement.tagName==="INPUT";
+    if(!typing&&(view==="home"||(view==="play"&&G&&!G.done)))render();};
+  hadVoice=canSpeak();ss.addEventListener("voiceschanged",check);
+}
 function del(){if(G.task.type==="pair")G.inp[G.act]=G.inp[G.act].slice(0,-1);else G.input=G.input.slice(0,-1);render();}
 function ok(){const T=G.task;if(T.type==="pair"){if(G.act===0&&G.inp[0]!==""&&G.inp[1]===""){G.act=1;render();return;}if(G.inp[0]!==""&&G.inp[1]!=="")answer(G.inp.slice());return;}if(G.input!=="")answer(G.input);}
 
@@ -454,6 +488,9 @@ function bindAdmin($){
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const kv=b.dataset.aset.split(":"),k=kv[0],v=kv[1];
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
+  document.querySelectorAll("[data-atopic]").forEach(b=>b.onclick=()=>{
+    const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
+    const [t,m]=b.dataset.atopic.split(":");commitOn(a.rec,(s,c)=>applyTopicMode(s,c,t,m));render();});
   document.querySelectorAll("[data-apin]").forEach(b=>b.onclick=adminChangePin);
   // Trainer (gilt für alle Konten)
   const key=w=>w===2?"tr2":"tr1";
@@ -502,6 +539,16 @@ function bind(){
   document.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{if(!G.done){G.act=Number(b.dataset.slot);render();}});
   document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>answer(b.dataset.c));
   document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{G.pickIdx=Number(b.dataset.w);render();});
+  document.querySelectorAll("[data-ml]").forEach(b=>b.onclick=()=>tapMatchLeft(Number(b.dataset.ml)));
+  document.querySelectorAll("[data-mr]").forEach(b=>b.onclick=()=>tapMatchRight(Number(b.dataset.mr)));
+  document.querySelectorAll("[data-pic]").forEach(b=>b.onclick=()=>{if(!G.done)answer(Number(b.dataset.pic));});
+  document.querySelectorAll("[data-sc]").forEach(b=>b.onclick=()=>tapCard(Number(b.dataset.sc)));
+  document.querySelectorAll("[data-sb]").forEach(b=>b.onclick=()=>tapBasket(Number(b.dataset.sb)));
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>tapPlaced(Number(b.dataset.sp)));
+  document.querySelectorAll("[data-oc]").forEach(b=>b.onclick=()=>tapOrder(Number(b.dataset.oc)));
+  if($("ordReset"))$("ordReset").onclick=()=>{G.ord=[];render();};
+  if($("fin"))$("fin").onclick=finishNew;
+  document.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>speak(b.dataset.say)); // Vorlesen nur nach Antippen
   // Eltern-Bereich
   if($("adminOpen"))$("adminOpen").onclick=()=>{UI.adminAsk=true;UI.adminMsg="";UI.newAcct=false;render();const i=$("adminPin");if(i)i.focus();};
   if($("adminCancel"))$("adminCancel").onclick=()=>{UI.adminAsk=false;UI.adminMsg="";render();};
@@ -538,6 +585,7 @@ document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&
     if(!accounts.length)view="accounts";
     if(!maybeOfferAvatar())render();
     initSW();
+    watchVoices();
     syncNow();
   }catch(e){
     console.error(e);

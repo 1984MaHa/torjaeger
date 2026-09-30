@@ -1,6 +1,7 @@
 // Aufgaben-Generatoren je Thema (Klasse 2 bis 4) samt Wortlisten.
 import {R,pick,shuffle,fmt} from "./util.js";
 import {blocksSVG,stwSVG,fieldSVG,groupsSVG} from "./svg.js";
+import {TASKGEN} from "./tasks.js";
 
 const NOMEN=[["BALL","der Ball"],["TOR","das Tor"],["TRAINER","der Trainer"],["WIESE","die Wiese"],["TRIKOT","das Trikot"],["SCHUH","der Schuh"],["PFIFF","der Pfiff"],["SONNE","die Sonne"],["SCHAF","das Schaf"],["HUND","der Hund"],["BLUME","die Blume"],["NETZ","das Netz"],["MANNSCHAFT","die Mannschaft"],["KATZE","die Katze"]];
 const VERBEN=[["LAUFEN","ich laufe"],["SPRINGT","er springt"],["SCHIESST","er schießt"],["LIEGT","es liegt"],["KICKT","sie kickt"],["JUBELN","wir jubeln"],["RENNT","er rennt"],["SPIELEN","wir spielen"],["LACHT","sie lacht"],["FÄNGT","er fängt"],["WIRFT","sie wirft"],["PFEIFT","er pfeift"]];
@@ -118,3 +119,6 @@ const HINTS={
   d4_steigern:"Steigern heißt: warm, wärmer, am wärmsten. Sprich es laut. Welche Form klingt richtig?"
 };
 for(const t of Object.keys(HINTS)){const f=GEN[t];GEN[t]=()=>{const T=f();if(!T.hint)T.hint=HINTS[t];return T;};}
+
+// Englisch und Sachkunde (neue Aufgabenarten): GEN[thema]({level}) , siehe tasks.js
+Object.assign(GEN,TASKGEN);

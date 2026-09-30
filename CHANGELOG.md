@@ -1,5 +1,22 @@
 # Änderungen
 
+## 1.4.0 (Vorschau: Englisch und Sachkunde)
+Zwei neue Fächer für die Kreisliga (Klasse 3), vier neue Aufgabenarten, Vorlesen englischer Wörter und die Steuerung der Themen im Eltern-Bereich. Schemaversion 5 (Konto), global bleibt 3. Ein Stand im Format 1.3.0 wird beim ersten Start ohne Verlust migriert. Die Nachbesserung 81eb864 zu 1.3.0 steht schon im Abschnitt 1.3.0 unten.
+
+### Neu
+- **Englisch** (10 Themen, je mindestens 10 Wörter) mit drei Stufen je Thema: Bild wählen, Zuordnen englisch zu deutsch, Bild zur richtigen Schreibweise. Die Stufe steigt je Thema ab 8 von 10 richtig. Farben als Farbkästen, Zahlen als große Ziffern, sonst Emoji.
+- **Sachkunde** (7 Themen nach Lehrplan Sachsen): Sinne, Pflanzen/Tiere/Lebensräume, Getreide, Kartoffel, Wasser, Himmelsrichtungen und Karte (mit Kompassrose zum Antippen), Straßenverkehr.
+- **Vier neue Aufgabenarten** für alle Fächer: Zuordnen in zwei Spalten, Bild wählen, Sortieren in Körbe, Reihenfolge. Nur Antippen, große Flächen. Zuordnen färbt Paare, zeigt falsche Paare danach, Statistik je Begriff.
+- **Vorlesen:** Taste 🔊 an englischen Wörtern (Gerätestimme, en-GB bevorzugt), nur nach Antippen, dazu Hör-Aufgaben. Ohne englische Stimme sind beide weg.
+- **Kreisliga-Karte:** neben Mathe und Deutsch die Tasten Englisch und Sachkunde mit Mix und Themenblöcken (Päckchen mit 4 Aufgaben, Kontroll-Pfiff, Probe „Schau dir jedes Paar noch einmal an“). Das Mix-Spiel bleibt bei Mathe und Deutsch. Eigener Fortschritt mit Häkchen je Thema, für den Aufstieg zählen weiter nur Mathe und Deutsch.
+- **Themensteuerung im Eltern-Bereich** je Konto und Thema (alle Fächer): aktuell, wiederholen (seltener), aus (ausgeblendet). Ein ausgeschaltetes Thema blockiert den Aufstieg nicht. Der Lernstand zeigt Englisch mit Stufe, Sachkunde und die schwächsten Begriffe.
+- `docs/Inhalte-Englisch-Sachkunde.md`: lesbare Prüfliste aller Wörter, Bilder, Aufgaben und Lösungen, unsichere Stellen markiert (erzeugt mit `tools/inhalte-liste.mjs`).
+
+### Datenmodell (Schemaversion 5)
+- `settings.topicMode` (je Thema wiederholen oder aus), `stats.<Thema>.lv` (Englisch-Stufe), `stats.<Thema>.terms` (Statistik je Begriff, je Gerät), `stats.<Thema>.last[].lv`, Spielarten `eng` und `su` im Verlauf. Migration 4 nach 5 ergänzt nur `topicMode` (`{}`).
+- Zusammenführen: Einstellungen (mit `topicMode`) neuerer Stand, `lv` höherer Wert, `terms` je Gerät der größere Wert, angezeigt die Summe.
+- Neue Dateien: `content-en.js`, `content-su.js`, `tasks.js`, `inputs.js`, `speech.js` (alle in der `FILES`-Liste des Service Workers). Version 1.4.0 an allen vier Stellen.
+
 ## 1.3.0 (Vorschau: neue Avatare)
 Nachbesserung nach Marcos erster Sicht: Bäckchen dezent und klein, Vorgabe aus; Zöpfe hängen am Kopf; Haarkappe enger (Pony und Co. wirken nicht mehr wie ein Helm); Halbzopf mit Haargummi statt Schleife; Cap und Mütze eng am Kopf; Schritt 5 zeigt das Porträt mit der Kleidung; Vorschau oben und Weiter-Leiste unten bleiben stehen (weniger Scrollen); neuer Kragen „Rund, dunkler“ und Haarfarbe „sandblond“, damit sich Emil nachbauen lässt (Vorlage Torjäger).
 

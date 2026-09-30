@@ -4,7 +4,16 @@ import {trainerSVG} from "./avatardraw.js";
 import {esc} from "./util.js";
 
 // Lösungstext einer Aufgabe (für Anzeige und Prüfung)
-export function rightText(T){return T.type==="tap"?T.words[T.a]:T.type==="pair"?`${T.a[0]} Rest ${T.a[1]}`:String(T.a);}
+// match, sort, order und pic (neue Aufgabenarten) geben die Lösung als Text.
+export function rightText(T){
+  if(T.type==="tap")return T.words[T.a];
+  if(T.type==="pair")return `${T.a[0]} Rest ${T.a[1]}`;
+  if(T.type==="match")return T.left.map((l,i)=>`${l.k==="txt"||l.k==="emo"?l.t:"Farbe"} = ${T.right[T.a[i]].t}`).join("; ");
+  if(T.type==="sort")return T.baskets.map((b,j)=>`${b.t}: ${T.cards.filter((_,i)=>T.a[i]===j).map(c=>c.t).join(", ")||"nichts"}`).join("; ");
+  if(T.type==="order")return T.a.map(i=>T.cards[i].t).join(" → ");
+  if(T.type==="pic")return T.tiles[T.a].name||T.tiles[T.a].t;
+  return String(T.a);
+}
 
 export const FALLBACK_TIP="Lies die Aufgabe noch einmal langsam. Probiere es in kleinen Schritten.";
 export const FALLBACK_EXAMPLE="Mach es in kleinen Schritten. Schreib dir auf, was du schon weißt. Dann probierst du es Stück für Stück.";
@@ -24,7 +33,7 @@ export function leaks(text,answer){
 export function similarExample(gen,T,tries=60){
   const mine=rightText(T);
   for(let i=0;i<tries;i++){
-    const E=gen[T.topic]();
+    const E=gen[T.topic]({level:T.level});
     if(String(rightText(E))===String(mine))continue;
     // Auch die Beschreibung der Grafik zählt zum Text des Beispiels
     const labels=[...String(E.vis||"").matchAll(/aria-label="([^"]*)"/g)].map(m=>m[1]).join(" ");

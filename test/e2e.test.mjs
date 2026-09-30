@@ -139,7 +139,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.meta.schemaVersion,4);
+    assert.equal(st.meta.schemaVersion,5);
     const av=st.profile.avatar;assert.equal(av.v,3);assert.equal(av.body,"m");assert.equal(av.hair,"lang");assert.equal(av.browColor,"#2f6fde");assert.equal(av.hat,1);assert.equal(av.pattern,1);assert.equal(av.eyes,"#6a95c4");assert.equal(av.socks,"#22252b");assert.equal(av.mouth,1);assert.equal(av.collar,1);assert.deepEqual([av.face,av.eyeShape,av.brows,av.nose,av.freckles,av.glasses,av.build,av.cheeks,av.outfit],[3,0,2,2,1,2,2,0,2]);assert.equal(av.hatColor,"#2f6fde");assert.equal(av.outfitColor,"#34a853");assert.equal(av.bg,"#ffd9e0");assert.equal(av.shirt,"#2f6fde");assert.equal(av.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);assert.ok(!("beard" in av),"kein Bart-Merkmal");
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
@@ -222,7 +222,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     // Sicherungen und System
     await clickData("atab","system");
     await until(()=>has("Tagessicherungen")&&has("Dieses Gerät"),"Listen vom Server");
-    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 4, App 4")&&has("Server 3, App 3"));
+    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 5, App 5")&&has("Server 3, App 3"));
     // Konten: umbenennen, zurücksetzen, löschen
     await clickData("atab","accounts");
     await clickData("arename",id);byId("renameIn").value="Emil M.";await clickData("arenameok",id);

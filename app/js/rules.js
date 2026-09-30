@@ -1,8 +1,8 @@
 // Spielregeln auf dem Konto-Stand: Ligen, sichere Themen, Aufstieg, Punkte, Sticker.
 // Alles reine Funktionen auf dem Stand `s` (kein DOM), damit sie getestet werden können.
 // Änderungen laufen über die apply*-Funktionen mit ctx = {deviceId, now}.
-import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,topicsOf} from "./content.js";
-import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings} from "./model.js";
+import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
+import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf} from "./model.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
 import {todayKey} from "./util.js";
 
@@ -12,8 +12,21 @@ export function topicSafe(s,t){
   const l=st.last.slice(-MASTER_N);
   return l.length>=MASTER_N&&l.reduce((a,x)=>a+x.ok,0)>=MASTER_K;
 }
-export const safeCount=(s,i)=>topicsOf(i).filter(t=>topicSafe(s,t)).length;
-export const mastered=(s,i)=>safeCount(s,i)===topicsOf(i).length;
+// Themensteuerung der Eltern je Konto: aktuell (Vorgabe), wiederholen (seltener) oder aus (ausgeblendet).
+export const topicModeOf=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"?v:"aktuell";};
+export const topicOn=(s,t)=>topicModeOf(s,t)!=="aus";
+export const activeTopics=(s,list)=>list.filter(t=>topicOn(s,t));
+// Themen, die für den Aufstieg zählen: nur Mathe und Deutsch, und nur die, die nicht "aus" sind.
+export const gateTopics=(s,i)=>activeTopics(s,topicsOf(i));
+export const safeCount=(s,i)=>gateTopics(s,i).filter(t=>topicSafe(s,t)).length;
+export const mastered=(s,i)=>{const n=gateTopics(s,i).length;return n>0&&safeCount(s,i)===n;};
+// Häkchen je Thema. Englisch: sicher und Stufe 3 erreicht.
+export const topicDone=(s,t)=>topicSafe(s,t)&&(!isEng(t)||lvOf(s,t)>=EN_LEVELS);
+// Fortschritt in einem Fach (math, deu, eng, su) einer Liga, ohne ausgeschaltete Themen.
+export function fachProgress(s,li,fach){
+  const list=activeTopics(s,LIGEN[li][fach]||[]);
+  return{done:list.filter(t=>topicDone(s,t)).length,total:list.length};
+}
 export const budgetOf=(s,i)=>Math.max(0,PROBE-lgOf(s,LIGEN[i].id).spent);
 // open | probe | wait | locked
 export function leagueState(s,i){
@@ -54,9 +67,11 @@ export function weightOf(s,t){
   const st=s.stats[t];let w=WEAK[t]||1.2;
   if(st&&st.last&&st.last.length>=3){const l=st.last.slice(-MASTER_N);w*=0.5+2.2*(1-l.reduce((a,x)=>a+x.ok,0)/l.length);}
   if(topicSafe(s,t))w*=.6;
-  return Math.max(.25,w);
+  w=Math.max(.25,w);
+  return topicModeOf(s,t)==="wiederholen"?w*.35:w; // Wiederholen kommt seltener dran
 }
 export function nextTopic(s,pool,last,rnd=Math.random){
+  const on=activeTopics(s,pool);if(on.length)pool=on; // ausgeschaltete Themen kommen nie dran
   let tot=0;const ws=pool.map(t=>{const w=weightOf(s,t)*(t===last?.3:1);tot+=w;return w;});
   let x=rnd()*tot;for(let i=0;i<pool.length;i++){x-=ws[i];if(x<=0)return pool[i];}
   return pool[pool.length-1];
@@ -67,16 +82,26 @@ const touch=(s,ctx)=>{s.meta.updatedAt=ctx.now;};
 
 // Eine beantwortete Aufgabe: Antwortverlauf, Probetraining-Budget und Punkte.
 // help: höchste Hilfestufe in dieser Aufgabe (0 keine, 1 Tipp, 2 Erklärung). Hilfe kostet keine Punkte.
-export function applyAnswer(s,ctx,{topic,ok,gain,li,trial,help=0}){
+// lv: Englisch-Stufe der Aufgabe, terms: [{id, ok}] Begriffe für die Statistik je Begriff.
+export function applyAnswer(s,ctx,{topic,ok,gain,li,trial,help=0,lv=0,terms=null}){
   const st=statOf(s,topic),dev=ctx.deviceId;
   const tot=st.tot[dev]||(st.tot[dev]={a:0,c:0});
   tot.a++;if(ok)tot.c++;
-  const entry={t:ctx.now,ok:ok?1:0,d:dev.slice(0,6)};if(help>0)entry.h=help;
+  const entry={t:ctx.now,ok:ok?1:0,d:dev.slice(0,6)};if(help>0)entry.h=help;if(lv>0)entry.lv=lv;
   st.last.push(entry);st.last=st.last.slice(-MASTER_N);
+  if(isEng(topic))promoteLevel(s,st,topic);
+  if(Array.isArray(terms)&&terms.length){const tm=st.terms=st.terms||{},d=tm[dev]||(tm[dev]={});
+    for(const x of terms){d["a:"+x.id]=(d["a:"+x.id]||0)+1;if(x.ok)d["c:"+x.id]=(d["c:"+x.id]||0)+1;}}
   if(help>0)helpOn(st,dev).n++;
   if(!trial&&leagueState(s,li)==="probe"){const l=lgOf(s,LIGEN[li].id);l.spent=Math.min(PROBE,l.spent+1);l.t=ctx.now;}
   if(gain)devOf(s,dev).points+=gain;
   touch(s,ctx);
+}
+// Englisch: Stufe steigt, wenn die letzten 10 Antworten in dieser Stufe mindestens 8 richtige hatten. Sie sinkt nie.
+function promoteLevel(s,st,topic){
+  const cur=lvOf(s,topic);if(cur>=EN_LEVELS)return;
+  const l=st.last.filter(e=>(e.lv||1)===cur);
+  if(l.length>=MASTER_N&&l.reduce((a,x)=>a+x.ok,0)>=MASTER_K)st.lv=cur+1;
 }
 const helpOn=(st,dev)=>{st.help=st.help||{};return st.help[dev]||(st.help[dev]={n:0,t1:0,t2:0});};
 // Der Trainer wurde um Hilfe gebeten (level 1 Tipp, level 2 Erklärung). Pro Aufgabe und Stufe einmal aufrufen.
@@ -128,6 +153,13 @@ export function applySettings(s,ctx,patch){
   if("trialDaily" in patch)st.trialDaily=!!patch.trialDaily;
   if(Number.isInteger(patch.hintAfter)&&(patch.hintAfter===0||(patch.hintAfter>=10&&patch.hintAfter<=300)))st.hintAfter=patch.hintAfter;
   st.t=ctx.now;touch(s,ctx);
+}
+// Themensteuerung (Eltern): topic = Thema, mode = aktuell, wiederholen oder aus. Gehört zu den Einstellungen (neuerer Stand gewinnt).
+export function applyTopicMode(s,ctx,topic,mode){
+  if(!TOPIC_MODES.includes(mode)||!LIGEN.some((_,i)=>allTopicsOf(i).includes(topic)))return false;
+  const m=Object.assign({},s.settings.topicMode);
+  if(mode==="aktuell")delete m[topic];else m[topic]=mode;
+  s.settings.topicMode=m;s.settings.t=ctx.now;touch(s,ctx);return true;
 }
 export function applyRename(s,ctx,name){
   const n=typeof name==="string"?name.trim().slice(0,40):"";

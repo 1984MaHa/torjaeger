@@ -1,8 +1,8 @@
 // Eltern-Bereich: baut das HTML für Konten, Lernstand, Einstellungen sowie Sicherungen und System.
 // Reine Darstellung, kennt weder Speicher noch Netz. Alle Namen laufen durch esc().
-import {LIGEN,TOPICS,PROBE,MASTER_N,topicsOf} from "./content.js";
-import {total,answersOf,helpOf,ctlOf} from "./model.js";
-import {leagueState,budgetOf,topicSafe,safeCount,streakDays,settingsOf,stickerCount} from "./rules.js";
+import {LIGEN,TOPICS,PROBE,MASTER_N,FACHER,TOPIC_MODES,isEng,allTopicsOf} from "./content.js";
+import {total,answersOf,helpOf,ctlOf,lvOf,termsOf} from "./model.js";
+import {leagueState,budgetOf,topicSafe,topicDone,topicModeOf,gateTopics,safeCount,streakDays,settingsOf,stickerCount} from "./rules.js";
 import {esc} from "./util.js";
 import {avatarSVG} from "./avatardraw.js";
 import {lookOf} from "./avatar.js";
@@ -12,7 +12,8 @@ export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings"
 export const ROUND_CHOICES=[6,8,10];
 export const TRIAL_CHOICES=[2,3,5,8];
 export const HINT_CHOICES=[[0,"Aus"],[20,"20 s"],[30,"30 s"],[45,"45 s"],[60,"60 s"],[90,"90 s"]];
-const MODE={math:"Mathe",deu:"Deutsch",mix:"Mix",topic:"Päckchen"};
+const MODE={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde",mix:"Mix",topic:"Päckchen"};
+export const TOPIC_MODE_LABELS={aktuell:"Aktuell",wiederholen:"Wiederholen",aus:"Aus"};
 const modeLabel=h=>h.mode==="topic"&&h.topic&&TOPICS[h.topic]?`Päckchen: ${TOPICS[h.topic]}`:(MODE[h.mode]||h.mode);
 
 const pad=n=>String(n).padStart(2,"0");
@@ -51,6 +52,19 @@ function accountsTab(A){
     <p class="small">Die Eltern-PIN gilt weiter für alle Konten. Gelöschte Konten liegen im Papierkorb.</p></section>`;
 }
 
+// Statistik je Begriff (Englisch und Sachkunde): die schwächsten Begriffe zuerst, erst ab 2 Antworten.
+function termsPanel(s){
+  const rows=[];
+  for(const li in LIGEN)for(const t of (LIGEN[li].eng||[]).concat(LIGEN[li].su||[])){
+    const m=termsOf(s,t);
+    for(const id in m)if(m[id].a>=2)rows.push({t,id,a:m[id].a,c:m[id].c});
+  }
+  if(!rows.length)return `<section class="panel"><h3>Begriffe</h3><p class="note">Noch keine Zuordnungen, Sortier- oder Bildaufgaben in Englisch und Sachkunde.</p></section>`;
+  rows.sort((x,y)=>x.c/x.a-y.c/y.a||y.a-x.a);
+  return `<section class="panel"><h3>Begriffe (Englisch und Sachkunde)</h3><p class="small">Die schwächsten Begriffe zuerst. Zahlen: richtig von allen Antworten.</p>
+    <div class="krow thead"><span>Begriff</span><span>Thema</span><span>Richtig</span><span></span></div>${rows.slice(0,12).map(r=>`<div class="krow"><span>${esc(r.id)}</span><span>${esc(TOPICS[r.t])}</span><span>${r.c}/${r.a}</span><span></span></div>`).join("")}</section>`;
+}
+
 // ---------- Lernstand ----------
 function standTab(A){
   const a=selAccount(A);
@@ -59,19 +73,20 @@ function standTab(A){
   const summary=`<div class="sumrow"><span class="pill">${total(s,"points")} Punkte</span><span class="pill">${total(s,"rounds")} Spiele</span><span class="pill">${total(s,"wins")} Siege</span><span class="pill">${stickerCount(s)} Sticker</span><span class="pill">${days.length} Trainingstage, ${streakDays(s)} in Folge</span></div>`;
   let helpN=0,t1=0,t2=0;
   const rows=LIGEN.map((L,i)=>{
-    const head=`<h4 class="gl">${esc(L.name)} (${esc(L.klasse)}) · ${safeCount(s,i)} von ${topicsOf(i).length} Themen sicher</h4>`;
-    return head+topicsOf(i).map(t=>{
+    const head=`<h4 class="gl">${esc(L.name)} (${esc(L.klasse)}) · ${safeCount(s,i)} von ${gateTopics(s,i).length} Themen sicher (Mathe und Deutsch)</h4>`;
+    return head+allTopicsOf(i).map(t=>{
       const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((x,e)=>x+e.ok,0),an=answersOf(s,t),h=helpOf(s,t);
       helpN+=h.n;t1+=h.t1;t2+=h.t2;
       const pct=an.a?Math.round(an.c/an.a*100):0;
-      return `<div class="trow ${topicSafe(s,t)?"safe":""}"><span>${topicSafe(s,t)?"✓ ":""}${esc(TOPICS[t])}</span><span>${l.length?`${k}/${l.length}`:"-"}</span><span>${an.a?`${an.c}/${an.a} (${pct}%)`:"-"}</span><span>${h.n||h.t1||h.t2?`${h.n}× · ${h.t1}/${h.t2}`:"-"}</span></div>`;
+      const mo=topicModeOf(s,t),tag=(isEng(t)?` (Stufe ${lvOf(s,t)})`:"")+(mo==="aktuell"?"":` (${TOPIC_MODE_LABELS[mo].toLowerCase()})`);
+      return `<div class="trow ${topicDone(s,t)?"safe":""}"><span>${topicDone(s,t)?"✓ ":""}${esc(TOPICS[t])}${tag}</span><span>${l.length?`${k}/${l.length}`:"-"}</span><span>${an.a?`${an.c}/${an.a} (${pct}%)`:"-"}</span><span>${h.n||h.t1||h.t2?`${h.n}× · ${h.t1}/${h.t2}`:"-"}</span></div>`;
     }).join("");
   }).join("");
   const table=`<div class="trow thead"><span>Thema</span><span>Letzte ${MASTER_N}</span><span>Gesamt</span><span>Hilfe</span></div>${rows}
     <p class="small">Letzte ${MASTER_N}: richtige Antworten der letzten ${MASTER_N} Aufgaben. Gesamt: alle Antworten. Hilfe: in wie vielen Aufgaben der Trainer half, dahinter wie oft der Tipp und die Erklärung aufgerufen wurden.</p>`;
   // Kontrolle: je Thema Kontroll-Pfiffe, benutzte Proben, selbst korrigierte Fehler
   let cN=0,cP=0,cF=0;
-  const ctlRows=LIGEN.map((L,i)=>topicsOf(i).map(t=>{const c=ctlOf(s,t);cN+=c.n;cP+=c.p;cF+=c.f;
+  const ctlRows=LIGEN.map((L,i)=>allTopicsOf(i).map(t=>{const c=ctlOf(s,t);cN+=c.n;cP+=c.p;cF+=c.f;
     return c.n?`<div class="krow"><span>${esc(TOPICS[t])}</span><span>${c.n}</span><span>${c.p}</span><span>${c.f}</span></div>`:"";}).join("")).join("");
   const ctl=`<section class="panel"><h3>Kontrollieren</h3>${cN?`<p class="small"><b>Kontroll-Pfiffe:</b> ${cN} (${cP}× Probe benutzt, ${cF} Fehler selbst gefunden und verbessert). Der Kontroll-Pfiff gehört zu den Themenblöcken (Päckchen).</p>
     <div class="krow thead"><span>Thema</span><span>Pfiffe</span><span>Proben</span><span>Selbst korrigiert</span></div>${ctlRows}`:`<p class="note">Noch kein Kontroll-Pfiff. Der Kontroll-Pfiff kommt nach jedem Themenblock (Päckchen), wenn das Kind auf „Ich habe kontrolliert“ tippt.</p>`}</section>`;
@@ -81,9 +96,20 @@ function standTab(A){
   const probes=LIGEN.slice(1).map((L,k)=>{const i=k+1,st=leagueState(s,i);return st==="probe"||st==="wait"?`<span class="pill">${esc(L.name)}: Probetraining, noch ${budgetOf(s,i)} von ${PROBE}</span>`:"";}).join("");
   return `${chips(A)}<section class="panel"><h3>${esc(a.name)}</h3>${summary}${probes?`<div class="sumrow">${probes}</div>`:""}
     <p class="small"><b>Hilfe vom Trainer:</b> ${helpN} Aufgaben mit Hilfe (${t1}× Tipp, ${t2}× Erklärung). Hilfe kostet keine Punkte.</p></section>
-    <section class="panel"><h3>Themen</h3>${table}</section>${ctl}
+    <section class="panel"><h3>Themen</h3>${table}</section>${termsPanel(s)}${ctl}
     <section class="panel"><h3>Letzte Spiele</h3>${games?`<div class="grow thead"><span>Datum</span><span>Liga</span><span>Modus</span><span>Ergebnis</span><span>Dauer</span></div>${games}`:`<p class="note">Noch kein Spiel beendet.</p>`}</section>
     <section class="panel"><h3>Trainingstage</h3>${days.length?`<div class="chipsT">${days.slice(-14).reverse().map(d=>`<span>${fmtDay(d)}</span>`).join("")}</div><p class="small">${days.length} Tage insgesamt, die letzten 14 sind aufgeführt.</p>`:`<p class="note">Noch kein Trainingstag.</p>`}</section>`;
+}
+
+// Themensteuerung je Konto: aktuell (Vorgabe), wiederholen (kommt seltener dran) oder aus (ausgeblendet).
+function topicControl(a){
+  const s=a.state;
+  const groups=LIGEN.map((L,i)=>{
+    const fach=f=>{const list=(L[f]||[]);return list.length?`<h5 class="gl3">${FACHER[f]}</h5>${list.map(t=>`<div class="setrow"><span>${esc(TOPICS[t])}</span>${seg("data-atopic",TOPIC_MODES.map(m=>[`${t}:${m}`,TOPIC_MODE_LABELS[m]]),`${t}:${topicModeOf(s,t)}`)}</div>`).join("")}`:"";};
+    return `<h4 class="gl">${esc(L.name)} (${esc(L.klasse)})</h4>${["math","deu","eng","su"].map(fach).join("")}`;
+  }).join("");
+  return `<section class="panel"><h3>Themen im Unterricht: ${esc(a.name)}</h3>
+    <p class="note">Aktuell: kommt ganz normal dran. Wiederholen: kommt seltener dran. Aus: ist ausgeblendet. Für den Aufstieg zählen nur Mathe und Deutsch, und nur Themen, die nicht aus sind.</p>${groups}</section>`;
 }
 
 // ---------- Einstellungen ----------
@@ -97,9 +123,10 @@ function settingsTab(A){
     <div class="setrow"><span>Tipp-Zeit: der Trainer meldet sich nach</span>${seg("data-aset",HINT_CHOICES.map(([n,l])=>[`hintAfter:${n}`,l]),`hintAfter:${st.hintAfter}`)}</div>
     <p class="small">Die Tipp-Zeit gilt, wenn bei einer Aufgabe so lange nichts angetippt wird. „Aus“ heißt: Der Trainer meldet sich nicht von selbst. Die Hilfe-Taste bleibt immer da.</p></section>`
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
+  const topics=a?topicControl(a):"";
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
-  return `${acct}${trainerPanelHTML(A.tr1,1,(A.trStep||{})[1])}${trainerPanelHTML(A.tr2,2,(A.trStep||{})[2])}${pin}`;
+  return `${acct}${topics}${trainerPanelHTML(A.tr1,1,(A.trStep||{})[1])}${trainerPanelHTML(A.tr2,2,(A.trStep||{})[2])}${pin}`;
 }
 
 // ---------- Sicherungen und System ----------

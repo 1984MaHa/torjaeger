@@ -1,17 +1,19 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 4):
+// Konto (profile-Stand, schemaVersion 5):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
 //   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
-//   stats     je Thema: tot (Antworten je Gerät: a, c), last (letzte 10 Antworten {t, ok, d, h?}), help (je Gerät: n, t1, t2) und ctl (Kontrolle je Gerät: n Kontroll-Pfiffe, p benutzte Proben, f selbst korrigierte Fehler)
-//   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?} (pk = Päckchen, topic = Themenblock)
-//   settings  sound, t, perRound, trialN, trialDaily, hintAfter
+//   stats     je Thema: tot (Antworten je Gerät: a, c), last (letzte 10 Antworten {t, ok, d, h?, lv?}), help (je Gerät: n, t1, t2), ctl (Kontrolle je Gerät: n Kontroll-Pfiffe, p benutzte Proben, f selbst korrigierte Fehler),
+//             lv (Stufe 1 bis 3, nur Englisch, steigt nie zurück) und terms (Statistik je Begriff: je Gerät {"a:Begriff": Antworten, "c:Begriff": richtige})
+//   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?} (pk = Päckchen, topic = Themenblock; mode auch eng und su)
+//   settings  sound, t, perRound, trialN, trialDaily, hintAfter, topicMode (je Thema "wiederholen" oder "aus", fehlt = aktuell)
 // Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
 // Schemaversion 2 (bis App 1.1.5) hatte weder progress.cur noch stats.ctl noch topic und pk im Verlauf.
 // Schemaversion 3 (App 1.2.x) hatte das alte Aussehen (Frisur als Zahl je Junge/Mädchen, Trainer mit v 2). Ab 4 (App 1.3.0): Frisur als Schlüssel,
 // neue Felder browColor, cheeks, outfit, outfitColor, bg; Trainer mit v 3 (Bart in Formen, Kopfbedeckung, Merkmal). Global: Schemaversion 3.
+// Schemaversion 4 (App 1.3.x) hatte weder settings.topicMode noch stats.lv und stats.terms noch die Spielarten eng und su. Ab 5 (App 1.4.0): Themensteuerung, Englisch-Stufen, Begriffsstatistik.
 //
 // Zähler stehen je Gerät getrennt. Jedes Gerät schreibt nur seinen eigenen Zähler, die
 // Anzeige ist die Summe. So geht beim Zusammenführen nichts verloren und doppeltes
@@ -20,14 +22,15 @@ import {PROBE} from "./content.js";
 import {clone} from "./util.js";
 import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer} from "./avatar.js";
 
-export const SCHEMA_VERSION=4;        // Konto-Stand
+export const SCHEMA_VERSION=5;        // Konto-Stand
 export const GLOBAL_SCHEMA_VERSION=3; // globale Einstellungen
 
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
 
 // Einstellungen je Konto (Eltern im Admin): Ton, Aufgaben pro Runde (6, 8, 10), Schnupper-Aufgaben, Schnuppern nur einmal pro Tag,
 // Tipp-Zeit in Sekunden (0 = der Trainer meldet sich nicht von selbst).
-export const defaultSettings=()=>({sound:true,t:0,perRound:8,trialN:3,trialDaily:true,hintAfter:45});
+// topicMode: je Thema die Steuerung der Eltern ("wiederholen" oder "aus"), fehlt ein Thema, ist es "aktuell".
+export const defaultSettings=()=>({sound:true,t:0,perRound:8,trialN:3,trialDaily:true,hintAfter:45,topicMode:{}});
 
 export function newProfile({id,name,deviceId,now=Date.now()}){
   return{
@@ -46,6 +49,9 @@ export const devOf=(s,deviceId)=>s.progress.dev[deviceId]||(s.progress.dev[devic
 export function total(s,field){let n=0;for(const k in s.progress.dev)n+=s.progress.dev[k][field]||0;return n;}
 export function helpOf(s,topic){const st=s.stats[topic];let n=0,t1=0,t2=0;if(st&&st.help)for(const k in st.help){n+=st.help[k].n||0;t1+=st.help[k].t1||0;t2+=st.help[k].t2||0;}return{n,t1,t2};}
 export function ctlOf(s,topic){const st=s.stats[topic];let n=0,p=0,f=0;if(st&&st.ctl)for(const k in st.ctl){n+=st.ctl[k].n||0;p+=st.ctl[k].p||0;f+=st.ctl[k].f||0;}return{n,p,f};}
+// Englisch-Stufe eines Themas (1 bis 3) und Begriffsstatistik (Summe über alle Geräte)
+export const lvOf=(s,topic)=>{const v=s.stats[topic]&&s.stats[topic].lv;return Number.isInteger(v)&&v>=1&&v<=3?v:1;};
+export function termsOf(s,topic){const st=s.stats[topic],out={};if(st&&st.terms)for(const d in st.terms)for(const k in st.terms[d]){const id=k.slice(2),e=out[id]||(out[id]={a:0,c:0});e[k[0]]+=st.terms[d][k]||0;}return out;}
 export function statOf(s,topic){return s.stats[topic]||(s.stats[topic]={tot:{},last:[]});}
 export function answersOf(s,topic){const st=s.stats[topic];let a=0,c=0;if(st)for(const k in st.tot){a+=st.tot[k].a||0;c+=st.tot[k].c||0;}return{a,c};}
 
@@ -72,6 +78,13 @@ const PROFILE_MIGRATIONS=[
     const av=s.profile&&s.profile.avatar;
     if(av&&typeof av==="object")s.profile.avatar=Object.assign(cleanLook(av),{t:Number.isFinite(av.t)?av.t:0});
     s.meta.schemaVersion=4;
+    return s;
+  }},
+  // 4 -> 5 (App 1.4.0): Themensteuerung der Eltern (alles "aktuell"). stats.lv und stats.terms entstehen erst bei Nutzung (Stufe fehlt = 1).
+  {from:4,to:5,run:s=>{
+    s.settings=Object.assign(defaultSettings(),s.settings);
+    if(!s.settings.topicMode||typeof s.settings.topicMode!=="object"||Array.isArray(s.settings.topicMode))s.settings.topicMode={};
+    s.meta.schemaVersion=5;
     return s;
   }}
 ];

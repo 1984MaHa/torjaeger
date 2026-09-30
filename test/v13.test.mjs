@@ -30,14 +30,14 @@ function maxY(svg){
 const group=(svg,part)=>{const i=svg.indexOf(`data-part="${part}"`);if(i<0)return"";const s=svg.indexOf(">",i)+1;let depth=1,k=s;const re=/<(\/?)g\b[^>]*>/g;re.lastIndex=s;let m;while((m=re.exec(svg))){depth+=m[1]?-1:1;k=m.index;if(depth===0)break;}return svg.slice(s,k);};
 
 // ---------- Datenmodell: Schemaversion 4 ----------
-test("Schema ist 4 (Konto) und 3 (global)",()=>{assert.equal(SCHEMA_VERSION,4);assert.equal(GLOBAL_SCHEMA_VERSION,3);});
+test("Schema ist 5 (Konto) und 3 (global)",()=>{assert.equal(SCHEMA_VERSION,5);assert.equal(GLOBAL_SCHEMA_VERSION,3);});
 
 test("Migration 3 nach 4: Stand im Format 1.2.1 bleibt vollständig erhalten, der alte Avatar wird überführt",()=>{
   const old=fx("state-v3.json"),before=JSON.stringify(old),s=migrateProfile(old);
   assert.equal(old.meta.schemaVersion,3);assert.equal(JSON.stringify(old),before,"Eingabe bleibt unverändert");
-  assert.equal(s.meta.schemaVersion,4);
+  assert.equal(s.meta.schemaVersion,5);
   // nichts verloren
-  assert.deepEqual(s.progress,old.progress);assert.deepEqual(s.stats,old.stats);assert.deepEqual(s.history,old.history);assert.deepEqual(s.settings,old.settings);
+  assert.deepEqual(s.progress,old.progress);assert.deepEqual(s.stats,old.stats);assert.deepEqual(s.history,old.history);assert.deepEqual(s.settings,{...old.settings,topicMode:{}}); // neu in Schema 5: alles aktuell
   assert.equal(total(s,"points"),total(old,"points"));
   assert.deepEqual({...s.profile,avatar:0},{...old.profile,avatar:0});
   const a=s.profile.avatar,o=old.profile.avatar;
@@ -49,10 +49,10 @@ test("Migration 3 nach 4: Stand im Format 1.2.1 bleibt vollständig erhalten, de
   assert.equal(a.browColor,"");assert.equal(a.cheeks,0);assert.equal(a.outfit,0);assert.equal(a.outfitColor,o.shirt);assert.equal(a.bg,"");
   // ohne Avatar und von Schema 1 und 2 aus geht es auch
   const n=clone(old);n.profile.avatar=null;assert.equal(migrateProfile(n).profile.avatar,null);
-  assert.equal(migrateProfile(fx("state-v1.json")).meta.schemaVersion,4);assert.equal(migrateProfile(fx("state-v2.json")).meta.schemaVersion,4);
+  assert.equal(migrateProfile(fx("state-v1.json")).meta.schemaVersion,5);assert.equal(migrateProfile(fx("state-v2.json")).meta.schemaVersion,5);
   // zweimal migrieren ändert nichts, neuere Schemaversion wird abgelehnt
   assert.deepEqual(migrateProfile(clone(s)),s);
-  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=5;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
+  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=6;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
 });
 
 test("Alle alten Frisuren (Junge und Mädchen, Index 0 bis 9) gehen in gültige Schlüssel über, nichts geht verloren",()=>{

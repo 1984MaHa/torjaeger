@@ -3,11 +3,12 @@
 // Die Probe verrät die Lösung nie: Sie rechnet mit der Antwort des Kindes oder nennt nur die Strategie.
 import {GEN,mk} from "./generators.js";
 import {R,pick,esc} from "./util.js";
-import {BONUS_FIX} from "./content.js";
+import {BONUS_FIX,ENG_IDS,SU_IDS} from "./content.js";
 
 export const PACK_MIN=3,PACK_MAX=6,DEFAULT_PACK=5;
 // Länge des Päckchens je Thema (3 bis 6). Teilen mit Rest ist das längste, wie auf dem Blatt wächst der Dividend.
-export const PACK_N={m3_rest:6,m3_1x1:5,m3_plus:4,m4_mult:4,m4_div:4};
+export const PACK_N=Object.assign({m3_rest:6,m3_1x1:5,m3_plus:4,m4_mult:4,m4_div:4},
+  Object.fromEntries([...ENG_IDS,...SU_IDS].map(t=>[t,4]))); // Englisch und Sachkunde: Zuordnen und Sortieren brauchen mehr Zeit
 export const packLen=t=>PACK_N[t]||DEFAULT_PACK;
 
 // ---------- Päckchen ----------
@@ -34,18 +35,19 @@ const PACKS={
     for(let i=0;i<n;i++)out.push(mk.div(b,q0+i));
     return out;}
 };
-const keyOf=T=>[T.q,T.choices?[...T.choices].sort().join(","):"",T.words?T.words.join(" "):"",String(T.a)].join("|");
-// Standard: n verschiedene Aufgaben desselben Themas hintereinander.
-function independent(t,n){
+// Doppelte Aufgaben: mit sig (Englisch, Sachkunde) zählt der Inhalt, nicht die Reihenfolge der Anzeige.
+const keyOf=T=>T.sig?T.q+"|"+T.sig:[T.q,T.choices?[...T.choices].sort().join(","):"",T.words?T.words.join(" "):"",String(T.a)].join("|");
+// Standard: n verschiedene Aufgaben desselben Themas hintereinander. opts: {level} (Englisch-Stufe).
+function independent(t,n,opts){
   const seen=new Set(),out=[];
-  for(let tries=0;out.length<n&&tries<200;tries++){const T=GEN[t](),k=keyOf(T);if(seen.has(k))continue;seen.add(k);out.push(T);}
-  while(out.length<n)out.push(GEN[t]());
+  for(let tries=0;out.length<n&&tries<200;tries++){const T=GEN[t](opts),k=keyOf(T);if(seen.has(k))continue;seen.add(k);out.push(T);}
+  while(out.length<n)out.push(GEN[t](opts));
   return out;
 }
-export function packOf(topic,n=packLen(topic)){
+export function packOf(topic,n=packLen(topic),opts){
   n=Math.max(PACK_MIN,Math.min(PACK_MAX,n|0));
   const make=PACKS[topic];
-  return (make?make(n):independent(topic,n)).map(T=>Object.assign({topic},T));
+  return (make?make(n):independent(topic,n,opts)).map(T=>Object.assign({topic},T));
 }
 
 // ---------- Probe ----------
@@ -76,6 +78,7 @@ const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;};
 // Probe für die Antwort `given` (Zahl, Zahlenpaar oder Text). Gibt {name, html} zurück.
 export function probeOf(T,given){
   const inv=T.inv;
+  if(T.probe)return T.probe; // Englisch und Sachkunde: Probe je Aufgabenart, zeigt nie die Lösung
   if(T.probeText)return{name:"Tauschaufgabe",html:T.probeText};
   if(inv){
     const y=inv.y;
@@ -96,8 +99,10 @@ export const probeHTML=(T,given)=>{const p=probeOf(T,given);return `<b>${esc(p.n
 // ---------- Auswertung des Kontroll-Pfiffs ----------
 // answers: erste Antworten, finals: Antworten nach der Kontrolle, tasks: die Aufgaben, checked: Kontrolle abgeschlossen.
 // Bonus nur für eine Aufgabe, die zuerst falsch war und nach der Kontrolle richtig ist. Sonst zählt die Endantwort normal.
+const sameList=(a,b)=>Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>x===b[i]);
 export function isRight(T,val){
   if(val===null||val===undefined||val==="")return false;
+  if(T.type==="match"||T.type==="sort"||T.type==="order")return sameList(val,T.a);
   if(T.type==="num")return Number(val)===T.a;
   if(T.type==="pair")return Array.isArray(val)&&Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];
   return val===T.a;
@@ -111,9 +116,22 @@ export function gradePack({tasks,answers,finals,checked}){
   return{items,fixed,bonus:fixed*BONUS_FIX};
 }
 
+// Begriffe einer beantworteten Aufgabe für die Statistik je Begriff: [{id, ok}]. Zuordnen und Sortieren je Begriff, sonst der Begriff der Aufgabe.
+export function termResults(T,val){
+  if(T.type==="match"||T.type==="sort"){
+    const ids=T.terms||[];
+    return ids.map((id,i)=>({id,ok:Array.isArray(val)&&val[i]===T.a[i]}));
+  }
+  if(T.term)return[{id:T.term,ok:isRight(T,val)}];
+  return[];
+}
 // Antwort als Text für die Übersicht des Kontroll-Pfiffs
 export function givenText(T,val){
   if(val===null||val===undefined||val==="")return "-";
+  if(T.type==="match")return Array.isArray(val)?T.left.map((l,i)=>`${l.k==="txt"?l.t:"Bild"} = ${val[i]>=0&&T.right[val[i]]?T.right[val[i]].t:"?"}`).join("; "):"-";
+  if(T.type==="sort")return Array.isArray(val)?T.cards.map((c,i)=>`${c.t}: ${val[i]>=0&&T.baskets[val[i]]?T.baskets[val[i]].t:"?"}`).join("; "):"-";
+  if(T.type==="order")return Array.isArray(val)?val.map(i=>T.cards[i]?T.cards[i].t:"?").join(" → "):"-";
+  if(T.type==="pic")return T.tiles[val]?(T.tiles[val].k==="dir"?T.tiles[val].name:T.tiles[val].k==="col"||T.tiles[val].k==="num"||T.tiles[val].k==="emo"?(T.tiles[val].name||T.tiles[val].t):T.tiles[val].t):"-";
   if(T.type==="pair")return Array.isArray(val)?`${val[0]} Rest ${val[1]}`:"-";
   if(T.type==="tap")return T.words[val]!==undefined?T.words[val]:"-";
   return String(val);

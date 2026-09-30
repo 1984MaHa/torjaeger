@@ -1,14 +1,16 @@
 // Darstellung: baut das HTML für jede Ansicht. Kennt weder Speicher noch Netz.
-import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,BONUS_FIX,topicsOf} from "./content.js";
+import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,BONUS_FIX,FACHER,EN_LEVELS,topicsOf,allTopicsOf,isEng} from "./content.js";
+import {newInputHTML,NEW_TYPES} from "./inputs.js";
+import {speakBtn} from "./speech.js";
 import {stickerHTML} from "./stickers.js";
 import {probeHTML,givenText,packLen} from "./check.js";
 import {avatarSVG,sceneSVG,SHOT_TEXT} from "./avatardraw.js";
 import {lookOf,defaultTrainer,defaultTrainer2} from "./avatar.js";
 import {rightText,coachHTML} from "./coach.js";
-import {total} from "./model.js";
+import {total,lvOf} from "./model.js";
 import {esc} from "./util.js";
 import {adminAskHTML} from "./admin.js";
-import {topicSafe,safeCount,mastered,leagueState,playable,currentLeague,canTrial,budgetOf,streakDays,stickerCount,settingsOf,roundLen,trialLen,winNeed} from "./rules.js";
+import {topicSafe,topicDone,topicOn,activeTopics,gateTopics,fachProgress,safeCount,mastered,leagueState,playable,currentLeague,canTrial,budgetOf,streakDays,stickerCount,settingsOf,roundLen,trialLen,winNeed} from "./rules.js";
 
 // Band oben in der Vorschau (label kommt vom Server, leer bei Live).
 export function bandHTML(label){return label?`<div class="preview-band" role="status">${esc(label)}</div>`:"";}
@@ -16,7 +18,7 @@ export function bandHTML(label){return label?`<div class="preview-band" role="st
 export {rightText,stickerHTML};
 
 export function boardHTML(s){
-  const top=currentLeague(s),L=LIGEN[top],sc=safeCount(s,top),tot=topicsOf(top).length,pct=Math.round(sc/tot*100);
+  const top=currentLeague(s),L=LIGEN[top],sc=safeCount(s,top),tot=gateTopics(s,top).length,pct=tot?Math.round(sc/tot*100):0;
   return `<header class="board"><div><div class="league">${L.name} · ${L.klasse}</div><div class="sub">${sc} von ${tot} Themen sicher${top<LIGEN.length-1?` · dann geht es in die ${LIGEN[top+1].name}`:""}</div></div>
   <div class="pts">${total(s,"points")}<small>Punkte</small></div><div class="bar"><i style="width:${pct}%"></i></div>
   <div class="icons"><span class="pill">${streakDays(s)} Trainingstage in Folge</span><span class="pill">${total(s,"wins")} Siege · ${total(s,"rounds")} Spiele</span><button class="snd" id="snd">${s.settings.sound?"Ton an":"Ton aus"}</button></div></header>`;
@@ -29,15 +31,17 @@ function statusOf(s,i){
   if(st==="wait")return ["wait","Wartet auf Freigabe"];
   return canTrial(s,i)?["trial","Schnuppern möglich"]:["lock","Gesperrt"];
 }
-const chipsOf=(s,i)=>`<div class="chipsT">${topicsOf(i).map(t=>`<span class="${topicSafe(s,t)?"ok":""}">${topicSafe(s,t)?"✓ ":""}${TOPICS[t]}</span>`).join("")}</div>`;
+const stufe=(s,t)=>isEng(t)?` (Stufe ${lvOf(s,t)})`:"";
+const chipsOf=(s,i)=>`<div class="chipsT">${activeTopics(s,allTopicsOf(i)).map(t=>`<span class="${topicDone(s,t)?"ok":""}">${topicDone(s,t)?"✓ ":""}${TOPICS[t]}${stufe(s,t)}</span>`).join("")}</div>`;
 
 // Fach-Auswahl: Mathe und Deutsch öffnen darunter "Mix" und je einen Themenblock (Päckchen mit Kontroll-Pfiff).
 function topicBlock(s,li,t){
-  const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((a,x)=>a+x.ok,0),p=l.length?Math.round(k/l.length*100):0,safe=topicSafe(s,t);
-  return `<button class="topicbtn ${safe?"safe":""}" data-play="${li}:topic:${t}"><span class="tn">${safe?"✓ ":""}${TOPICS[t]}</span><span class="tb" aria-hidden="true"><i style="width:${p}%"></i></span><span class="tv">${safe?"sicher · ":""}${l.length?`${k} von ${l.length} richtig · `:""}Päckchen mit ${packLen(t)} Aufgaben</span></button>`;
+  const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((a,x)=>a+x.ok,0),p=l.length?Math.round(k/l.length*100):0,safe=topicDone(s,t),rep=s.settings&&s.settings.topicMode&&s.settings.topicMode[t]==="wiederholen";
+  return `<button class="topicbtn ${safe?"safe":""}" data-play="${li}:topic:${t}"><span class="tn">${safe?"✓ ":""}${TOPICS[t]}${rep?" · wiederholen":""}</span><span class="tb" aria-hidden="true"><i style="width:${p}%"></i></span><span class="tv">${safe?"sicher · ":""}${isEng(t)?`Stufe ${lvOf(s,t)} von ${EN_LEVELS} · `:""}${l.length?`${k} von ${l.length} richtig · `:""}Päckchen mit ${packLen(t)} Aufgaben</span></button>`;
 }
 function fachPanel(s,li,fach){
-  const L=LIGEN[li],name=fach==="math"?"Mathe":"Deutsch",list=fach==="math"?L.math:L.deu;
+  const L=LIGEN[li],name=FACHER[fach],list=activeTopics(s,L[fach]||[]);
+  if(!list.length)return `<div class="fach" role="group" aria-label="${name}"><p class="note">Zurzeit ist hier kein Thema angeschaltet. Mama und Papa stellen das in der Trainerbank ein.</p></div>`;
   return `<div class="fach" role="group" aria-label="${name} spielen"><button class="topicbtn mixbtn" data-play="${li}:${fach}"><span class="tn">Mix: alles aus ${name}</span><span class="tv">Schwache Themen kommen öfter dran. Jede Antwort zählt sofort.</span></button>
     <p class="note">Oder ein Thema üben. Du schreibst erst alle Aufgaben des Päckchens und kontrollierst dann selbst.</p>${list.map(t=>topicBlock(s,li,t)).join("")}</div>`;
 }
@@ -45,17 +49,23 @@ function modeBtns(s,li,UI,small){
   const open=UI&&UI.fach;
   const fb=(fach,label,ic,col)=>`<button class="mode ${open===li+":"+fach?"on":""}" data-fach="${li}:${fach}" aria-expanded="${open===li+":"+fach}"><span class="ic" style="background:${col}">${ic}</span><span><b>${label}</b></span></button>`;
   const panel=open&&open.startsWith(li+":")?fachPanel(s,li,open.split(":")[1]):"";
-  return `<div class="modes ${small?"sm":""}">${fb("math","Mathe","+","var(--sky)")}${fb("deu","Deutsch","Aa","var(--miss)")}
+  const L=LIGEN[li];
+  return `<div class="modes ${small?"sm":""}">${fb("math","Mathe","+","var(--sky)")}${fb("deu","Deutsch","Aa","var(--miss)")}${L.eng?fb("eng","Englisch","En","#d9480f"):""}${L.su?fb("su","Sachkunde","Sk","#0f8b6d"):""}
     <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">★</span><span><b>Mix-Spiel</b></span></button></div>${panel}`;
 }
 
+// Eigener Fortschritt in Englisch und Sachkunde (zählt nicht für den Aufstieg).
+function fachLines(s,i){
+  const parts=["eng","su"].filter(f=>LIGEN[i][f]).map(f=>{const p=fachProgress(s,i,f);return p.total?`${FACHER[f]}: ${p.done} von ${p.total} Themen sicher`:"";}).filter(Boolean);
+  return parts.length?`<p class="note">${parts.join(" · ")} (zählt nicht für den Aufstieg)</p>`:"";
+}
 // Die aktuelle Liga: Themen mit Status, Fortschritt und Spielauswahl.
 function currentCard(s,UI,i){
-  const L=LIGEN[i],st=leagueState(s,i),ms=mastered(s,i),sc=safeCount(s,i),tot=topicsOf(i).length;
+  const L=LIGEN[i],st=leagueState(s,i),ms=mastered(s,i),sc=safeCount(s,i),tot=gateTopics(s,i).length;
   const badge=st==="probe"?`<span class="badge probe">Probetraining: noch ${budgetOf(s,i)} Aufgaben</span>`:ms?`<span class="badge done">Durchgespielt</span>`:`<span class="badge cur">Deine Liga</span>`;
   const note=st==="probe"?`<p class="note">Wenn die ${PROBE} Probe-Aufgaben gespielt sind, können Mama oder Papa die Liga ganz freigeben.</p>`:"";
   return `<section class="lg current"><div class="lg-head"><div><b>${L.name}</b><span class="k">${L.klasse} · ${sc} von ${tot} Themen sicher</span></div>${badge}</div>
-    <div class="lgbar" aria-hidden="true"><i style="width:${Math.round(sc/tot*100)}%"></i></div>${chipsOf(s,i)}${modeBtns(s,i,UI,true)}${note}</section>`;
+    <div class="lgbar" aria-hidden="true"><i style="width:${tot?Math.round(sc/tot*100):0}%"></i></div>${fachLines(s,i)}${chipsOf(s,i)}${modeBtns(s,i,UI,true)}${note}</section>`;
 }
 // Jede andere Liga: eine schmale Zeile mit Name, Klasse und Status. Antippen klappt sie auf.
 function miniRow(s,UI,i){
@@ -68,7 +78,7 @@ function miniRow(s,UI,i){
     }else if(st==="wait"){
       body=chipsOf(s,i)+`<p class="note">Das Probetraining ist geschafft. Jetzt müssen Mama oder Papa die ${L.name} in der Trainerbank freigeben.</p>`;
     }else{const prev=LIGEN[i-1];
-      body=`<p class="note">Freispielen: In der ${prev.name} alle Themen sicher schaffen (je ${MASTER_K} von den letzten ${MASTER_N} Aufgaben richtig). Stand: ${safeCount(s,i-1)} von ${topicsOf(i-1).length}.</p>`+
+      body=`<p class="note">Freispielen: In der ${prev.name} alle Themen in Mathe und Deutsch sicher schaffen (je ${MASTER_K} von den letzten ${MASTER_N} Aufgaben richtig). Stand: ${safeCount(s,i-1)} von ${gateTopics(s,i-1).length}.</p>`+
         (canTrial(s,i)?`<div class="row"><button class="btn sm" data-trial="${i}">Schnuppern: ${trialLen(s)} Aufgaben</button>${settingsOf(s).trialDaily?`<span class="note">Einmal am Tag</span>`:""}</div>`:i<=top+2?`<p class="note">Heute schon geschnuppert. Morgen geht es wieder.</p>`:"");
     }
   }
@@ -87,10 +97,10 @@ function parentHTML(s,UI,hasPin){
 }
 
 export function homeHTML(s,UI,env){
-  const stats=LIGEN.map((L,i)=>`<h4 class="gl">${L.name} (${L.klasse})</h4>`+topicsOf(i).map(t=>{
+  const stats=LIGEN.map((L,i)=>`<h4 class="gl">${L.name} (${L.klasse})</h4>`+activeTopics(s,allTopicsOf(i)).map(t=>{
     const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((a,x)=>a+x.ok,0),p=l.length?Math.round(k/l.length*100):0,
-      col=!l.length?"#c9d3cb":topicSafe(s,t)?"var(--goal)":p>=60?"var(--gold)":"var(--miss)";
-    return `<div class="stat"><span>${TOPICS[t]}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
+      col=!l.length?"#c9d3cb":topicDone(s,t)?"var(--goal)":p>=60?"var(--gold)":"var(--miss)";
+    return `<div class="stat"><span>${TOPICS[t]}${stufe(s,t)}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
   return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+`
   <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
@@ -122,6 +132,7 @@ export function accountsHTML(accounts,UI,env){
 
 function padHTML(label="Schuss!"){return `<div class="pad">${[1,2,3,"del",4,5,6,0,7,8,9,"ok"].map(k=>k==="del"?`<button data-k="del" aria-label="Löschen">⌫</button>`:k==="ok"?`<button class="ok" data-k="ok">${label}</button>`:`<button data-k="${k}">${k}</button>`).join("")}</div>`;}
 function inputHTML(T,G){
+  if(NEW_TYPES.includes(T.type))return newInputHTML(T,G);
   const label=G.pack&&G.phase==="solve"?"Eintragen":G.pack&&G.phase==="edit"?"Ändern":"Schuss!";
   if(T.type==="num"){let h=`<div class="ans" aria-live="polite">${G.done?G.given:(G.input||"&nbsp;")}</div>`;if(!G.done)h+=padHTML(label);return h;}
   if(T.type==="pair"){const v=G.done?G.given:G.inp;let h=`<div class="pairrow"><span class="ans ${!G.done&&G.act===0?"act":""}" data-slot="0" role="button" aria-label="${T.labels[0]}">${v[0]||"&nbsp;"}</span><span>Rest</span><span class="ans ${!G.done&&G.act===1?"act":""}" data-slot="1" role="button" aria-label="${T.labels[1]}">${v[1]||"&nbsp;"}</span></div>`;
@@ -167,7 +178,7 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
     <div class="score">${blind?`${esc(s.profile.name)} · Päckchen`:`${esc(s.profile.name)} <em>${c}</em> : <em>${m}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
     <section class="card"><div class="tag">${tag}</div>
-    <p class="q">${T.q}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
+    <p class="q">${T.q}${T.speak?" "+speakBtn(T.speak):""}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
     <p class="lead small" style="color:#fff">${tip}</p>`;
 }
 
