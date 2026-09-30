@@ -20,10 +20,10 @@
 // Zusammenführen zählt nichts doppelt.
 import {PROBE} from "./content.js";
 import {clone} from "./util.js";
-import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer} from "./avatar.js";
+import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer,upgradeOldHair} from "./avatar.js";
 
-export const SCHEMA_VERSION=5;        // Konto-Stand
-export const GLOBAL_SCHEMA_VERSION=3; // globale Einstellungen
+export const SCHEMA_VERSION=6;        // Konto-Stand
+export const GLOBAL_SCHEMA_VERSION=4; // globale Einstellungen
 
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
 
@@ -76,7 +76,7 @@ const PROFILE_MIGRATIONS=[
   // 3 -> 4 (App 1.3.0): neues Aussehen. Der alte Avatar wird in die neuen Merkmale überführt (nächstliegende Werte), sein Zeitstempel t bleibt.
   {from:3,to:4,run:s=>{
     const av=s.profile&&s.profile.avatar;
-    if(av&&typeof av==="object")s.profile.avatar=Object.assign(cleanLook(av),{t:Number.isFinite(av.t)?av.t:0});
+    if(av&&typeof av==="object")s.profile.avatar=Object.assign(upgradeOldHair(av),{v:3,t:Number.isFinite(av.t)?av.t:0});
     s.meta.schemaVersion=4;
     return s;
   }},
@@ -85,6 +85,14 @@ const PROFILE_MIGRATIONS=[
     s.settings=Object.assign(defaultSettings(),s.settings);
     if(!s.settings.topicMode||typeof s.settings.topicMode!=="object"||Array.isArray(s.settings.topicMode))s.settings.topicMode={};
     s.meta.schemaVersion=5;
+    return s;
+  }},
+  // 5 -> 6 (App 1.5.0): feste Bild-Vorlage. Trikot-, Hosen- und Stutzenfarbe, Streifenfarbe, Nummer, Name und Mannschaftsname
+  // des alten Avatars werden übernommen (kit, tpl); alle alten Felder bleiben im Stand, sein Zeitstempel t bleibt.
+  {from:5,to:6,run:s=>{
+    const av=s.profile&&s.profile.avatar;
+    if(av&&typeof av==="object")s.profile.avatar=Object.assign(cleanLook(av),{t:Number.isFinite(av.t)?av.t:0});
+    s.meta.schemaVersion=6;
     return s;
   }}
 ];
@@ -108,8 +116,8 @@ export function migrateGlobal(g){
   // 1 -> 2: Trainer und Trainerin. Ein nie geänderter Eintrag (t 0) bekommt immer die aktuelle Vorgabe.
   if(!g.trainer||typeof g.trainer!=="object"||g.trainer.t===0)g.trainer=defaultTrainer();
   if(!g.trainer2||typeof g.trainer2!=="object"||g.trainer2.t===0)g.trainer2=defaultTrainer2();
-  // 2 -> 3 (App 1.3.0): Trainer im neuen Aufbau (Frisur als Schlüssel, Bart in Formen). Name und Zeitstempel bleiben.
-  if(v<3){g.trainer=cleanTrainer(g.trainer,1);g.trainer2=cleanTrainer(g.trainer2,2);}
+  // 3 -> 4 (App 1.5.0): Trainer tragen Farben (Polo, Hose, Stutzen) statt Baukasten-Merkmale. Die frühere Jacke wird zur Polo-Farbe, alles Alte bleibt.
+  if(v<4){g.trainer=cleanTrainer(g.trainer,1);g.trainer2=cleanTrainer(g.trainer2,2);}
   return g;
 }
 

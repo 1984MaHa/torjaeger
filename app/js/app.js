@@ -11,9 +11,10 @@ import {openStore} from "./store.js";
 import {createSync} from "./sync.js";
 import {createAdminApi,adminError} from "./adminapi.js";
 import {adminHTML} from "./admin.js";
-import {avatarBuilderHTML,NUM_KEYS} from "./avatarui.js";
+import {avatarBuilderHTML} from "./avatarui.js";
 import {pickShot} from "./avatardraw.js";
-import {cleanLook,cleanTrainer,lookOf,templateLook,startLook,withBody,defaultTrainer,defaultTrainer2,randomPatch,randomTrainerPatch} from "./avatar.js";
+import {cleanLook,cleanTrainer,lookOf,withKit,withPreset,defaultTrainer,defaultTrainer2} from "./avatar.js";
+import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML} from "./views.js";
@@ -83,9 +84,9 @@ function maybeOfferAvatar(){
   if(!cur||!S().profile||S().profile.avatar||S().profile.avatarAsked)return false;
   openAvatar(true);return true;
 }
-function openAvatar(first,step=1){
+function openAvatar(first){
   const s=S();
-  UI.av={first,step,view:"front",name:s.profile.name,look:cleanLook(lookOf(s.profile))};
+  UI.av={first,view:"front",name:s.profile.name,look:cleanLook(lookOf(s.profile))};
   view="avatar";render();window.scrollTo(0,0);
 }
 
@@ -387,7 +388,7 @@ const validName=n=>typeof n==="string"&&n.trim().length>0;
 function adminModel(){
   const A=UI.admin;
   const list=accounts.map(a=>({id:a.id,name:a.rec.state?a.rec.state.profile.name:a.name,state:a.rec.state})).sort((x,y)=>String(x.name).localeCompare(String(y.name),"de"));
-  return{tr1:A.tr1,tr2:A.tr2,trStep:A.trStep,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
+  return{tr1:A.tr1,tr2:A.tr2,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
     server:A.server,deviceId,appVersion:APP_VERSION,persistent:store.persistent,previewLabel:UI.preview,schema:{app:SCHEMA_VERSION,global:GLOBAL_SCHEMA_VERSION}};
 }
 const adminRec=id=>{const a=accounts.find(x=>x.id===id);return a&&a.rec.state?a.rec:null;};
@@ -452,21 +453,15 @@ async function adminChangePin(){
   await sync.syncGlobal(globalRec); // die neue PIN (neuerer Zeitstempel) kommt vom Server
   adminSay("ok","Die neue PIN gilt jetzt für alle Konten und Geräte.");render();
 }
-// ================= Avatar-Baukasten =================
+// ================= Mein Spieler =================
 function bindAvatar($){
   const grab=()=>{const n=$("avShirtName"),t=$("avTeam");if(n)UI.av.look.shirtName=n.value;if(t)UI.av.look.team=t.value;};
-  const set=patch=>{grab();UI.av.look=Object.assign({},UI.av.look,patch);render();};
-  const go=n=>{grab();UI.av.step=Math.max(1,Math.min(6,n));render();window.scrollTo(0,0);};
-  document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{const [k,...r]=b.dataset.av.split(":"),v=r.join(":");set({[k]:NUM_KEYS.includes(k)?Number(v):v});});
-  document.querySelectorAll("[data-avbody]").forEach(b=>b.onclick=()=>{grab();const body=b.dataset.avbody;
-    UI.av.look=UI.av.first&&!UI.av.touched&&UI.av.look.body!==body?startLook(body,UI.av.name):withBody(UI.av.look,body);UI.av.touched=true;render();});
-  document.querySelectorAll("[data-avtpl]").forEach(b=>b.onclick=()=>{grab();UI.av.look=templateLook(Number(b.dataset.avtpl),UI.av.name);UI.av.touched=true;render();});
-  document.querySelectorAll("[data-avnum]").forEach(b=>b.onclick=()=>set({number:String((Number(UI.av.look.number)+Number(b.dataset.avnum)+100)%100)}));
-  document.querySelectorAll("[data-avstep]").forEach(b=>b.onclick=()=>go(Number(b.dataset.avstep)));
+  const set=look=>{grab();UI.av.look=cleanLook(look);render();};
+  document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{grab();const [k,...r]=b.dataset.av.split(":");UI.av.look=withKit(UI.av.look,k,r.join(":"));render();});
+  document.querySelectorAll("[data-avpreset]").forEach(b=>b.onclick=()=>{grab();UI.av.look=withPreset(UI.av.look,Number(b.dataset.avpreset));render();});
+  document.querySelectorAll("[data-avtpl]").forEach(b=>b.onclick=()=>set({...UI.av.look,tpl:b.dataset.avtpl}));
+  document.querySelectorAll("[data-avnum]").forEach(b=>b.onclick=()=>set({...UI.av.look,number:String((Number(UI.av.look.number)+Number(b.dataset.avnum)+100)%100)}));
   document.querySelectorAll("[data-avview]").forEach(b=>b.onclick=()=>{grab();UI.av.view=b.dataset.avview;render();});
-  if($("avBack"))$("avBack").onclick=()=>go(UI.av.step-1);
-  if($("avNext"))$("avNext").onclick=()=>go(UI.av.step+1);
-  if($("avDice"))$("avDice").onclick=()=>set(randomPatch(UI.av.step,UI.av.look));
   const leave=()=>{UI.av=null;view="home";render();window.scrollTo(0,0);};
   if($("avSave"))$("avSave").onclick=()=>{grab();const look=cleanLook(UI.av.look);commit((s,c)=>applyAvatar(s,c,look));leave();};
   if($("avSkip"))$("avSkip").onclick=()=>{commit((s,c)=>applyAvatarAsked(s,c));leave();};
@@ -503,9 +498,7 @@ function bindAdmin($){
   const grabTr=()=>{for(const w of [1,2]){const i=$("trName"+w);if(i&&A[key(w)])A[key(w)].name=i.value;}};
   document.querySelectorAll("[data-atr]").forEach(b=>b.onclick=()=>{
     const p=b.dataset.atr.split(":"),w=Number(p[0]),k=p[1],v=p.slice(2).join(":");grabTr();
-    A[key(w)].look=Object.assign({},A[key(w)].look,{[k]:NUM_KEYS.includes(k)?Number(v):v});render();});
-  document.querySelectorAll("[data-atrstep]").forEach(b=>{const [w,n]=b.dataset.atrstep.split(":").map(Number);b.onclick=()=>{grabTr();A.trStep=Object.assign({1:2,2:2},A.trStep,{[w]:n});render();};});
-  document.querySelectorAll("[data-atrdice]").forEach(b=>{const [w,n]=b.dataset.atrdice.split(":").map(Number);b.onclick=()=>{grabTr();A[key(w)].look=Object.assign({},A[key(w)].look,randomTrainerPatch(n,A[key(w)].look,w));render();};});
+    A[key(w)].look=Object.assign({},A[key(w)].look,{[k]:v});render();});
   document.querySelectorAll("[data-atrdefault]").forEach(b=>b.onclick=()=>{const w=Number(b.dataset.atrdefault);A[key(w)]=cleanTrainer(w===2?defaultTrainer2():defaultTrainer(),w);render();});
   document.querySelectorAll("[data-atrsave]").forEach(b=>b.onclick=async()=>{
     const w=Number(b.dataset.atrsave);grabTr();
@@ -589,6 +582,10 @@ document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&
 (async function main(){
   try{
     await loadAll();
+    // Figuren-Bilder vor dem ersten Bild laden (höchstens kurz warten, dann nachzeichnen)
+    const figs=loadFigures().catch(()=>false);
+    await Promise.race([figs,new Promise(r=>setTimeout(r,3000))]);
+    figs.then(ok=>{if(ok&&["accounts","home","avatar"].includes(view)&&!UI.fatal)render();});
     if(!accounts.length)view="accounts";
     if(!maybeOfferAvatar())render();
     initSW();

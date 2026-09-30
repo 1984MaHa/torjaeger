@@ -7,8 +7,8 @@ import {fileURLToPath} from "node:url";
 import {LIGEN,topicsOf} from "../app/js/content.js";
 import {GEN} from "../app/js/generators.js";
 import {newProfile} from "../app/js/model.js";
-import {HAIRS,TEMPLATES,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf} from "../app/js/avatar.js";
-import {avatarSVG,crestSVG,trainerSVG,sceneSVG,pickShot,shotPath,SHOT_KINDS,SHOT_TEXT} from "../app/js/avatardraw.js";
+import {KIT_PRESETS,KID_TEMPLATES,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,lookOf} from "../app/js/avatar.js";
+import {avatarSVG,trainerSVG,sceneSVG,pickShot,shotPath,SHOT_KINDS,SHOT_TEXT} from "../app/js/avatardraw.js";
 import {leaks,similarExample,exampleHTML,helpBubblesHTML,coachHTML,rightText,speakerOf,FALLBACK_EXAMPLE} from "../app/js/coach.js";
 import {playHTML,accountsHTML,homeHTML} from "../app/js/views.js";
 import {applyAvatar,applyAnswer} from "../app/js/rules.js";
@@ -26,21 +26,22 @@ const noSvg=s=>s.replace(/<svg[\s\S]*?<\/svg>/g,"");
 const clean=(s,what)=>{assert.ok(wellFormed(s),what+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s),what+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),what+": unsicher");};
 
 test("Eingaben werden entschärft (Name, Mannschaft, Farben)",()=>{
-  const evil={hair:2,shirt:"red;stroke:url(x)",shirtName:'"><script>alert(1)</script>',team:"<img src=x onerror=1>",number:"<b>",c1:"#12345",c2:"#ABCDEF"};
-  const svg=avatarSVG(evil,{px:80})+sceneSVG(evil,{kind:"goal",side:1})+crestSVG(evil,30);
+  const evil={kit:{trikot:"red;stroke:url(x)",streifen:"#ABCDEF",hose:"#12345",stutzen:"url(#x)"},shirtName:'"><script>alert(1)</script>',team:"<img src=x onerror=1>",number:"<b>"};
+  const svg=avatarSVG(evil,{px:80})+avatarSVG(evil,{px:80,view:"back"})+avatarSVG(evil,{px:80,crop:"bust"})+sceneSVG(evil,{kind:"goal",side:1});
   clean(svg,"böse Eingaben");
-  const l=cleanLook(evil);assert.ok(!/[<>"]/.test(l.shirtName+l.team));assert.equal(l.c2,"#abcdef");assert.notEqual(l.c1,"#12345");assert.equal(l.number,TEMPLATES[0].look.number);
-  const tr=cleanTrainer({name:"<b>Coach</b>",look:{jacket:"blue",beard:"ja",glasses:0,hair:9},t:"x"},1);
-  assert.ok(!/[<>]/.test(tr.name));assert.equal(tr.look.beard,1);assert.equal(tr.look.glasses,0);assert.equal(tr.look.hair,"ohne");assert.equal(tr.t,0);
-  clean(trainerSVG({jacket:"url(#x)"},{px:60,label:'"><script>'}),"Trainer böse");
+  const l=cleanLook(evil);assert.ok(!/[<>"]/.test(l.shirtName+l.team));assert.equal(l.kit.streifen,"#abcdef");assert.equal(l.kit.trikot,KID_TEMPLATES[0].kit.trikot);assert.equal(l.kit.hose,KID_TEMPLATES[0].kit.hose);assert.equal(l.number,"10");
+  const tr=cleanTrainer({name:"<b>Coach</b>",look:{polo:"blue",hose:"#ABCDEF",stutzen:"url(#x)"},t:"x"},1);
+  assert.ok(!/[<>]/.test(tr.name));assert.equal(tr.look.polo,defaultTrainer().look.polo);assert.equal(tr.look.hose,"#abcdef");assert.equal(tr.look.stutzen,defaultTrainer().look.stutzen);assert.equal(tr.t,0);
+  clean(trainerSVG({polo:"url(#x)"},{px:60,label:'"><script>'}),"Trainer böse");
 });
 
 test("Konten ohne Avatar bekommen eine feste Vorgabe aus dem Namen",()=>{
   assert.deepEqual(defaultLook("Emil"),defaultLook("Emil"));
-  assert.equal(defaultLook("Emil").shirtName,"EMIL");
+  assert.equal(defaultLook("Emil").shirtName,"EMIL");assert.equal(defaultLook("Emil").tpl,"emil");
+  assert.ok(KIT_PRESETS.some(p=>p.team===defaultLook("Mia").team),"Mannschaft aus den Vorschlägen");
   const p={name:"Mia",avatar:null};assert.deepEqual(lookOf(p),defaultLook("Mia"));
-  const s=newProfile({id:"k-abc12345",name:"Mia",deviceId:"d"});applyAvatar(s,{deviceId:"d",now:5},{body:"m",hair:6,shirt:"#8e44ad"});
-  assert.equal(lookOf(s.profile).hair,"halbzopf");assert.equal(lookOf(s.profile).body,"m");assert.equal(s.profile.avatarAsked,true);assert.equal(s.profile.avatar.t,5);
+  const s=newProfile({id:"k-abc12345",name:"Mia",deviceId:"d"});applyAvatar(s,{deviceId:"d",now:5},{kit:{trikot:"#7b3fa0"},team:"Beeren",number:"3"});
+  assert.equal(lookOf(s.profile).kit.trikot,"#7b3fa0");assert.equal(lookOf(s.profile).team,"Beeren");assert.equal(s.profile.avatarAsked,true);assert.equal(s.profile.avatar.t,5);
 });
 
 test("Torszene: Treffer und drei Fehlschuss-Varianten, beide Seiten, ohne Vereinsschild",()=>{
@@ -52,7 +53,7 @@ test("Torszene: Treffer und drei Fehlschuss-Varianten, beide Seiten, ohne Verein
   const rnd=(...v)=>()=>v.shift();
   assert.deepEqual([pickShot(false,rnd(0,.1)).kind,pickShot(false,rnd(.4,.9)).kind,pickShot(false,rnd(.9,.9)).kind],["post","bar","wide"]);
   const sides=new Set();for(let i=0;i<100;i++)sides.add(pickShot(true).side);assert.equal(sides.size,2);
-  const look={...TEMPLATES[2].look,team:"Geheimer Vereinsname"};
+  const look={...defaultLook("Emil"),team:"Geheimer Vereinsname"};
   for(const kind of SHOT_KINDS)for(const side of [-1,1]){
     const svg=sceneSVG(look,{kind,side});clean(svg,kind+side);
     assert.ok(svg.includes(`class="scene sc-${kind}"`)&&svg.includes("ballpos")&&svg.includes("netfx")&&svg.includes("<defs>"));
@@ -92,8 +93,8 @@ test("Bewegung: prefers-reduced-motion schaltet die Szenen-Animationen ab, Ball 
 
 test("Kacheln in Wer spielt? und Kabine zeigen den Avatar",()=>{
   const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.1.0"},UI={newAcct:false,acctMsg:"",adminAsk:false};
-  const h=accountsHTML([{id:"k-a",name:"Emil",avatar:cleanLook(TEMPLATES[1].look)},{id:"k-b",name:"Mia",avatar:null}],UI,env);
-  assert.equal((h.match(/class="avsvg"/g)||[]).length,2);assert.ok(h.includes(TEMPLATES[1].look.team)&&h.includes(defaultLook("Mia").team));
+  const h=accountsHTML([{id:"k-a",name:"Emil",avatar:cleanLook({team:"Blaue Wirbel"})},{id:"k-b",name:"Mia",avatar:null}],UI,env);
+  assert.equal((h.match(/class="avsvg"/g)||[]).length,2);assert.ok(h.includes("Blaue Wirbel")&&h.includes(defaultLook("Mia").team));
   const s=newProfile({id:"k-abc12345",name:"Emil",deviceId:"d1"});
   const home=homeHTML(s,{parent:false,pinMsg:""},env);
   assert.ok(home.includes('class="avsvg"')&&home.includes('id="avEdit"'));
@@ -169,7 +170,7 @@ test("Aufgabenansicht: richtig = kurzes Overlay ohne Weiter-Taste, falsch = witz
   }
   assert.ok(playHTML(s,{...G,done:true,ok:false,gain:0,res:[false],given:"1"}).includes("Knapp vorbei"));   // ohne gespeicherten Ausgang
   assert.ok(playHTML(s,{...G,done:true,ok:false,gain:0,res:[false],given:"1",i:7,len:8}).includes("Abpfiff"));
-  applyAvatar(s,{deviceId:"d1",now:5},{...TEMPLATES[3].look,shirtName:"Emil"});
+  applyAvatar(s,{deviceId:"d1",now:5},{...defaultLook("Emil"),shirtName:"Emil"});
   applyAnswer(s,{deviceId:"d1",now:9},{topic:t,ok:true,gain:10,li:0,trial:false,help:1});
 });
 

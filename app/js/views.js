@@ -8,6 +8,8 @@ import {stickerHTML} from "./stickers.js";
 import {probeHTML,givenText,packLen} from "./check.js";
 import {avatarSVG,sceneSVG,SHOT_TEXT} from "./avatardraw.js";
 import {lookOf,defaultTrainer,defaultTrainer2} from "./avatar.js";
+// Name der Mannschaft (Vereinsname) für Kabine und Anzeigetafel
+const teamOf=s=>lookOf(s.profile).team||s.profile.name;
 import {rightText,coachHTML} from "./coach.js";
 import {total,lvOf} from "./model.js";
 import {esc} from "./util.js";
@@ -105,7 +107,7 @@ export function homeHTML(s,UI,env){
     return `<div class="stat"><span>${TOPICS[t]}${stufe(s,t)}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
   return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+`
-  <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
+  <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="teamline">${esc(teamOf(s))}</p><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
   <div class="leagues">${currentCard(s,UI,currentLeague(s))}<h2 class="gl2">Andere Ligen</h2>${LIGEN.map((_,i)=>i).filter(i=>i!==currentLeague(s)).map(i=>miniRow(s,UI,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
@@ -185,7 +187,7 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   const foot=G.phase==="edit"?`<button class="btn ghost" id="editBack">Zurück zur Kontrolle</button>`:"";
   const tip=G.pack&&G.phase==="solve"?"Schreibe erst alle Aufgaben des Päckchens. Danach kontrollierst du sie selbst.":"Lies zuerst das gelb markierte Wort. Dann erst schießen!";
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
-    <div class="score">${blind?`${esc(s.profile.name)} · Päckchen`:`${esc(s.profile.name)} <em>${c}</em> : <em>${m}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
+    <div class="score">${blind?`${esc(teamOf(s))} · Päckchen`:`${esc(teamOf(s))} <em>${c}</em> : <em>${m}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
     <section class="card"><div class="cardtop"><div class="tag">${tag}</div>${mini}</div>
     <p class="q">${T.q}${T.speak?" "+speakBtn(T.speak):""}</p>${T.late?`<p class="note late">Das hattest du vielleicht noch nicht in der Schule. Raten ist okay: Ein falscher Tipp zählt dann nicht.</p>`:""}${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
     <p class="lead small" style="color:#fff">${tip}</p>`;
@@ -199,7 +201,7 @@ export function resultHTML(s,G,UI){
   else if(st==="probe")info=`<p>Probetraining in der ${L.name}: noch ${budgetOf(s,G.li)} Aufgaben.</p>`;
   else if(st==="wait")info=`<p>Probetraining geschafft! Jetzt müssen Mama oder Papa die ${L.name} freigeben.</p>`;
   return boardHTML(s)+`<section class="card result"><h2>${head}</h2>
-    <div class="final"><span class="team">${esc(s.profile.name)}<small>Heim</small></span><span>${c} : ${m}</span><span class="team">${G.rival}<small>Gast</small></span></div>
+    <div class="final"><span class="team">${esc(teamOf(s))}<small>Heim</small></span><span>${c} : ${m}</span><span class="team">${G.rival}<small>Gast</small></span></div>
     <p class="q" style="font-size:1.4rem">+${G.pts} Punkte${G.bonus?` (davon ${G.bonus} Bonus)`:""}</p>
     ${pk?(G.checked?(pk.fixed?`<div class="celebrate">Kontroll-Pfiff: Du hast ${pk.fixed} Fehler selbst gefunden und verbessert. Stark! (+${pk.bonus} Bonus)</div>`:`<p>Kontroll-Pfiff gemacht. Gutes Kontrollieren!</p>`):`<p>Nächstes Mal kontrollierst du vor dem Abgeben. Dann gibt es Kontroll-Bonus.</p>`):""}
     ${UI.celebrate?`<div class="celebrate">${UI.celebrate}</div>`:""}${info}

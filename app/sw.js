@@ -1,12 +1,14 @@
 // Service Worker: App-Dateien aus dem Cache (cache-first), /api immer direkt ans Netz.
 // Neue Auslieferung: VERSION erhöhen (gleichzeitig js/version.js). Der Worker berührt nie IndexedDB.
-const VERSION = "1.4.1";
+const VERSION = "1.5.0";
 const CACHE = "torjaeger-app-" + VERSION;
 const FILES = [
   "index.html", "manifest.webmanifest", "css/style.css",
-  "js/app.js", "js/admin.js", "js/adminapi.js", "js/audio.js", "js/avatar.js", "js/avatardraw.js", "js/avatarui.js", "js/check.js", "js/coach.js", "js/content.js", "js/content-en.js", "js/content-su.js", "js/generators.js", "js/icons.js", "js/inputs.js", "js/merge.js", "js/model.js", "js/pin.js",
+  "js/app.js", "js/admin.js", "js/adminapi.js", "js/audio.js", "js/avatar.js", "js/avatardraw.js", "js/avatarui.js", "js/check.js", "js/coach.js", "js/content.js", "js/content-en.js", "js/content-su.js", "js/figdata.js", "js/figures.js", "js/generators.js", "js/icons.js", "js/inputs.js", "js/merge.js", "js/model.js", "js/pin.js",
   "js/rules.js", "js/speech.js", "js/stickers.js", "js/store.js", "js/svg.js", "js/sync.js", "js/tasks.js", "js/util.js", "js/version.js", "js/views.js",
   "fonts/andika-400.woff2", "fonts/andika-700.woff2", "fonts/lilita-one-400.woff2",
+  "img/fig-emil-front.png", "img/fig-emil-front-layer.png", "img/fig-emil-back.png", "img/fig-emil-back-layer.png",
+  "img/fig-trainer-front.png", "img/fig-trainer-front-layer.png", "img/fig-trainerin-front.png", "img/fig-trainerin-front-layer.png",
   "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"
 ];
 

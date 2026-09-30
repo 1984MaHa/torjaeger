@@ -1,6 +1,6 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.4.1. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.5.0. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
@@ -9,10 +9,12 @@ Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (In
   - `index.html`, `manifest.webmanifest`, `sw.js` (Service Worker), `css/`, `fonts/` (Andika, Lilita One, OFL), `icons/`
   - `js/` Module: `app.js` (Steuerung), `views.js` (Darstellung), `rules.js` (Spielregeln), `generators.js` (Aufgaben), `model.js` (Datenmodell, Migration), `merge.js` (Zusammenführen), `sync.js` (Abgleich), `store.js` (IndexedDB), `pin.js`, `content.js`, `svg.js`, `audio.js`, `util.js`, `version.js`, `check.js` (Päckchen, Kontroll-Pfiff, Probe), `stickers.js` (24 Sticker mit Jubelruf), `content-en.js` und `content-su.js` (Wörter und Aufgaben Englisch und Sachkunde), `tasks.js` (Aufgaben daraus), `inputs.js` (Zuordnen, Bild wählen, Sortieren, Reihenfolge), `speech.js` (Vorlesen mit Gerätestimme), `icons.js` (Fach-Symbole)
   - Eltern-Bereich: `admin.js` (Ansichten), `adminapi.js` (Aufrufe an den Server)
-  - Avatar und Trainer: `avatar.js` (Daten, Paletten, Vorlagen), `avatardraw.js` (Figuren und Torszene als SVG), `avatarui.js` (Baukasten in 6 Schritten), `coach.js` (Trainer-Hilfe)
+  - Spieler und Trainerteam: `avatar.js` (Vorlagen, Farbpaletten, Vereinsfarben-Vorschläge, Prüfung), `figures.js` (Umfärben der Bild-Vorlagen, Rückenfeld), `figdata.js` (Maße der Bilder, erzeugt von `tools/prepare-figures.mjs`), `avatardraw.js` (Figuren und Torszene als SVG mit eingebettetem Bild), `avatarui.js` („Mein Spieler“ und Trainerfarben), `coach.js` (Trainer-Hilfe)
+  - `img/` die freigestellten Figuren-Bilder (je Figur ein Grundbild und eine Umfärb-Ebene)
 - `server/server.js` liefert die App aus und speichert die Stände (Node 20, keine Zusatzpakete), `server/admin.js` die Admin-Aktionen der Eltern (PIN-Prüfung, Papierkorb, Zurücksetzen, Wiederherstellen, Geräteliste)
 - `test/` Tests mit `node --test`, `test/fixtures/` Stände für die Migrationen (Prototyp-Format, Format 1.0.0 und 1.1.5)
-- `tools/` Hilfsskripte (Icons erzeugen, Schriften laden, `inhalte-liste.mjs` erzeugt `docs/Inhalte-Englisch-Sachkunde.md`)
+- `tools/` Hilfsskripte (Icons erzeugen, Schriften laden, `inhalte-liste.mjs` erzeugt `docs/Inhalte-Englisch-Sachkunde.md`, `prepare-figures.mjs` bereitet die Figuren-Bilder auf, siehe Abschnitt „Figuren-Vorlagen“)
+- `assets-src/` die Original-Bilder der Figuren (Quelle für `tools/prepare-figures.mjs`, nicht im Docker-Image)
 - `docs/Inhalte-Englisch-Sachkunde.md` lesbare Liste aller Wörter, Bilder und Sachkunde-Aufgaben zum Prüfen (nach Änderungen an `content-en.js` oder `content-su.js` mit `node tools/inhalte-liste.mjs` neu erzeugen)
 - `prototype/` der ursprüngliche Prototyp (Claude-Artifact), nur zur Referenz
 - `data/` Spielstände und Sicherungen, **nicht im Repo, nicht im Image**
@@ -147,12 +149,24 @@ Beim Auslieferen einer neuen App-Version die Version in **beiden** Dateien erhö
 
 ## Hilfsskripte
 - `node tools/make-icons.js` erzeugt die Icons in `app/icons/` neu.
+- `node tools/prepare-figures.mjs` bereitet die Figuren-Bilder auf (Abschnitt „Figuren-Vorlagen“).
 - `node tools/fetch-fonts.js` lädt die Schriften und OFL-Texte nach `app/fonts/` (nur nötig, wenn der Ordner leer ist).
+
+## Figuren-Vorlagen (Bilder aufbereiten)
+Die Figuren sind Bilder von Marco (Emil vorn und hinten, Trainerteam). Sie liegen als Original in `assets-src/` und werden einmalig am Rechner aufbereitet. Die App selbst braucht dafür nichts (keine Bibliotheken, nur fertige PNG in `app/img/`).
+1. **Aufruf:** `node tools/prepare-figures.mjs` (alle Quellen) oder `node tools/prepare-figures.mjs emil`. Mit `--debug` entstehen Prüfbilder in `.work/` (Schachbrett mit drei Farbvarianten, `dbg-bust.png` mit den runden Ausschnitten). Unter Windows wandelt das Skript das JPG selbst in ein PNG (`tools/jpg2png.ps1`, .NET), sonst das PNG als `.work/<quelle>.png` bereitstellen (zum Beispiel mit ImageMagick). Node reicht, Python ist nicht nötig.
+2. **Was passiert:** `prepare-figures.mjs` findet die Figuren (Hintergrund vom Rand wegfluten, die größten Reste sind die Figuren), schneidet jede frei (weiche Kante aus der Linienfarbe), sucht die umfärbbaren Bereiche nach den Regeln in `tools/figures.config.mjs` und schreibt je Figur zwei Bilder: `fig-<id>.png` (Grundbild mit Löchern an den umfärbbaren Stellen) und `fig-<id>-layer.png` (Umfärb-Ebene: R = Schattierung, 128 = Mitte; G = Nummer des Bereichs; B = Deckung; A = 255 im Bereich). Dazu `app/js/figdata.js` (Maße, Bereiche, Fenster des Brustbildes, Rückenfeld). Hilfsfunktionen stehen in `tools/fig-lib.mjs`, PNG lesen und schreiben in `tools/png.mjs`.
+3. **Neue Vorlage ergänzen** (zum Beispiel für die Nichte):
+   - Original nach `assets-src/`, in `tools/figures.config.mjs` eine Quelle mit `bgTest` (welche Punkte Hintergrund sind) und den Figuren von links nach rechts eintragen. Je Bereich eine Regel (`mask`): Farbtest, Suchfenster `box`, Startpunkt `flood`, bei schwarzer Kleidung `erode`, damit die Kontur im Grundbild bleibt. `holes` gibt eingeschlossene Hintergrundstellen frei (zum Beispiel zwischen Arm und Körper). Markenlogos werden übermalt: Fläche in den Bereich aufnehmen und als `flat` markieren (Schattierung 128 = reine Farbe). `bust` (Fenster des Brustbildes), `field` (Rückenfeld) und `chest` (Brustnummer) angeben.
+   - Mit `--debug` prüfen, dann ohne `--debug` laufen lassen. Die neuen Bilder stehen in `app/img/` und müssen in `FILES` von `app/sw.js` (ein Test prüft es).
+   - In `app/js/avatar.js` einen Eintrag in `KID_TEMPLATES` anlegen (id, name, Bild vorn und hinten, Bereiche, Vorgabefarben). Die Auswahl erscheint in „Mein Spieler“ von selbst, sobald es mehr als eine Vorlage gibt. Trainer haben feste Bilder je Figur (`TRAINER_FIG` in `avatardraw.js`).
+4. **Umfärben in der App:** `figures.js` färbt die Ebene je Farbkombination auf einer Zeichenfläche ein (Schattierung mal Farbe, hellere Stellen mischen Weiß bei), legt das Grundbild darüber und merkt sich das Ergebnis (höchstens 80 Bilder, ältere werden freigegeben). Name und Nummer liegen als SVG-Text darüber (`backLayout`).
+5. **Größe im Blick:** alle Bilder zusammen etwa 0,9 MB (ein Test begrenzt sie auf 1,6 MB, sie liegen im Offline-Cache).
 
 ## Eltern-Bereich, Avatar, Trainer
 - **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).
-- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten (überspringbar). Er führt in 6 Schritten: 1 Junge oder Mädchen (nur ein Vorschlag, nichts ist eingeschränkt), 2 Kopfform und Hautton, 3 Frisur und Haarfarbe, 4 Gesicht, 5 Kleidung und Zubehör fürs Porträt, 6 Trikot und Verein. Jeder Schritt zeigt die Ganzkörperfigur (vorne oder hinten) und hat Zurück, Weiter, Würfel und Fertig. Später über „Mein Spieler“ in der Kabine, jeder Schritt lässt sich einzeln antippen. Die Figur steht als Brustbild auf der Kachel und schießt als Ganzkörperfigur die Tore (Name und Nummer auf dem Rücken).
-- **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Name und Aussehen beider im Eltern-Bereich unter Einstellungen, mit demselben Baukasten (Schritte 2 bis 5, dazu Bart, Brille, Kopfbedeckung, Pfeife oder Klemmbrett nur für die Erwachsenen). Die Tipp-Zeit je Konto ebenda. Richtige Antworten zeigen kurz ein Overlay und gehen von allein weiter.
+- **Mein Spieler:** Beim ersten Öffnen eines Kontos ohne eigenen Spieler erscheint die Seite „Dein Spieler“ (überspringbar), später in der Kabine die Taste „Mein Spieler“. Die Figur ist eine feste Vorlage (vorerst „Emil“). Einstellbar sind Vereinsfarben (Vorschläge) oder die Farben von Trikot, Streifen, Hose und Stutzen, die Rückennummer, der eigene Name auf dem Rücken und der Name der Mannschaft (steht in „Wer spielt?“, in der Kabine und auf der Anzeigetafel).
+- **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Im Eltern-Bereich unter Einstellungen ändert man Name und Kleidungsfarben beider (Polo, Hose, Stutzen). Vorgaben „Trainer“ und „Trainerin“.
 
 ## Abnahme Version 1.1.0 (in der Vorschau)
 1. `node --test` grün.

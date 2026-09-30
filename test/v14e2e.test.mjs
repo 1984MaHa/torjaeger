@@ -178,7 +178,7 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.meta.schemaVersion,5);
+    assert.equal(st.meta.schemaVersion,6);
     assert.equal(st.history.at(-1).mode,"topic");assert.equal(st.history.at(-1).topic,"su_wasser");assert.equal(st.history.at(-1).pk,true);
     const eng=st.stats.en_tiere;assert.ok(eng===undefined||eng.tot);
     const sw=st.stats.su_wasser;assert.equal(Object.values(sw.tot).reduce((a,x)=>a+x.a,0),4,"vier Antworten im Thema");

@@ -1,5 +1,26 @@
 # Änderungen
 
+## 1.5.0 (Vorschau: feste Bild-Vorlagen statt Avatar-Baukasten)
+Der gezeichnete Avatar-Baukasten (1.3.0) ist ersetzt durch **feste Bild-Vorlagen** aus Marcos Bildern: Emil vorn und hinten, dazu Trainer und Trainerin. Schemaversion 6 (Konto) und 4 (global). Ein Stand im Format 1.4.1 wird beim ersten Start ohne Verlust migriert, Emils Trikotfarben, Nummer, Name und Mannschaftsname bleiben.
+
+### Neu
+- **Figuren aus Bildern:** Emil (blondes Haar, blaues Trikot mit weißen Streifen) als Ganzfigur von vorn und hinten, Trainer (Glatze, Brille) und Trainerin (blond, Bob, Creolen) als Brustbild. Alle freigestellt (durchsichtiger Hintergrund), Markenlogos auf Trikotbrust und Stutzen sind übermalt. Die Originale liegen in `assets-src/`, die fertigen Bilder in `app/img/` (zusammen etwa 0,9 MB, alle im Offline-Cache).
+- **Umfärben zur Laufzeit** (`figures.js`): Trikot, Streifen, Hose und Stutzen des Kindes sowie Polo, Hose und Stutzen der Trainer haben eine eigene Umfärb-Ebene. Sie wird in der gewählten Farbe eingefärbt, Falten und Schatten bleiben sichtbar. Das Ergebnis wird je Farbkombination zwischengespeichert.
+- **„Mein Spieler“** ist jetzt eine Seite: Vorschau vorn und hinten, 10 Vereinsfarben-Vorschläge, 13 feste Farben je Bereich, Rückennummer, eigener Name und Name der Mannschaft. Der Baukasten mit den sechs Schritten (Kopfform, Frisur, Gesicht, Kleidung) ist aus der Oberfläche und aus dem Code entfernt.
+- **Rückenfeld:** der Name ist leicht gebogen über der Nummer, beides im Rückenfeld, lange Namen und zweistellige Nummern werden kleiner, nie über die Hose. Die Schriftfarbe wird automatisch hell oder dunkel gewählt (guter Kontrast zur Trikotfarbe). Vorn steht eine kleine Nummer auf der Brust, wo das Logo war.
+- **Vereinsname** steht auf der Kachel in „Wer spielt?“, in der Kabine und auf der Anzeigetafel (Kopfzeile im Spiel, „Heim“ im Ergebnis).
+- **Torszene** mit der Rückansicht der Vorlage. Der Spieler macht beim Schuss einen kleinen Satz nach vorn. Mit `prefers-reduced-motion` bleibt er stehen.
+- **Trainerteam im Eltern-Bereich:** Name und Farben von Polo, Hose und Stutzen (vorher Baukasten mit Frisur, Bart, Brille und mehr).
+- **Vorlagen-Auswahl vorbereitet:** `KID_TEMPLATES` in `avatar.js`, vorerst nur „Emil“. Weitere Vorlagen kommen als Bilddatei plus Eintrag dazu, die Auswahl erscheint von selbst.
+- **Werkzeug** `tools/prepare-figures.mjs` (mit `figures.config.mjs`, `fig-lib.mjs`, `png.mjs`, `jpg2png.ps1`) bereitet Bilder auf, nur Node. Ablauf im README, Abschnitt „Figuren-Vorlagen“.
+
+### Datenmodell (Schemaversion 6, global 4)
+- `profile.avatar`: `v` 4, `tpl`, `kit {trikot, streifen, hose, stutzen}`, `number`, `shirtName`, `team`, `t`. Migration 5 nach 6: Trikotfarbe, Streifenfarbe (`c2`), Hose, Stutzen, Nummer, Name und Mannschaft werden übernommen. Alle alten Felder (Frisur, Gesicht, `shirt`, `c1`, ...) bleiben im Stand erhalten, werden aber nicht mehr benutzt. Ein Stand ohne `kit` wird beim Lesen aus den alten Feldern gedeutet.
+- Global: `trainer.look` und `trainer2.look` haben `polo`, `hose`, `stutzen`. Die frühere Jacke wird zur Polo-Farbe, nie geänderte Trainer bekommen die neue Vorgabe (Migration 3 nach 4).
+- Zusammenführen unverändert: das Aussehen mit dem neueren `avatar.t` gewinnt vollständig, ebenso Trainer und Trainerin.
+- Neue Dateien: `js/figures.js`, `js/figdata.js` und acht PNG in `img/` (alle in `FILES` des Service Workers). Version 1.5.0 an allen vier Stellen.
+- Keine Änderungen an Aufgaben, Fächern, Ligen, Kontroll-Pfiff und Stickern.
+
 ## 1.4.1 (Vorschau: Rückmeldungen nach der ersten Sicht)
 Nachbesserung zu 1.4.0 nach Marcos erster Prüfung. Keine Änderung am Datenmodell (Schemaversion 5).
 

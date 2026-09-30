@@ -10,7 +10,8 @@
 - Neue App-Version: `app/js/version.js`, `VERSION` in `app/sw.js`, `SERVER_VERSION` in `server/server.js` und `version` in `package.json` gemeinsam erhöhen (Tests prüfen es). Tests: `node --test`.
 - Neue Datei in `app/`: in die Liste `FILES` in `app/sw.js` eintragen (ein Test prüft es).
 - Branches: `main` ist Live, `preview` ist die Vorschau (zweiter Klon auf der NAS). Neues zuerst auf `preview`, erst nach Abnahme nach `main`. `.env` (Container, Port, `PREVIEW_LABEL`) nie committen.
-- Schemaversion 5 (Konto, global 3): Migration in `PROFILE_MIGRATIONS` (`model.js`), Merge-Regeln in `merge.js` und SPEC.md. Der Server prüft die Eltern-PIN bei jeder Admin-Aktion selbst (`server/admin.js`).
+- Schemaversion 6 (Konto, global 4): Migration in `PROFILE_MIGRATIONS` (`model.js`), Merge-Regeln in `merge.js` und SPEC.md. Der Server prüft die Eltern-PIN bei jeder Admin-Aktion selbst (`server/admin.js`).
+- Figuren (Kind, Trainer) sind feste Bild-Vorlagen in `app/img/` (Quelle `assets-src/`, aufbereitet mit `tools/prepare-figures.mjs`, Ablauf im README). Neue Bilder in `FILES` von `app/sw.js`, Maße in `app/js/figdata.js` (erzeugt, nicht von Hand ändern).
 - Hilfe des Trainers verrät nie die Lösung: Tipps (`hint`) und Beispiele bleiben ohne Lösungswörter, Tests prüfen es.
 - `data/` nie committen.
 

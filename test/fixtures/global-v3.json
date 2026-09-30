@@ -1,0 +1,50 @@
+{
+ "schemaVersion": 3,
+ "pin": {
+  "hash": "h",
+  "salt": "s",
+  "iter": 1
+ },
+ "trainer": {
+  "name": "Coach Kai",
+  "look": {
+   "v": 3,
+   "hair": "halblang",
+   "hairColor": "#b8341f",
+   "browColor": "",
+   "skin": "#c68642",
+   "face": 0,
+   "eyeShape": 1,
+   "eyes": "#5f9b6a",
+   "brows": 1,
+   "nose": 1,
+   "mouth": 1,
+   "cheeks": 0,
+   "freckles": 0,
+   "glasses": 2,
+   "hat": 0,
+   "hatColor": "#2f6fde",
+   "bg": "#d3e2ff",
+   "jacket": "#2f6fde",
+   "beard": 1,
+   "beardColor": "#b8341f",
+   "earrings": 0,
+   "gear": 1
+  },
+  "t": 1790500000000
+ },
+ "trainer2": {
+  "name": "Trainerin",
+  "look": {
+   "v": 3,
+   "hair": "halblang",
+   "hairColor": "#d9c58a",
+   "skin": "#f6c9a0",
+   "jacket": "#22252b",
+   "earrings": 1,
+   "gear": 1
+  },
+  "t": 0
+ },
+ "extra": "bleibt"
+}
