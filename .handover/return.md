@@ -7,17 +7,18 @@
 
 ```
 Rückübergabe claude-code nach cowork, 2026-09-30.
-Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, auf preview gepusht und in der Vorschau deployed. Auf Marcos Anweisung ist main lokal nachgezogen (siehe 2), noch nicht nach origin gepusht, Live nicht deployed.
+Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, nach preview und main gepusht und in Vorschau UND Live deployed (alles von Marco ausgeführt, siehe 1).
 
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
 - Marco hat selbst ausgeführt: (a) git push origin preview (nach 1.2.0 auf 1d57caf, nach 1.2.1 auf ca15a8d, jeweils per git fetch bestätigt), (b) SSH auf die NAS und Vorschau-Deploy (sudo sh deploy.sh im Ordner torjaeger-preview), zweimal: 1.2.0 (Health-Antwort meldete {"ok":true,"preview":"VORSCHAU","serverVersion":"1.2.0"}) und 1.2.1 (Marco: "ist durch, läuft jetzt"). (c) Den Screenshot mit der unklaren Frage Schal/Schall geschickt (siehe 5). Claude hat auf Marcos "push it" gepusht (Befehl lief von Claude aus).
-- Ausdrücklich NOCH NICHT ausgeführt: git push origin main, Live-Deploy auf der NAS (Ordner torjaeger), Test auf iPad/iPhone und visuelle Abnahme der neuen Ansichten sind von Marco nicht als erledigt gemeldet (Marco prüft die Vorschau). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
+- Ausdrücklich NOCH NICHT gemeldet oder ausgeführt: Abnahme der neuen Ansichten auf iPad und iPhone, Kontrolle von Emils Stand nach der Migration im Live (Punkte, Sticker, Ligen), Bereinigen der Testrunden in Emils Konto (entscheidet Marco). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
+- Zusätzlich von Marco ausgeführt nach der Abnahme der Vorschau: Anweisung "zieh auch die Hauptseite nach" (Claude: lokaler Fast-Forward preview nach main), "push main" (Claude hat main gepusht, origin/main = adb3c07), danach Live-Deploy auf der NAS im Ordner torjaeger (sudo sh deploy.sh). Marco: "live ist durch". Live läuft damit 1.2.1 (laut Marco; die Health-Antwort des Live-Servers wurde hier nicht gesehen).
 
 2. STAND JE UMGEBUNG
 - Anker am Start stimmten: preview baab42f, main 882d8e1, Arbeitsbaum nur M .handover/current.md. Seither drei Code-Commits auf preview: 8473864 (1.2.0), ca15a8d (1.2.1) und die Rückübergabe-Commits.
 - preview und origin/preview: ca15a8d enthält 1.2.1, danach folgt der Commit mit dieser Rückübergabe (lokal, gepusht erst nach Marcos "push it").
-- main (lokal): auf Marcos Anweisung ("zieh auch die Hauptseite nach") per Fast-Forward auf preview gebracht, enthält also 1.2.1. origin/main: 882d8e1 (Live 1.1.5), NICHT gepusht. Hinweis: Der Auftrag sagte "nicht nach main mergen"; Marco hat das in der Sitzung bewusst geändert, bevor er alle Punkte auf dem iPad abgenommen hat (keine Abnahme gemeldet).
-- Live läuft 1.1.5 und bleibt so, bis Marco origin/main pusht und im Live-Ordner deployed. Die Vorschau auf der NAS läuft 1.2.1.
+- main und origin/main: adb3c07 (Fast-Forward von preview, von Claude auf Marcos Anweisung gepusht). Der Auftrag sagte "nicht nach main mergen"; Marco hat das in der Sitzung bewusst geändert, ohne dass eine Abnahme aller Punkte auf dem iPad gemeldet wurde.
+- Live läuft 1.2.1 (Marco: Deploy durch). Die Vorschau läuft ebenfalls 1.2.1. Vor dem Live-Deploy sichert deploy.sh data/ nach data/backups/pre-deploy-<Zeit>/ (Rückweg über den Eltern-Bereich, Sicherungen vor Updates).
 - Version 1.2.1 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, package.json). Neue Dateien app/js/check.js und app/js/stickers.js stehen in FILES von sw.js.
 
 3. WAS UMGESETZT IST (Auftragspunkte)
@@ -39,7 +40,7 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, a
 - Ein Päckchen wird erst bei der Abgabe gespeichert (dann vollständig). Bricht die App mittendrin ab, gehen die Antworten dieses Päckchens verloren (beim normalen Spiel bleibt jede beantwortete Aufgabe erhalten). In SPEC.md unter Bekannte Grenzen. Alternative wäre Zwischenspeichern, hier bewusst nicht gebaut.
 - Trainer-Hilfe gilt im Päckchen wie sonst. Das Angebot nach der Tipp-Zeit kommt nur beim Schreiben, nicht im Kontroll-Pfiff.
 - .handover/current.md (Marcos Auftrag, war als geändert vorgemerkt) ist im 1.2.0-Commit mit enthalten, damit der Arbeitsbaum sauber ist.
-- Keine Abweichung vom Auftrag bei den Nicht-Zielen: kein Merge nach main, keine Modi Phase 3, kein Aufgabenkatalog, keine Einführungstour, keine npm-Pakete, keine externen Ressourcen.
+- Abweichung vom Auftrag (von Marco angewiesen): Merge nach main, Push und Live-Deploy wurden in dieser Sitzung doch gemacht. Sonst keine Abweichung bei den Nicht-Zielen: keine Modi Phase 3, kein Aufgabenkatalog, keine Einführungstour, keine npm-Pakete, keine externen Ressourcen.
 
 5. RÜCKMELDUNGEN UND WÜNSCHE VON MARCO IN DIESER SITZUNG
 - Marco (Abnahme der Vorschau, Screenshot "Doppelte Mitlaute"): Die Frage "Welches Wort ist richtig geschrieben?" bot Schal und Schall an. Beide sind richtig und meinen Verschiedenes, das verwirrt beim Üben. Umgesetzt in 1.2.1: Das Paar ist raus (ersetzt durch Kette und Kete), ein Test stellt sicher, dass bei dieser Aufgabe nie zwei echte Wörter zur Wahl stehen.
@@ -58,7 +59,7 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, a
 
 8. ANKER
 - Branch: preview. Code-Commit 8473864 (Elternteil baab42f). Danach ein Commit mit dieser Datei.
-- main: 882d8e1. origin/preview: baab42f. origin/main: 882d8e1.
+- main, origin/main, preview, origin/preview: alle adb3c07 (vor dem Rückübergabe-Commit dieser Änderung). Arbeitsbaum nach dem Commit sauber, Branch preview ausgecheckt.
 - Arbeitsbaum: sauber nach dem Rückübergabe-Commit.
 
 9. NÄCHSTE SCHRITTE FÜR MARCO (einzeln, unverschachtelt)
@@ -76,10 +77,6 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, a
    - Album: 24 verschiedene Sticker mit Jubelruf groß, Fußballbegriff klein. Ein Konto mit schon gesammelten Stickern (Emils Stand als Sicherung einspielen) behält sie.
    - Eltern-Bereich, Lernstand: Abschnitt "Kontrollieren" mit Pfiffen, Proben, selbst korrigierten Fehlern. Letzte Spiele nennt "Päckchen: Thema".
    - Name überall Trainingscamp (Startseite, Eltern-Bereich, Ergebnis).
-6. LIVE (Marco, erst nach Abnahme der Vorschau): main ist lokal schon nachgezogen. Dann pushen:
-   git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin main
-   Danach auf der NAS im Live-Ordner (sichert vorher data/, Emils Stand wird ohne Verlust migriert):
-   cd /volume1/docker/torjaeger && sudo sh deploy.sh
-   Danach auf dem iPad der Live-App "Jetzt laden" tippen.
+6. ERLEDIGT (Marco): Live. main gepusht, Live-Deploy durch. Offen für Marco: auf dem iPad in der Live-App "Jetzt laden" tippen (falls noch nicht), im Eltern-Bereich unter Sicherungen und System prüfen (Server 3, App 3, Version 1.2.1) und Emils Punkte, Sticker und Ligen kontrollieren. Rückweg bei Problemen: Eltern-Bereich, Sicherungen vor Updates, Konto wiederherstellen.
 7. Cowork: Plan und Index im Vault auf Version 1.2.1 nachziehen (Abschnitt G als umgesetzt markieren, Päckchengröße, Bonus 8, Jubelrufe stehen in stickers.js). Dort schreibt nur Cowork.
 ```
