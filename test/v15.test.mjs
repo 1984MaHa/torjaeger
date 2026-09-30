@@ -12,8 +12,8 @@ import {mergeProfile,mergeGlobal} from "../app/js/merge.js";
 import {applyAvatar,applyTrainer,applyReset,applyProfilePin,validKidPin} from "../app/js/rules.js";
 import {KIT_COLORS,KIT_KEYS,KIT_PRESETS,KID_TEMPLATES,POLO_COLORS,COLOR_NAMES,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,upgradeOldHair,lookOf,withKit,withPreset,presetIndex} from "../app/js/avatar.js";
 import {FIGDATA} from "../app/js/figdata.js";
-import {tintLayer,backLayout,textOn,contrast,shadeChannel,hexToRgb,figureURL,loadFigures,setFigureEnv,storeSize,basePath,FIG_IDS} from "../app/js/figures.js";
-import {avatarSVG,trainerSVG,sceneSVG,figureParts} from "../app/js/avatardraw.js";
+import {charW,tintLayer,backLayout,textOn,contrast,shadeChannel,hexToRgb,figureURL,loadFigures,setFigureEnv,storeSize,basePath,FIG_IDS} from "../app/js/figures.js";
+import {avatarSVG,trainerSVG,trainerFullSVG,sceneSVG,figureParts} from "../app/js/avatardraw.js";
 import {avatarBuilderHTML,trainerPanelHTML} from "../app/js/avatarui.js";
 import {kidPinRow as adminKidPin} from "../app/js/admin.js";
 import {homeHTML,accountsHTML,playHTML,resultHTML} from "../app/js/views.js";
@@ -30,11 +30,11 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 6 (Konto) und 4 (global), Version 1.5.1 an allen vier Stellen",()=>{
+test("Schema ist 6 (Konto) und 4 (global), Version 1.5.2 an allen vier Stellen",()=>{
   assert.equal(SCHEMA_VERSION,6);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.1"/);assert.match(sw,/VERSION = "1.5.1"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.1"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.1");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.2"/);assert.match(sw,/VERSION = "1.5.2"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.2"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.2");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{
@@ -117,11 +117,11 @@ test("Aussehen prüfen: Vorgaben, Farben, Vorschläge und Text",()=>{
 // ---------- Bilder ----------
 test("Figuren-Bilder: Dateien, Maße, Liste des Service Workers, kein Markenlogo, freigestellt, Größe im Blick",()=>{
   const dir=path.join(ROOT,"app/img"),files=fs.readdirSync(dir).sort();
-  assert.deepEqual(files,["fig-emil-back-layer.png","fig-emil-back.png","fig-emil-front-layer.png","fig-emil-front.png","fig-trainer-front-layer.png","fig-trainer-front.png","fig-trainerin-front-layer.png","fig-trainerin-front.png"]);
+  assert.deepEqual(files,["fig-emil-back-layer.png","fig-emil-back.png","fig-emil-front-layer.png","fig-emil-front.png","fig-trainer-back-layer.png","fig-trainer-back.png","fig-trainer-front-layer.png","fig-trainer-front.png","fig-trainerin-back-layer.png","fig-trainerin-back.png","fig-trainerin-front-layer.png","fig-trainerin-front.png"]);
   for(const f of files){assert.ok(sw.includes(`"img/${f}"`),"nicht im Service Worker: "+f);assert.ok(!/adidas|nike|puma|logo/i.test(f),f);}
   const bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);
   assert.ok(bytes<1.6*1024*1024,"Bilder insgesamt "+Math.round(bytes/1024)+" KB");
-  assert.deepEqual(FIG_IDS.sort(),["emil-back","emil-front","trainer-front","trainerin-front"]);
+  assert.deepEqual(FIG_IDS.sort(),["emil-back","emil-front","trainer-back","trainer-front","trainerin-back","trainerin-front"]);
   for(const id of FIG_IDS){
     const info=FIGDATA.figures[id],b=png(`fig-${id}.png`),l=png(`fig-${id}-layer.png`);
     assert.deepEqual([b.w,b.h],[info.w,info.h],id);assert.deepEqual([l.w,l.h],[info.w,info.h],id);
@@ -304,7 +304,7 @@ test("Trainerteam im Eltern-Bereich: Name und Farben von Polo, Hose und Stutzen"
 });
 
 test("Name der Mannschaft steht auf Kachel „Wer spielt?“, in der Kabine und auf der Anzeigetafel, der Name des Kindes bleibt in der Begrüßung",()=>{
-  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.1"},UI={newAcct:false,acctMsg:"",adminAsk:false,parent:false,pinMsg:""};
+  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.2"},UI={newAcct:false,acctMsg:"",adminAsk:false,parent:false,pinMsg:""};
   const s=newProfile({id:"k-abc12345",name:"Emil",deviceId:"d1"});applyAvatar(s,dev("d1",5),{...defaultLook("Emil"),team:"Die Wirbel"});
   assert.ok(accountsHTML([{id:"k-a",name:"Emil",avatar:s.profile.avatar}],UI,env).includes("Die Wirbel"));
   const home=homeHTML(s,UI,env);assert.ok(home.includes("Die Wirbel")&&home.includes("Hallo Emil!"));
@@ -337,7 +337,7 @@ test("PIN des Kindes: 4 Ziffern, freiwillig, Eltern sehen sie, der neuere Stand 
 });
 
 test("Wer spielt?: Konto mit PIN ist markiert und fragt die PIN, Mein Spieler und Eltern-Bereich zeigen sie",()=>{
-  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.1"};
+  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.2"};
   const acc=[{id:"k-a",name:"Emil",avatar:null,locked:true},{id:"k-b",name:"Mia",avatar:null,locked:false}];
   let h=accountsHTML(acc,{newAcct:false,acctMsg:"",adminAsk:false},env);
   assert.ok(h.includes("Emil (PIN)")&&!h.includes("Mia (PIN)")&&!h.includes('id="kidPin"'));
@@ -355,4 +355,36 @@ test("Start: die App zeigt immer zuerst Wer spielt?, auch mit nur einem Konto (k
   const app=fs.readFileSync(path.join(ROOT,"app/js/app.js"),"utf8");
   assert.ok(!/if\(found\)\{cur=/.test(app),"kein automatisches Öffnen des letzten Kontos");
   assert.ok(app.includes("useAccount(b.dataset.acct)")&&app.includes("kidPinOk"));
+});
+
+// ---------- Nachbesserung 1.5.2 ----------
+test("Rückennummer hängt direkt unter dem Namen und ist groß, schmale Buchstaben stehen eng (EMIL)",()=>{
+  const f=FIGDATA.figures["emil-back"].field,B=backLayout({shirtName:"EMIL",number:"7",team:"SV Sachsenwerk"},f);
+  assert.ok(B.num.top-B.name.bottom<=f.y1*0.03+20&&B.num.top>=B.name.bottom,"Nummer beginnt gleich unter dem Namen: "+B.num.top+" nach "+B.name.bottom);
+  assert.ok(B.num.y<(f.y0+f.y1)/2+B.num.size*.75,"Nummer sitzt im oberen Teil");assert.ok(B.num.size>150,"eine Ziffer ist groß: "+B.num.size);
+  const L=B.name.letters,gap=(i)=>L[i+1].x-L[i].x;
+  assert.ok(gap(2)<gap(0)*.85,"nach dem I ist der Abstand klein (I ist schmal)");assert.ok(gap(1)>gap(2),"M ist breit");
+  assert.ok(charW("I")<charW("E")&&charW("M")>charW("E")&&charW("W")>charW("M"));
+});
+
+test("Trainer im Eltern-Bereich: ganze Figur vorn und hinten, Name auf Brust und Rücken, vier Trainerbilder mehr",()=>{
+  for(const w of [1,2]){
+    const T=cleanTrainer({name:w===2?"Trainerin Ina":"Coach Kai"},w),h=trainerPanelHTML(T,w);
+    assert.equal((h.match(/class="avsvg"/g)||[]).length,3,"vorn, hinten und Brustbild");
+    const front=trainerFullSVG(T.look,{which:w,view:"front",name:T.name}),back=trainerFullSVG(T.look,{which:w,view:"back",name:T.name});
+    clean(front,"vorn");clean(back,"hinten");
+    assert.ok(front.includes('data-k="chest"')&&front.includes(T.name)&&!back.includes('data-k="chest"'));
+    assert.ok(back.includes('data-part="rueckenfeld"')&&[...T.name.toUpperCase().replace(/ /g,"")].every(ch=>back.includes(">"+ch+"</text>")));
+    assert.ok(front.includes("front")||front.includes("img/"));
+  }
+  assert.ok(trainerFullSVG(defaultTrainer().look,{which:1,view:"front",name:"X",}).includes('fill="#ffffff"'),"dunkles Polo: helle Schrift");
+  assert.ok(trainerFullSVG({polo:"#f4f4f4"},{which:1,view:"front",name:"X"}).includes('fill="#0b0d10"'),"helles Polo: dunkle Schrift");
+  for(const id of ["trainer-back","trainerin-back"])assert.ok(sw.includes(`"img/fig-${id}.png"`)&&sw.includes(`"img/fig-${id}-layer.png"`));
+});
+
+test("PIN des Kindes merken: einmal am Tag, geänderte PIN fragt wieder",()=>{
+  const app=fs.readFileSync(path.join(ROOT,"app/js/app.js"),"utf8"),views=fs.readFileSync(path.join(ROOT,"app/js/views.js"),"utf8");
+  assert.ok(views.includes('id="kidPinKeep"')&&/id="kidPinKeep" checked/.test(views)&&views.includes("Heute nicht noch einmal fragen"));
+  assert.ok(app.includes('"pinok:"+id')&&app.includes("ok.day===todayKey()&&ok.code===kp.code"),"Tag und PIN werden verglichen");
+  assert.ok(app.includes("todayKey()"));
 });

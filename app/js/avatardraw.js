@@ -1,7 +1,7 @@
 // Darstellung von Spieler, Trainerteam und Torszene aus den festen Bild-Vorlagen (Bilder, Umfärben und Rückenfeld: figures.js).
 // Alles ist SVG mit einem eingebetteten Bild. Gefärbt wird je Farbkombination einmal, danach kommt die Adresse aus dem Zwischenspeicher.
 import {cleanLook,cleanTrainerLook,KID_TEMPLATES,COLOR_NAMES} from "./avatar.js";
-import {figInfo,figureURL,backLayout,textOn,FONT_FAMILY as FONT} from "./figures.js";
+import {figInfo,figureURL,backLayout,textOn,textWidth,FONT_FAMILY as FONT} from "./figures.js";
 import {esc} from "./util.js";
 
 const INK="#2b2320";
@@ -50,6 +50,7 @@ export function avatarSVG(look,{view="front",px=100,crop="full",label}={}){
 
 // ---------- Trainer und Trainerin (Brustbild aus der Vorlage) ----------
 export const TRAINER_FIG={1:"trainer-front",2:"trainerin-front"};
+export const TRAINER_BACK={1:"trainer-back",2:"trainerin-back"};
 const TRAINER_BG={1:"#d3e2ff",2:"#ffe3c2"};
 export function trainerSVG(look,{px=72,label,which=1}={}){
   const l=cleanTrainerLook(look,which),id=TRAINER_FIG[which===2?2:1],info=figInfo(id);
@@ -57,10 +58,21 @@ export function trainerSVG(look,{px=72,label,which=1}={}){
   return bustSVG(id,inner,info,TRAINER_BG[which===2?2:1],px,label||(which===2?"Trainerin":"Trainer"));
 }
 
-// Trainer oder Trainerin als ganze Figur (für die Einstellung im Eltern-Bereich, damit man die Kleidung sieht)
-export function trainerFullSVG(look,{px=260,label,which=1}={}){
-  const l=cleanTrainerLook(look,which),id=TRAINER_FIG[which===2?2:1],info=figInfo(id);
-  return `<svg class="avsvg" viewBox="0 0 ${info.w} ${info.h}" width="${Math.round(px*info.w/info.h)}" height="${px}" role="img" aria-label="${esc(label||(which===2?"Trainerin ganz":"Trainer ganz"))}"><image href="${figureURL(id,{polo:l.polo,hose:l.hose,stutzen:l.stutzen})}" width="${info.w}" height="${info.h}"/></svg>`;
+// Trainer oder Trainerin als ganze Figur, vorn oder hinten (für die Einstellung im Eltern-Bereich, damit man die Kleidung sieht).
+// Der Name steht vorn klein auf der Brust und hinten gebogen auf dem Rücken, in hell oder dunkel je nach Polofarbe.
+export function trainerFullSVG(look,{px=260,label,which=1,view="front",name=""}={}){
+  const l=cleanTrainerLook(look,which),w2=which===2?2:1,back=view==="back",id=(back?TRAINER_BACK:TRAINER_FIG)[w2],info=figInfo(id),fg=textOn(l.polo);
+  let g=`<image href="${figureURL(id,{polo:l.polo,hose:l.hose,stutzen:l.stutzen})}" width="${info.w}" height="${info.h}"/>`;
+  const nm=String(name||"");
+  if(nm&&!back&&info.chest){
+    const C=info.chest,fs=+Math.min(C.size,C.width/textWidth(nm)).toFixed(1);
+    g+=`<text data-k="chest" x="${C.cx}" y="${C.y}" text-anchor="middle" font-family="${FONT}" font-size="${fs}" fill="${fg}" fill-opacity=".92">${esc(nm)}</text>`;
+  }
+  if(nm&&back&&info.field){
+    const B=backLayout({shirtName:nm.toUpperCase(),number:"",team:""},info.field);
+    g+=`<g data-part="rueckenfeld">`+B.name.letters.map(L=>`<text x="${L.x}" y="${L.y}" text-anchor="middle" font-family="${FONT}" font-size="${B.name.size}" fill="${fg}" transform="rotate(${L.rot} ${L.x} ${L.y})">${esc(L.ch)}</text>`).join("")+"</g>";
+  }
+  return `<svg class="avsvg" viewBox="0 0 ${info.w} ${info.h}" width="${Math.round(px*info.w/info.h)}" height="${px}" role="img" aria-label="${esc(label||((which===2?"Trainerin":"Trainer")+(back?" von hinten":" von vorn")))}">${g}</svg>`;
 }
 
 // ---------- Torszene ----------

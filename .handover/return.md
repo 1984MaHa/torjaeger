@@ -24,6 +24,14 @@
 - Start zeigt immer zuerst "Wer spielt?" mit den Bildern (auch bei nur einem Konto).
 - **PIN des Kindes** (neu, nicht im Auftrag): freiwillig, 4 Ziffern, `profile.pin = {code, t}`, Klartext. Kachel zeigt "(PIN)" und fragt beim Antippen. Kind setzt sie in "Mein Spieler", Eltern sehen, ändern und entfernen sie im Eltern-Bereich bei jedem Konto. Zusammenführen: neuerer Stand gewinnt, Zurücksetzen behält sie. Kein Schemawechsel (Feld optional). Sicherheit bewusst schwach: Komfort, kein Schutz vor Eltern.
 
+## Zweite Sicht von Marco (Version 1.5.2)
+- Ursache für "sieht aus wie vorher": Service-Worker-Cache. Die Nachbesserung trug dieselbe Nummer 1.5.0, `sw.js` war unverändert. Marco hat mit hartem Neuladen geholfen. Deshalb gab es 1.5.1 und jetzt 1.5.2. **Lehre: jede Auslieferung braucht eine neue Versionsnummer.**
+- Rückennummer stand zu tief: hängt jetzt direkt unter dem Namen und ist größer (Marco hat den Bereich rot eingezeichnet).
+- "EMI L": Buchstabenbreiten statt fester Breite (`charW`).
+- PIN des Kindes funktioniert (Marco bestätigt). Neu: "Heute nicht noch einmal fragen", Tag plus PIN lokal gemerkt.
+- Trainer im Eltern-Bereich: vorn und hinten ganze Figur plus Brustbild (neue Bilder `fig-trainer-back`, `fig-trainerin-back`).
+- "Namen auf der Brust": Annahme, dass die Namen der Trainer gemeint sind. Sie stehen vorn auf der Brust (links) und hinten auf dem Rücken. Beim Kind steht vorn die Nummer. Falls auch der Kindername vorn gewünscht ist, nachfragen.
+
 ## Was gebaut ist
 - **Bilder:** Originale nach `assets-src/` (emil-avatar.jpg, trainer-team.jpg). Aufbereitet mit `tools/prepare-figures.mjs` (nur Node, Regeln in `tools/figures.config.mjs`, Bibliothek `tools/fig-lib.mjs`, PNG-Leser `tools/png.mjs`, `tools/jpg2png.ps1` für die JPG-Umwandlung unter Windows). Ergebnis in `app/img/`: Emil vorn und hinten, Trainer und Trainerin vorn, je Grundbild plus Umfärb-Ebene, zusammen etwa 0,9 MB. Die Trainer-Rückansichten sind aufbereitbar (`use:false`), aber nicht ausgeliefert. Markenlogos auf Brust und Stutzen sind übermalt.
 - **App:** `figures.js` (Umfärben, Zwischenspeicher, Rückenfeld, Schriftkontrast), `figdata.js` (erzeugt), `avatardraw.js` (SVG mit eingebettetem Bild, Torszene mit Rückansicht und kleinem Satz nach vorn), `avatarui.js` ("Mein Spieler" auf einer Seite, Trainerfarben), `avatar.js` (Vorlagen, Paletten, 10 Vereinsfarben-Vorschläge, Prüfung). Alter Zeichencode und Baukasten entfernt.

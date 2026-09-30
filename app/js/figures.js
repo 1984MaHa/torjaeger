@@ -34,29 +34,38 @@ export function tintLayer(layer,w,h,colors){
 // ---------- Rücken: Mannschaft, Name gebogen über der Nummer, im Rückenfeld ----------
 const FONT="Lilita One, Arial Rounded MT Bold, Arial, sans-serif";
 export const FONT_FAMILY=FONT;
-const NUMW=.66,CAP=.75,LW=.6;
+const NUMW=.66,CAP=.75;
+// Breite eines Buchstabens (in Schriftgrößen): schmale wie I und Punkt, breite wie M und W. So stehen die Buchstaben gleichmäßig.
+const NARROW={"I":.32,"J":.5," ":.34,".":.3,"'":.26,"-":.42,"1":.44,"L":.56,"F":.56,"T":.6,"E":.58,"Z":.6};
+const WIDE={"M":.86,"W":.96,"Ä":.68,"Ö":.7,"Ü":.7};
+export const charW=ch=>{const u=ch.toUpperCase();return NARROW[u]??WIDE[u]??.64;};
+export const textWidth=t=>[...t].reduce((n,ch)=>n+charW(ch),0);
+const textW=(t,fs)=>[...t].reduce((n,ch)=>n+charW(ch)*fs,0);
 // Buchstaben auf einem flachen Bogen (Mitte oben, die Ränder etwas tiefer). top = obere Kante der Schrift.
 function arc(text,fs,R,cx,top){
-  const cw=fs*LW,letters=[...text].map((ch,i,a)=>{const dx=(i-(a.length-1)/2)*cw,phi=dx/R;
+  const chars=[...text],total=textW(text,fs);let pos=-total/2;
+  const letters=chars.map(ch=>{const w=charW(ch)*fs,dx=pos+w/2,phi=dx/R;pos+=w;
     return{ch,x:+(cx+R*Math.sin(phi)).toFixed(1),y:+(top+fs*.9+R*(1-Math.cos(phi))).toFixed(1),rot:+(phi*180/Math.PI).toFixed(1)};});
-  const phiMax=text?((text.length-1)/2*cw)/R:0,drop=text?R*(1-Math.cos(phiMax)):0;
-  return{letters,bottom:text?+(top+fs*.9+drop+fs*.2).toFixed(1):top,width:+(text.length*cw).toFixed(1)};
+  const phiMax=text?(total/2)/R:0,drop=text?R*(1-Math.cos(phiMax)):0;
+  return{letters,bottom:text?+(top+fs*.9+drop+fs*.2).toFixed(1):top,width:+total.toFixed(1)};
 }
-// field = {x0,x1,y0,y1} in Bildpunkten der Figur. Oben die Mannschaft (klein), darunter der eigene Name, darunter die Nummer, so groß wie der Platz erlaubt.
+// field = {x0,x1,y0,y1} in Bildpunkten der Figur. Oben die Mannschaft (klein), darunter der eigene Name, direkt darunter die Nummer, so groß wie der Platz erlaubt.
 // Alles bleibt im Feld: lange Namen werden kleiner, zweistellige Nummern auch, ohne Namen wird die Nummer größer.
 export function backLayout(look,field){
   const team=String(look.team||""),name=String(look.shirtName||""),n=String(look.number||"");
   const W=field.x1-field.x0,H=field.y1-field.y0,cx=(field.x0+field.x1)/2,Wi=W*.92;
-  const teamFs=team?+Math.max(W*.055,Math.min(W*.1,Wi/(team.length*LW))).toFixed(1):0;
+  const fit=(t,lo,hi)=>t?+Math.max(W*lo,Math.min(W*hi,Wi/textW(t,1))).toFixed(1):0;
+  const teamFs=fit(team,.05,.1);
   const T=arc(team,teamFs,W*1.4,cx,field.y0);
-  const nameFs=name?+Math.max(W*.08,Math.min(W*.26,Wi/(name.length*LW))).toFixed(1):0;
+  const nameFs=fit(name,.08,.26);
   const N=arc(name,nameFs,W*1.1,cx,T.bottom+(team&&name?H*.01:0));
-  const base=field.y1,avail=base-N.bottom-(name||team?H*.02:0);
-  const numFs=+Math.max(8,Math.min(Wi/(Math.max(1,n.length)*NUMW),avail/CAP,H*.6)).toFixed(1);
+  const gap=name||team?H*.015:0,avail=field.y1-N.bottom-gap;
+  const numFs=+Math.max(8,Math.min(Wi/(Math.max(1,n.length)*NUMW),avail/CAP,H*.75)).toFixed(1);
+  const base=+(N.bottom+gap+numFs*CAP).toFixed(1); // die Nummer hängt direkt unter dem Namen, nicht am unteren Rand
   return{
     team:{text:team,size:teamFs,letters:T.letters,bottom:T.bottom,width:T.width},
     name:{text:name,size:nameFs,letters:N.letters,top:+(T.bottom).toFixed(1),bottom:N.bottom,width:N.width},
-    num:{text:n,x:cx,y:+base.toFixed(1),size:numFs,width:+(n.length*numFs*NUMW).toFixed(1),top:+(base-numFs*CAP).toFixed(1)}
+    num:{text:n,x:cx,y:base,size:numFs,width:+(n.length*numFs*NUMW).toFixed(1),top:+(base-numFs*CAP).toFixed(1)}
   };
 }
 

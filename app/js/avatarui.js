@@ -39,7 +39,7 @@ export function trainerPanelHTML(T,which=1){
   const colors=TRAINER_KEYS.map(k=>field(TRAINER_LABELS[k],swatches(A,k,k==="polo"?POLO_COLORS:KIT_COLORS,l[k],TRAINER_LABELS[k]))).join("");
   return `<section class="panel"><h3>${which===2?"Trainerin":"Trainer"}</h3>
     ${which===1?`<p class="note">Trainer und Trainerin helfen in jeder Aufgabe. Sie sehen bei allen Konten gleich aus. Ihr könnt Namen und Farben der Kleidung ändern.</p>`:""}
-    <div class="avprev">${trainerFullSVG(l,{px:300,which})}${trainerSVG(l,{px:84,which})}</div>
+    <div class="avprev">${trainerFullSVG(l,{px:280,which,view:"front",name})}${trainerFullSVG(l,{px:280,which,view:"back",name})}${trainerSVG(l,{px:84,which})}</div>
     ${field("Name",`<input id="trName${which}" type="text" maxlength="16" autocomplete="off" value="${esc(name)}" aria-label="Name" class="avinput">`)}
     ${colors}
     <div class="row"><button class="btn sm" data-atrsave="${which}">${which===2?"Trainerin":"Trainer"} speichern</button><button class="btn ghost sm" data-atrdefault="${which}">Zurück zur Vorgabe</button></div></section>`;

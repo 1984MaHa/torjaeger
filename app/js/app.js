@@ -74,6 +74,9 @@ async function useAccount(id,unlocked=false){
     a.name=a.rec.state.profile.name;
   }
   const kp=a.rec.state.profile.pin;
+  // Einmal am Tag reicht: gemerkt wird der Tag und die PIN (eine geänderte PIN fragt wieder)
+  const ok=kp&&kp.code?await store.get("pinok:"+id):null;
+  if(ok&&ok.day===todayKey()&&ok.code===kp.code)unlocked=true;
   if(!unlocked&&kp&&kp.code){UI.pinAsk={id,msg:""};render();const i=document.getElementById("kidPin");if(i)i.focus();return;}
   UI.pinAsk=null;
   cur={rec:a.rec};await store.put("current",id);
@@ -568,7 +571,8 @@ function bind(){
   // Konten
   document.querySelectorAll("[data-acct]").forEach(b=>b.onclick=()=>useAccount(b.dataset.acct));
   if($("kidPinOk"))$("kidPinOk").onclick=()=>{const a=accounts.find(x=>x.id===UI.pinAsk.id),code=a&&a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code;
-    if($("kidPin").value.trim()===code)useAccount(UI.pinAsk.id,true);else{UI.pinAsk.msg="Die PIN stimmt nicht.";render();const i=$("kidPin");if(i)i.focus();}};
+    if($("kidPin").value.trim()===code){const keep=$("kidPinKeep")&&$("kidPinKeep").checked,id=UI.pinAsk.id;
+      (keep?store.put("pinok:"+id,{day:todayKey(),code}):store.del?store.del("pinok:"+id):Promise.resolve()).then(()=>useAccount(id,true));}else{UI.pinAsk.msg="Die PIN stimmt nicht.";render();const i=$("kidPin");if(i)i.focus();}};
   if($("kidPinCancel"))$("kidPinCancel").onclick=()=>{UI.pinAsk=null;render();};
   if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";render();};
   if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";render();};

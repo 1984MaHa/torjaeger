@@ -1,6 +1,6 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.5.1. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.5.2. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
@@ -161,7 +161,7 @@ Die Figuren sind Bilder von Marco (Emil vorn und hinten, Trainerteam). Sie liege
    - Mit `--debug` prüfen, dann ohne `--debug` laufen lassen. Die neuen Bilder stehen in `app/img/` und müssen in `FILES` von `app/sw.js` (ein Test prüft es).
    - In `app/js/avatar.js` einen Eintrag in `KID_TEMPLATES` anlegen (id, name, Bild vorn und hinten, Bereiche, Vorgabefarben). Die Auswahl erscheint in „Mein Spieler“ von selbst, sobald es mehr als eine Vorlage gibt. Trainer haben feste Bilder je Figur (`TRAINER_FIG` in `avatardraw.js`).
 4. **Umfärben in der App:** `figures.js` färbt die Ebene je Farbkombination auf einer Zeichenfläche ein (Schattierung mal Farbe, hellere Stellen mischen Weiß bei), legt das Grundbild darüber und merkt sich das Ergebnis (höchstens 80 Bilder, ältere werden freigegeben). Name und Nummer liegen als SVG-Text darüber (`backLayout`).
-5. **Größe im Blick:** alle Bilder zusammen etwa 0,9 MB (ein Test begrenzt sie auf 1,6 MB, sie liegen im Offline-Cache).
+5. **Größe im Blick:** alle Bilder zusammen etwa 1,1 MB (ein Test begrenzt sie auf 1,6 MB, sie liegen im Offline-Cache).
 
 ## Eltern-Bereich, Avatar, Trainer
 - **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).

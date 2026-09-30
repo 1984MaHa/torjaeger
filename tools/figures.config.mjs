@@ -39,7 +39,7 @@ const poloT=(r,g,b)=>b-r>=11&&b-g>=5&&L.lumOf(r,g,b)<140;
 const darkT=(r,g,b)=>L.lumOf(r,g,b)<100&&b-r<11&&b-r>-8;
 function coach(id,view,o={}){
   const area=(rect,test,er,cl=3)=>ctx=>L.erode(ctx.f,L.close(ctx.f,L.box(ctx.f,L.maskOf(ctx.f,test),rect),cl),er);
-  return{id,use:view==="front",view,debugColors:DBG_T,holes:o.holes,bust:o.bust,regions:[
+  return{id,use:true,view,debugColors:DBG_T,holes:o.holes,bust:o.bust,chest:o.chest,field:o.field,regions:[
     {id:"polo",label:"Polo",mask:area([0,165,900,400],poloT,0)},
     {id:"hose",label:"Hose",mask:area([0,355,900,470],darkT,1)},
     {id:"stutzen",label:"Stutzen",mask:area([0,462,900,560],darkT,1)}
@@ -57,5 +57,5 @@ export default{sources:[
     ]},
   {key:"team",jpg:"assets-src/trainer-team.jpg",ink:[44,33,32],bgLum:229,
     bgTest:(r,g,b)=>L.lumOf(r,g,b)>165&&Math.max(r,g,b)-Math.min(r,g,b)<16,
-    figures:[coach("trainerin-front","front",{bust:[-14,-4,206,216],holes:[[190,362],[77,363]]}),coach("trainerin-back","back"),coach("trainer-front","front",{bust:[-14,-4,222,232]}),coach("trainer-back","back")]}
+    figures:[coach("trainerin-front","front",{bust:[-14,-4,206,216],chest:{cx:60,y:252,size:14,width:52,local:true},holes:[[190,362],[77,363]]}),coach("trainerin-back","back",{field:{x0:55,x1:140,y0:176,y1:236}}),coach("trainer-front","front",{bust:[-14,-4,222,232],chest:{cx:66,y:250,size:14,width:56,local:true}}),coach("trainer-back","back",{field:{x0:58,x1:150,y0:180,y1:240}})]}
 ]};

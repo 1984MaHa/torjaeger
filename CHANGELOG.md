@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.5.2 (Vorschau: Nummer höher, Trainer von hinten, PIN merken)
+Nachbesserung nach Marcos zweiter Sicht. Die Versionsnummer steigt, weil der Service Worker unter gleicher Nummer die alte Fassung im Cache behält. Keine Änderung am Datenmodell.
+- **Rückennummer** hängt jetzt direkt unter dem Namen (vorher am unteren Rand des Feldes) und ist größer, bei einer Ziffer etwa 160 Punkte hoch.
+- **Buchstabenabstand** nach Breite der Buchstaben (I schmal, M und W breit), damit "EMIL" nicht mehr "EMI L" aussieht.
+- **PIN merken:** beim Eingeben der PIN des Kindes "Heute nicht noch einmal fragen" (vorbelegt). Gemerkt wird der Tag und die PIN auf dem Gerät (`pinok:<Konto>`), eine geänderte PIN fragt wieder.
+- **Trainer im Eltern-Bereich** zeigen vorn und hinten die ganze Figur plus Brustbild. Neue Bilder `fig-trainer-back` und `fig-trainerin-back` (je Grundbild und Ebene).
+- **Name der Trainer** steht vorn klein auf der Brust (links) und hinten gebogen auf dem Rücken, in hell oder dunkel je nach Polofarbe.
+
 ## 1.5.1 (Vorschau: feste Bild-Vorlagen statt Avatar-Baukasten)
 1.5.1 ist 1.5.0 mit höherer Versionsnummer, damit der Service Worker den alten Cache verwirft (unter 1.5.0 blieb auf dem iPad die erste Fassung stehen). Der gezeichnete Avatar-Baukasten (1.3.0) ist ersetzt durch **feste Bild-Vorlagen** aus Marcos Bildern: Emil vorn und hinten, dazu Trainer und Trainerin. Schemaversion 6 (Konto) und 4 (global). Ein Stand im Format 1.4.1 wird beim ersten Start ohne Verlust migriert, Emils Trikotfarben, Nummer, Name und Mannschaftsname bleiben.
 
