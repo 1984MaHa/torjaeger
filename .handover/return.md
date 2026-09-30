@@ -12,14 +12,14 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
 - Start freigegeben ("ja los"). Dann auf seine Anweisung ("ja okay, push") habe ich 1.4.0 nach origin/preview gepusht (81eb864 bis b95703c). Marco hat danach auf der NAS in /volume1/docker/torjaeger-preview das Deploy der Vorschau gemacht und mit 1.4.0 getestet (nach seiner Aussage, Ergebnis unten bei den Rückmeldungen). Kein Merge, kein Branch-Wechsel, keine Anweisung zu main oder Live.
 - 1.4.1 (bda67cf) habe ich auf Marcos Anweisung ("ja push") nach origin/preview gepusht. Marco hat die Vorschau auf der NAS deployed ("deploy ist durch"), getestet und abgenommen ("Wesentlich besser. Passt jetzt so für mich.").
-- Marco hat danach angewiesen, preview auf die Hauptversion (main) zu bringen. Ich habe preview nach main gemergt und main gepusht (Stand siehe 2 und 7). Das Live-Deploy auf der NAS (Ordner torjaeger, Branch main) führt Marco selbst aus, es ist von mir NICHT ausgeführt.
+- Marco hat danach angewiesen, preview auf die Hauptversion (main) zu bringen. Ich habe preview nach main gemergt und main gepusht (Stand siehe 2 und 7). Marco hat danach selbst auf der NAS das Live-Deploy ausgeführt ("deploy und live fertig hier"). Ich habe es nicht ausgeführt und nicht nachgeprüft. Nicht bestätigt: Kontrolle von Emils migriertem Stand auf dem iPad.
 - Ausdrücklich NOCH NICHT ausgeführt: Push von preview, Vorschau-Deploy auf der NAS, Abnahme auf dem iPad (auch die von 1.2.1 und 1.3.0), Kontrolle von Emils migriertem Stand, Prüfung von docs/Inhalte-Englisch-Sachkunde.md durch Marco. main und Live sind unberührt (Live läuft weiter 1.2.1).
 - Ich habe die Seite bewusst nicht im Browser oder in der Vorschau geöffnet und keine Screenshots gemacht (Wunsch von Marco, er prüft visuell selbst). Die neuen Ansichten sind nur per Test geprüft: HTML-Ausgabe und eine Ende-zu-Ende-Prüfung der echten app.js mit Fake-DOM. Das Aussehen (CSS, Emoji-Darstellung auf iOS, Kompassrose) ist nicht mit dem Auge gesehen.
 
 2. STAND JE UMGEBUNG
 - Anker am Start stimmten alle: preview 81eb864, origin/preview 81eb864, main adb3c07, Arbeitsbaum nur M .handover/current.md.
 - preview (lokal): Commit mit Version 1.4.0 (siehe Anker unten) auf 81eb864. origin/preview steht noch auf 81eb864 (nicht gepusht).
-- Nach dem Merge: main und origin/main zeigen auf denselben Commit wie preview (Fast-Forward, siehe 7). Die Vorschau läuft 1.4.1 (abgenommen). Live läuft bis zum Deploy durch Marco weiter 1.2.1.
+- Nach dem Merge: main und origin/main zeigen auf denselben Commit wie preview (Fast-Forward, siehe 7). Die Vorschau läuft 1.4.1 (abgenommen). Live läuft laut Marco jetzt 1.4.1 (main fe7f31b, bei Redaktion dieser Datei kam danach nur noch dieser Nachtrag dazu).
 - Version 1.4.0 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, version in package.json). Neue Dateien in FILES von sw.js: content-en.js, content-su.js, inputs.js, speech.js, tasks.js (Test prüft es).
 - Zu 81eb864: CHANGELOG (Abschnitt 1.3.0, Absatz "Nachbesserung") und SPEC (Avatar, Baukasten, Migration) enthalten die Nachbesserung bereits. Es war nichts nachzutragen, ich habe es im CHANGELOG 1.4.0 nur erwähnt. return.md hatte sie nicht erwähnt, das ist mit dieser Datei erledigt (Bäckchen, Zöpfe, Haarkappe, Halbzopf, Cap, Kleidungs-Vorschau, weniger Scrollen, Emil nachbaubar).
 
@@ -72,10 +72,8 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 - Branch: preview. Commit: siehe git log -1 (1.4.1; davor b95703c = 1.4.0 mit Testkorrekturen, a9f8e50 = 1.4.0). origin/preview und origin/main siehe Chat (beide auf 1.4.1 nach Merge und Push). Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
 
 8. NÄCHSTE SCHRITTE FÜR MARCO
-1. Live auf der NAS aktualisieren (Ordner torjaeger, Branch main). Das Deploy sichert vorher alle Stände, die Migration auf Schema 5 läuft beim ersten Start der Geräte. Die Vorschau hat 1.4.1 schon abgenommen.
-   cd /volume1/docker/torjaeger
-   sudo sh deploy.sh
-2. Danach auf dem iPad die App neu öffnen ("Jetzt laden" im Banner) und Emils Stand kontrollieren: Punkte, Sticker, Ligen, Aussehen unverändert.
+1. (erledigt von Marco) Live-Deploy auf der NAS.
+2. Auf dem iPad die App neu öffnen ("Jetzt laden" im Banner) und Emils Stand kontrollieren: Punkte, Sticker, Ligen, Aussehen unverändert (Schema 5 wurde beim ersten Start migriert).
 3. Die Liste docs/Inhalte-Englisch-Sachkunde.md lesen (mit "unsicher" markierte Stellen) und Korrekturen zurückgeben. Entscheiden, welche weiteren Sachkunde-Themen als "Stoff noch nicht gehabt" (late) markiert werden sollen.
 4. Entscheiden: bei "alle Mathe/Deutsch-Themen aus" kein Aufstieg von selbst (so gebaut); ob Englisch und Sachkunde später in Trainingscamp, Bezirksliga, Mix und Probe-Liga einfließen.
 ```
