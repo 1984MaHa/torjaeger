@@ -64,7 +64,7 @@ function engTask(topic,opts={}){
   if(opts.listen!==false&&canSpeak()&&Math.random()<.2){
     const w=pick(words),{tiles,a}=picTiles(words,w,pick([3,4]));
     return makePic({level,q:"Hör gut zu. Tippe auf das Bild, das zum Wort passt.",listen:true,say:w[0],tiles,a,term:cut(w[0]),terms:[cut(w[0])],
-      ex:`Du hast <b>${w[0]}</b> gehört. Das heißt ${w[1]}.`,hint:LISTEN_HINT,sig:"l|"+w[0]+tiles.map(x=>x.name).join("")});
+      ex:`Du hast <b>${w[0]}</b> gehört. Das heißt ${w[1]}.`,hint:LISTEN_HINT,sig:"w|"+w[0]});
   }
   if(level===2){
     const n=Math.min(words.length,pick([4,5])),ws=shuffle(words).slice(0,n),order=mixed(n),
@@ -76,12 +76,12 @@ function engTask(topic,opts={}){
   if(level===3){
     const choices=[w[0],w[3],w[4]],tile=tileOf(w[2]);
     return{type:"choice",level,q:"Wie schreibt man das Wort zum Bild richtig?",vis:tileHTML(tile,true),choices,a:w[0],term:cut(w[0]),terms:[cut(w[0])],
-      ex:`Das Wort heißt <b>${w[0]}</b> (${w[1]}).`,hint:ENHINT[3],sig:"s3|"+w[0],
+      ex:`Das Wort heißt <b>${w[0]}</b> (${w[1]}).`,hint:ENHINT[3],sig:"w|"+w[0],
       probe:probe("Schreibweise prüfen","Sprich das Wort langsam in Silben. Vergleiche jeden Buchstaben mit dem Bild. Stimmt die Schreibweise?")};
   }
   const {tiles,a}=picTiles(words,w,pick([3,4]));
   return makePic({level,q:`Welches Bild passt zu <b>${w[0]}</b>?`,speak:w[0],tiles,a,term:cut(w[0]),terms:[cut(w[0])],
-    ex:`<b>${w[0]}</b> heißt auf Deutsch ${w[1]}.`,hint:ENHINT[1],sig:"p|"+w[0]+tiles.map(x=>x.name).join("")});
+    ex:`<b>${w[0]}</b> heißt auf Deutsch ${w[1]}.`,hint:ENHINT[1],sig:"w|"+w[0]});
 }
 
 // ---------- Sachkunde ----------
@@ -136,7 +136,9 @@ function suRose(d){
 function suTask(topic){
   const d=pick(SU_TOPICS[topic].tasks);
   const f={match:()=>suMatch(d,topic),sort:()=>suSort(d),order:()=>suOrder(d),choice:()=>suChoice(d),pic:()=>suPic(d),rose:()=>suRose(d),compass:()=>suCompass(d)}[d.k];
-  return f();
+  const T=f();
+  if(SU_TOPICS[topic].late||d.late)T.late=true; // Stoff vielleicht noch nicht behandelt: kommt seltener, falsche Antwort zählt nicht
+  return T;
 }
 
 // Generatoren je Thema: GEN[thema]({level}) gibt eine Aufgabe zurück (level nur bei Englisch).

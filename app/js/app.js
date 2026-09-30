@@ -1,7 +1,7 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
 import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng} from "./content.js";
 import {GEN} from "./generators.js";
-import {packOf,gradePack,isRight,termResults} from "./check.js";
+import {packOf,gradePack,isRight,termResults,keyOf} from "./check.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
@@ -192,7 +192,7 @@ function startRound(li,mode,trial,topic){
   if(!trial&&leagueState(S(),li)==="probe")len=Math.min(roundLen(S()),budgetOf(S(),li));
   if(trial)commit((s,c)=>applyTrial(s,c,li));
   commit((s,c)=>applySel(s,c,li));
-  G={li,mode,trial,pool,len,i:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now()};
+  G={li,mode,trial,pool,len,i:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now(),seen:new Set()};
   nextTask();view="play";render();window.scrollTo(0,0);
   armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
@@ -202,9 +202,15 @@ function setTask(T){
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
   armIdle();
 }
+// Keine Aufgabe zweimal in einem Spiel (auch wenn sie zufällig gezogen wird): bis zu 40 neue Versuche, danach gilt die letzte.
 function nextTask(){
-  const t=nextTopic(S(),G.pool,G.last);G.last=t;
-  setTask(Object.assign({topic:t},GEN[t](levelOpts(t))));
+  let T,t;
+  for(let tries=0;tries<40;tries++){
+    t=nextTopic(S(),G.pool,G.last);T=Object.assign({topic:t},GEN[t](levelOpts(t)));
+    if(!G.seen||!G.seen.has(keyOf(T)))break;
+  }
+  G.last=t;if(G.seen)G.seen.add(keyOf(T));
+  setTask(T);
 }
 // Englisch: die Aufgaben folgen der Stufe des Kindes in diesem Thema.
 const levelOpts=t=>isEng(t)?{level:lvOf(S(),t)}:undefined;
@@ -244,7 +250,7 @@ function answer(val){
   G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok);G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.
-  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val)}));
+  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val),soft:!!T.late}));
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
   tone(ok?[523,659,784]:[220,180],ok?.12:.18,S().settings.sound);
   render();
@@ -288,7 +294,7 @@ function finishCheck(checked){
     const ok=grade.items[i].ok;let gain=0;
     if(ok){streak++;gain=10+(streak>=3?5:0);}else streak=0;
     G.gains[i]=gain;
-    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0,lv:T.level||0,terms:termResults(T,G.finals[i])}));
+    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0,lv:T.level||0,terms:termResults(T,G.finals[i]),soft:!!T.late}));
   });
   if(checked){
     const probes=Object.keys(G.probed).length;
@@ -525,7 +531,8 @@ function bind(){
   if($("editBack"))$("editBack").onclick=()=>{G.phase="check";render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
-  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);view="home";UI.celebrate="";render();window.scrollTo(0,0);};
+  document.querySelectorAll("[data-bank]").forEach(d=>{d.ontoggle=()=>{UI.bankOpen=!!d.open;};}); // Trainerbank merkt sich nur, solange man sie selbst aufgeklappt hat
+  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
   if($("coachHelp"))$("coachHelp").onclick=helpStep;

@@ -58,7 +58,7 @@ export function helpBubblesHTML(T,level,exHTML,trainers){
   return level>=2?tip+bubble(trainers[speakerOf(null,"explain")].name,exHTML||exampleHTML(null)):tip;
 }
 
-const fig=(t,which,talk)=>`<div class="coachfig${talk?" talk":""}">${trainerSVG(t.look,{px:70,label:t.name,which})}<span class="coachname">${esc(t.name)}</span></div>`;
+const fig=(t,which,talk,px=54)=>`<div class="coachfig${talk?" talk":""}">${trainerSVG(t.look,{px,label:t.name,which})}<span class="coachname">${esc(t.name)}</span></div>`;
 
 // Trainer-Block in der Aufgabe. G: helpLevel (0 bis 2), offer (Angebot nach langer Pause), helpEx (Beispiel für Stufe 2), i (Aufgabe).
 // Vor der Antwort: Hilfe-Taste und Hilfe-Blasen. Nach der Antwort: die Erklärung (ex) in einer Sprechblase.
@@ -75,7 +75,8 @@ export function coachHTML({T,G,trainers}){
     const s=speakerOf(G,"offer");talkA=s===0;talkB=s===1;
     bubbles=bubble(trainers[s].name,`<p>Hallo! Soll ich dir einen Tipp geben?</p><div class="row"><button class="helpbtn" id="coachYes">Ja, bitte</button><button class="btn ghost sm" id="coachNo">Nein, danke</button></div>`);
   }
-  if(level===0&&!G.offer)buttons=`<button class="helpbtn" id="coachHelp">Hilfe vom Trainer</button>`;
-  else if(level===1)buttons=`<button class="helpbtn" id="coachHelp">Noch mehr Hilfe</button>`;
+  // Ruhezustand: klein (kleine Figuren, kleine Taste), damit die Frage im Mittelpunkt steht. Groß erst bei Angebot, Hilfe oder Antwort.
+  if(level===0&&!G.offer)return `<div class="coach mini"><div class="coachfigs">${fig(a,1,false,38)}${fig(b,2,false,38)}</div><button class="helpbtn sm" id="coachHelp">Hilfe vom Trainer</button></div>`;
+  if(level===1)buttons=`<button class="helpbtn" id="coachHelp">Noch mehr Hilfe</button>`;
   return `<div class="coach"><div class="coachfigs">${fig(a,1,talkA)}${fig(b,2,talkB)}</div><div class="coachside">${bubbles}${buttons}</div></div>`;
 }

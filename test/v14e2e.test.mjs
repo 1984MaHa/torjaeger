@@ -94,7 +94,18 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     await until(()=>has('id="ovl"')||has('id="next"'),"Antwort auf Bild wählen");
     assert.ok(has("Tor!")||has("Richtig ist"));
     if(has('id="ovl"'))await clickId("ovl");else await clickId("next");
-    await until(()=>has("Aufgabe 2 von 8"),"zweite Aufgabe");
+    // ein ganzes Spiel: keine Frage kommt zweimal dran (auch nicht zufällig)
+    const words=[said[0].text];
+    for(let i=2;i<=8;i++){
+      await until(()=>has("Aufgabe "+i+" von 8"),"Aufgabe "+i);
+      const m=new RegExp("zu <b>([^<]+)</b>").exec(html),say=els.find(e=>"say" in e.dataset);
+      words.push(m?m[1]:say.dataset.say);
+      await click(all("pic")[0]);
+      await until(()=>has('id="ovl"')||has('id="next"'),"Antwort "+i);
+      if(has('id="ovl"'))await clickId("ovl");else await clickId("next");
+    }
+    assert.equal(words.length,8);assert.equal(new Set(words).size,8,"keine Frage doppelt: "+words.join(", "));
+    await until(()=>has("Zur Kabine"),"Ende des Englisch-Spiels");
     await clickId("home");
     await until(()=>has("Hallo Emil"),"zurück in die Kabine");
 

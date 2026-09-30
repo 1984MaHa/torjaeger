@@ -1,6 +1,8 @@
 // Darstellung: baut das HTML für jede Ansicht. Kennt weder Speicher noch Netz.
 import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,BONUS_FIX,FACHER,EN_LEVELS,topicsOf,allTopicsOf,isEng} from "./content.js";
 import {newInputHTML,NEW_TYPES} from "./inputs.js";
+import {tileHTML} from "./tasks.js";
+import {ICONS} from "./icons.js";
 import {speakBtn} from "./speech.js";
 import {stickerHTML} from "./stickers.js";
 import {probeHTML,givenText,packLen} from "./check.js";
@@ -50,8 +52,8 @@ function modeBtns(s,li,UI,small){
   const fb=(fach,label,ic,col)=>`<button class="mode ${open===li+":"+fach?"on":""}" data-fach="${li}:${fach}" aria-expanded="${open===li+":"+fach}"><span class="ic" style="background:${col}">${ic}</span><span><b>${label}</b></span></button>`;
   const panel=open&&open.startsWith(li+":")?fachPanel(s,li,open.split(":")[1]):"";
   const L=LIGEN[li];
-  return `<div class="modes ${small?"sm":""}">${fb("math","Mathe","+","var(--sky)")}${fb("deu","Deutsch","Aa","var(--miss)")}${L.eng?fb("eng","Englisch","En","#d9480f"):""}${L.su?fb("su","Sachkunde","Sk","#0f8b6d"):""}
-    <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">★</span><span><b>Mix-Spiel</b></span></button></div>${panel}`;
+  return `<div class="modes ${small?"sm":""}">${fb("math","Mathe",ICONS.math,"var(--sky)")}${fb("deu","Deutsch",ICONS.deu,"var(--miss)")}${L.eng?fb("eng","Englisch",ICONS.eng,"#d9480f"):""}${L.su?fb("su","Sachkunde",ICONS.su,"#0f8b6d"):""}
+    <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">${ICONS.mix}</span><span><b>Mix-Spiel</b></span></button></div>${panel}`;
 }
 
 // Eigener Fortschritt in Englisch und Sachkunde (zählt nicht für den Aufstieg).
@@ -65,7 +67,7 @@ function currentCard(s,UI,i){
   const badge=st==="probe"?`<span class="badge probe">Probetraining: noch ${budgetOf(s,i)} Aufgaben</span>`:ms?`<span class="badge done">Durchgespielt</span>`:`<span class="badge cur">Deine Liga</span>`;
   const note=st==="probe"?`<p class="note">Wenn die ${PROBE} Probe-Aufgaben gespielt sind, können Mama oder Papa die Liga ganz freigeben.</p>`:"";
   return `<section class="lg current"><div class="lg-head"><div><b>${L.name}</b><span class="k">${L.klasse} · ${sc} von ${tot} Themen sicher</span></div>${badge}</div>
-    <div class="lgbar" aria-hidden="true"><i style="width:${tot?Math.round(sc/tot*100):0}%"></i></div>${fachLines(s,i)}${chipsOf(s,i)}${modeBtns(s,i,UI,true)}${note}</section>`;
+    <div class="lgbar" aria-hidden="true"><i style="width:${tot?Math.round(sc/tot*100):0}%"></i></div>${fachLines(s,i)}${modeBtns(s,i,UI,true)}${note}</section>`;
 }
 // Jede andere Liga: eine schmale Zeile mit Name, Klasse und Status. Antippen klappt sie auf.
 function miniRow(s,UI,i){
@@ -73,10 +75,10 @@ function miniRow(s,UI,i){
   let body="";
   if(open){
     if(playable(s,i)){
-      body=chipsOf(s,i)+(st==="probe"?`<p class="note">Probetraining: noch ${budgetOf(s,i)} von ${PROBE} Aufgaben. Danach können Mama oder Papa die Liga ganz freigeben.</p>`:"")+
+      body=(st==="probe"?`<p class="note">Probetraining: noch ${budgetOf(s,i)} von ${PROBE} Aufgaben. Danach können Mama oder Papa die Liga ganz freigeben.</p>`:"")+
         `<div class="row"><button class="btn sm" data-cur="${i}">Hier spielen</button><span class="note">Dann ist die ${L.name} deine Liga.</span></div>`;
     }else if(st==="wait"){
-      body=chipsOf(s,i)+`<p class="note">Das Probetraining ist geschafft. Jetzt müssen Mama oder Papa die ${L.name} in der Trainerbank freigeben.</p>`;
+      body=`<p class="note">Das Probetraining ist geschafft. Jetzt müssen Mama oder Papa die ${L.name} in der Trainerbank freigeben.</p>`;
     }else{const prev=LIGEN[i-1];
       body=`<p class="note">Freispielen: In der ${prev.name} alle Themen in Mathe und Deutsch sicher schaffen (je ${MASTER_K} von den letzten ${MASTER_N} Aufgaben richtig). Stand: ${safeCount(s,i-1)} von ${gateTopics(s,i-1).length}.</p>`+
         (canTrial(s,i)?`<div class="row"><button class="btn sm" data-trial="${i}">Schnuppern: ${trialLen(s)} Aufgaben</button>${settingsOf(s).trialDaily?`<span class="note">Einmal am Tag</span>`:""}</div>`:i<=top+2?`<p class="note">Heute schon geschnuppert. Morgen geht es wieder.</p>`:"");
@@ -108,7 +110,7 @@ export function homeHTML(s,UI,env){
   <div class="leagues">${currentCard(s,UI,currentLeague(s))}<h2 class="gl2">Andere Ligen</h2>${LIGEN.map((_,i)=>i).filter(i=>i!==currentLeague(s)).map(i=>miniRow(s,UI,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
   <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
-  <section class="panel"><details ${UI.parent||UI.pinMsg?"open":""}><summary>Trainerbank (für Mama und Papa)</summary>
+  <section class="panel"><details data-bank ${UI.bankOpen||UI.parent||UI.pinMsg?"open":""}><summary>Trainerbank (für Mama und Papa)</summary>
     <p class="small">Zahlen zeigen, wie viele der letzten ${MASTER_N} Aufgaben je Thema richtig waren. Ein Thema ist sicher ab ${MASTER_K} von ${MASTER_N}. Schwache Themen kommen öfter dran.</p>${stats}
     <p class="small"><b>Zuletzt abgeglichen:</b> ${env.syncText}</p>
     ${env.persistent?"":`<p class="small">Achtung: Dieser Browser kann nichts dauerhaft speichern. Der Stand bleibt nur, bis die Seite geschlossen wird.</p>`}
@@ -142,9 +144,15 @@ function inputHTML(T,G){
   if(!G.done)h+=`<button class="btn" id="tapok" ${G.pickIdx<0?'disabled style="opacity:.5"':""}>${T.tapLabel}</button>`;return h;
 }
 
+// Antwort im Kontroll-Pfiff: bei Bildern das Bild selbst (Farbkasten, Emoji, Ziffer), sonst Text
+function givenHTML(T,val){
+  if(T.type==="pic"&&T.tiles[val]&&T.tiles[val].k!=="dir")return `${tileHTML(T.tiles[val],false)} ${esc(T.tiles[val].name||"")}`;
+  return esc(givenText(T,val));
+}
 // Kontroll-Pfiff: Übersicht aller Antworten des Päckchens, je Aufgabe Probe und Ändern. Noch keine Rückmeldung richtig oder falsch.
 function checkHTML(s,G){
-  const L=LIGEN[G.li],rows=G.tasks.map((T,i)=>`<div class="crow"><div class="chead"><span class="cno">${i+1}</span><span class="cq">${T.q}</span><span class="cval" aria-label="Deine Antwort">${esc(givenText(T,G.finals[i]))}</span></div>
+  const L=LIGEN[G.li],rows=G.tasks.map((T,i)=>`<div class="crow"><div class="chead"><span class="cno">${i+1}</span><span class="cq">${T.q}${T.speak?" "+speakBtn(T.speak):""}</span><span class="cval" aria-label="Deine Antwort">${givenHTML(T,G.finals[i])}</span></div>
+    ${T.vis?`<div class="vis sm">${T.vis}</div>`:""}${T.listen?`<div class="row">${speakBtn(T.say,"big")}<span class="note">Wort noch einmal anhören</span></div>`:""}
     <div class="row"><button class="helpbtn" data-probe="${i}">Probe</button><button class="btn ghost sm" data-edit="${i}">Antwort ändern</button></div>
     ${G.probeOpen[i]?`<div class="bubble probebox" role="status">${probeHTML(T,G.finals[i])}</div>`:""}</div>`).join("");
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button><div class="score">${esc(s.profile.name)} · Päckchen</div><div class="dots">${G.tasks.map(()=>'<i class="set"></i>').join("")}</div></div>
@@ -169,7 +177,8 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
     if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot)}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div></div></div>`;
     else fb=`<div class="fb no">${sceneSVG(look,shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;
   }
-  const coach=G.done||G.phase==="edit"?"":coachHTML({T,G,trainers});
+  let coach=G.done||G.phase==="edit"?"":coachHTML({T,G,trainers});
+  const isMini=coach.startsWith('<div class="coach mini"'),mini=isMini?coach:"";if(isMini)coach="";
   const tag=G.pack?(G.phase==="edit"?`${L.name} · Antwort ändern · Aufgabe ${G.ei+1} von ${G.len} · ${TOPICS[T.topic]}`:G.phase==="solve"?`${L.name} · Päckchen · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`:`${L.name} · Auswertung · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`)
     :`${L.name}${G.trial?" · Schnuppern":""} · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`;
   const edit=G.phase==="edit"?`<p class="note">Deine Antwort war: <b>${esc(givenText(T,G.finals[G.ei]))}</b></p>${G.probeOpen[G.ei]?`<div class="bubble probebox" role="status">${probeHTML(T,G.finals[G.ei])}</div>`:""}`:"";
@@ -177,8 +186,8 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   const tip=G.pack&&G.phase==="solve"?"Schreibe erst alle Aufgaben des Päckchens. Danach kontrollierst du sie selbst.":"Lies zuerst das gelb markierte Wort. Dann erst schießen!";
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
     <div class="score">${blind?`${esc(s.profile.name)} · Päckchen`:`${esc(s.profile.name)} <em>${c}</em> : <em>${m}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
-    <section class="card"><div class="tag">${tag}</div>
-    <p class="q">${T.q}${T.speak?" "+speakBtn(T.speak):""}</p>${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
+    <section class="card"><div class="cardtop"><div class="tag">${tag}</div>${mini}</div>
+    <p class="q">${T.q}${T.speak?" "+speakBtn(T.speak):""}</p>${T.late?`<p class="note late">Das hattest du vielleicht noch nicht in der Schule. Raten ist okay: Ein falscher Tipp zählt dann nicht.</p>`:""}${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
     <p class="lead small" style="color:#fff">${tip}</p>`;
 }
 

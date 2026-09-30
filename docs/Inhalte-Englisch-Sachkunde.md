@@ -407,6 +407,8 @@ Keine Fragen nach persönlichen Erfahrungen, keine Schockbilder. „Tipp“ verr
 
 ### Himmelsrichtungen und Karte (`su_himmel`)
 
+**Stoff vielleicht noch nicht in der Schule dran** (Marco, 30.09.2026): Das Thema kommt seltener dran, die Aufgaben zeigen den Hinweis „Raten ist okay“, eine falsche Antwort zählt nicht für die Wertung.
+
 **1. Kompassrose lesen**: Der rote Pfeil zeigt in eine Himmelsrichtung. Welche ist es?
 
 - Kompassrose mit rotem Pfeil, N O S W beschriftet. Richtig ist die Richtung des Pfeils, falsch sind die anderen drei Richtungen.

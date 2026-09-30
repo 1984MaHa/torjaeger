@@ -19,6 +19,8 @@ for(const k of ENG_IDS)TOPICS[k]="Englisch: "+EN_TOPICS[k].name;
 for(const k of SU_IDS)TOPICS[k]=SU_TOPICS[k].name;
 export const FACHER={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde"};
 export const isEng=t=>ENG_IDS.includes(t);
+// Sachkunde-Themen, deren Stoff in der Schule oft noch nicht dran war: kommen seltener, falsche Antworten zählen nicht.
+export const LATE_IDS=SU_IDS.filter(t=>SU_TOPICS[t].late);
 export const EN_LEVELS=3;
 export const WEAK={m_split:1.3,m_plaet:1.4,m_zehner:1.5,m_mal:1.1,m_rechnen:.9,d_wortart:1.5,d_verl:1.3,d_satz:1.4};
 export const STICKERS=["Anstoß","Doppelpass","Flanke","Kopfball","Dribbling","Eckball","Freistoß","Elfmeter","Torwart-Parade","Fallrückzieher","Hattrick","Kapitän","Goldener Schuh","Pokal","Meisterschale","Champions-Stern","Flutlicht","Fankurve","Aufstieg","Derbysieg","Rekordtor","Traumpass","Wembley-Tor","Weltmeister"];

@@ -1,5 +1,17 @@
 # Änderungen
 
+## 1.4.1 (Vorschau: Rückmeldungen nach der ersten Sicht)
+Nachbesserung zu 1.4.0 nach Marcos erster Prüfung. Keine Änderung am Datenmodell (Schemaversion 5).
+
+### Behoben und geändert
+- **Kontroll-Pfiff** zeigt jetzt, was gesucht war: das Bild der Frage (zum Beispiel der Farbkasten in Stufe 3), bei Hör-Aufgaben die Hörtaste, und die eigene Antwort als Bild.
+- **Keine Frage doppelt:** dieselbe Aufgabe kommt in einem Spiel und in einem Päckchen nicht zweimal dran (Prüfroutine `nextTask` mit `keyOf`, bei Englisch je Wort in allen Stufen und Hör-Aufgaben).
+- **Zuordnen:** Paarfarben ohne Rot und Grün (Blau, Lila, Türkis, Bernstein, Magenta), damit ein Paar nicht wie „falsch“ aussieht.
+- **Stoff noch nicht gehabt:** Himmelsrichtungen und Karte sind so markiert. Sie kommen seltener dran, zeigen „Raten ist okay“, und eine falsche Antwort zählt nicht für die Wertung (Begriff `late` in `content-su.js`).
+- **Ruhigere Aufgabenansicht:** Trainerteam klein oben rechts in der Fragenkachel, groß erst bei Angebot, Hilfe oder Antwort.
+- **Startseite:** keine grauen Themenkästen mehr in der Liga-Karte. Fächer mit Symbolen statt Buchstaben (Taschenrechner, Buch, Sprechblase, Keimling, Würfel). Trainerbank ist immer eingeklappt und bleibt nur offen, solange man sie selbst aufgeklappt hat.
+- Neue Datei `icons.js` (in `FILES`). Version 1.4.1 an allen vier Stellen.
+
 ## 1.4.0 (Vorschau: Englisch und Sachkunde)
 Zwei neue Fächer für die Kreisliga (Klasse 3), vier neue Aufgabenarten, Vorlesen englischer Wörter und die Steuerung der Themen im Eltern-Bereich. Schemaversion 5 (Konto), global bleibt 3. Ein Stand im Format 1.3.0 wird beim ersten Start ohne Verlust migriert. Die Nachbesserung 81eb864 zu 1.3.0 steht schon im Abschnitt 1.3.0 unten.
 

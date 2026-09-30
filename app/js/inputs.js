@@ -9,7 +9,8 @@ import {speakBtn,canSpeak} from "./speech.js";
 import {esc} from "./util.js";
 
 export const NEW_TYPES=["match","sort","order","pic"];
-export const PAIR_COLORS=["#e5484d","#2f6fde","#e08a00","#8e44ad","#138a6b"];
+// Paarfarben: kein Rot und kein Grün, damit ein Paar nicht wie „falsch“ oder „richtig“ aussieht
+export const PAIR_COLORS=["#2f6fde","#8e44ad","#0e9aa7","#d98200","#c2338a"];
 const cell=it=>it.k==="txt"?`<span class="ctxt">${it.t}</span>`:tileHTML(it,false);
 const btn=(label,id,ready)=>`<button class="btn" id="${id}" ${ready?"":'disabled style="opacity:.5"'}>${label}</button>`;
 

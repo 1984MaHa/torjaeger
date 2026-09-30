@@ -1,13 +1,13 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.4.0. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.4.1. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
 ## Aufbau
 - `app/` die Web-App (ES-Module ohne Build-Schritt, keine externen Ressourcen)
   - `index.html`, `manifest.webmanifest`, `sw.js` (Service Worker), `css/`, `fonts/` (Andika, Lilita One, OFL), `icons/`
-  - `js/` Module: `app.js` (Steuerung), `views.js` (Darstellung), `rules.js` (Spielregeln), `generators.js` (Aufgaben), `model.js` (Datenmodell, Migration), `merge.js` (Zusammenführen), `sync.js` (Abgleich), `store.js` (IndexedDB), `pin.js`, `content.js`, `svg.js`, `audio.js`, `util.js`, `version.js`, `check.js` (Päckchen, Kontroll-Pfiff, Probe), `stickers.js` (24 Sticker mit Jubelruf), `content-en.js` und `content-su.js` (Wörter und Aufgaben Englisch und Sachkunde), `tasks.js` (Aufgaben daraus), `inputs.js` (Zuordnen, Bild wählen, Sortieren, Reihenfolge), `speech.js` (Vorlesen mit Gerätestimme)
+  - `js/` Module: `app.js` (Steuerung), `views.js` (Darstellung), `rules.js` (Spielregeln), `generators.js` (Aufgaben), `model.js` (Datenmodell, Migration), `merge.js` (Zusammenführen), `sync.js` (Abgleich), `store.js` (IndexedDB), `pin.js`, `content.js`, `svg.js`, `audio.js`, `util.js`, `version.js`, `check.js` (Päckchen, Kontroll-Pfiff, Probe), `stickers.js` (24 Sticker mit Jubelruf), `content-en.js` und `content-su.js` (Wörter und Aufgaben Englisch und Sachkunde), `tasks.js` (Aufgaben daraus), `inputs.js` (Zuordnen, Bild wählen, Sortieren, Reihenfolge), `speech.js` (Vorlesen mit Gerätestimme), `icons.js` (Fach-Symbole)
   - Eltern-Bereich: `admin.js` (Ansichten), `adminapi.js` (Aufrufe an den Server)
   - Avatar und Trainer: `avatar.js` (Daten, Paletten, Vorlagen), `avatardraw.js` (Figuren und Torszene als SVG), `avatarui.js` (Baukasten in 6 Schritten), `coach.js` (Trainer-Hilfe)
 - `server/server.js` liefert die App aus und speichert die Stände (Node 20, keine Zusatzpakete), `server/admin.js` die Admin-Aktionen der Eltern (PIN-Prüfung, Papierkorb, Zurücksetzen, Wiederherstellen, Geräteliste)

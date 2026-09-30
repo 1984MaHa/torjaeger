@@ -342,3 +342,13 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .cmid{position:absolute;inset:0;display:grid;place-items:center;font-size:2rem;color:var(--muted);pointer-events:none}
 .gl3{font-family:var(--display);font-weight:400;font-size:1.05rem;margin:8px 0 2px;color:var(--muted)}
 @media (max-width:520px){.match{gap:10px}.mitem{font-size:1.05rem;padding:6px}.pics.n3{grid-template-columns:repeat(2,1fr)}.baskets.n3{grid-template-columns:1fr}.compass{width:230px;height:230px}.ctile{width:66px;height:66px}.ctile.n,.ctile.s{left:74px}.ctile.o,.ctile.w{top:74px}}
+
+/* ---- Version 1.4.1: ruhigere Aufgabenansicht ---- */
+.cardtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.coach.mini{flex-wrap:nowrap;align-items:center;gap:8px;flex:0 0 auto;justify-content:flex-end}
+.coach.mini .coachfig{width:40px;opacity:.9}.coach.mini .coachname{font-size:.55rem}
+.helpbtn.sm{font-size:.8rem;padding:6px 10px;border-width:2px;border-radius:10px;box-shadow:0 2px 0 #b5cdf7}
+.coachfig{width:54px}
+.note.late{background:#fff4d6;border-radius:10px;padding:6px 10px;margin:0}
+.vis.sm .tile.col.big{width:56px;height:56px}.vis.sm .tile.emo.big{font-size:2.6rem}.vis.sm .tile.num.big{font-size:2.4rem}
+.mode .ic svg{display:block}

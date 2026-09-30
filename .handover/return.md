@@ -3,14 +3,15 @@
 **Stand:** 2026-09-30
 **Von:** claude-code
 **An:** cowork
-**Auftrag:** Version 1.4.0 (Englisch und Sachkunde). Modus bauen, Stufe voll
+**Auftrag:** Version 1.4.0 (Englisch und Sachkunde) und Nachbesserung 1.4.1. Modus bauen, Stufe voll
 
 ```
 Rückübergabe claude-code nach cowork, 2026-09-30.
 Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgabenarten, Vorlesen, Themensteuerung) ist gebaut, getestet und lokal auf preview committed. NICHT gepusht, NICHT deployed, NICHT im Browser angesehen (siehe 1 und 6).
 
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
-- Nichts. Marco hat nur den Start freigegeben ("ja los" nach der Ankerprüfung). Kein Push, kein Merge, kein Branch-Wechsel, keine Befehle auf der NAS, keine Tests auf iPad oder iPhone, keine Anweisung zu main oder Live.
+- Start freigegeben ("ja los"). Dann auf seine Anweisung ("ja okay, push") habe ich 1.4.0 nach origin/preview gepusht (81eb864 bis b95703c). Marco hat danach auf der NAS in /volume1/docker/torjaeger-preview das Deploy der Vorschau gemacht und mit 1.4.0 getestet (nach seiner Aussage, Ergebnis unten bei den Rückmeldungen). Kein Merge, kein Branch-Wechsel, keine Anweisung zu main oder Live.
+- 1.4.1 ist lokal committed, NOCH NICHT gepusht und NICHT auf der NAS.
 - Ausdrücklich NOCH NICHT ausgeführt: Push von preview, Vorschau-Deploy auf der NAS, Abnahme auf dem iPad (auch die von 1.2.1 und 1.3.0), Kontrolle von Emils migriertem Stand, Prüfung von docs/Inhalte-Englisch-Sachkunde.md durch Marco. main und Live sind unberührt (Live läuft weiter 1.2.1).
 - Ich habe die Seite bewusst nicht im Browser oder in der Vorschau geöffnet und keine Screenshots gemacht (Wunsch von Marco, er prüft visuell selbst). Die neuen Ansichten sind nur per Test geprüft: HTML-Ausgabe und eine Ende-zu-Ende-Prüfung der echten app.js mit Fake-DOM. Das Aussehen (CSS, Emoji-Darstellung auf iOS, Kompassrose) ist nicht mit dem Auge gesehen.
 
@@ -32,6 +33,17 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 - Datenmodell: Schemaversion 5 (Konto), global 3. Migration 4 nach 5 ergänzt settings.topicMode ({}). Neue Felder: stats.<Thema>.lv, stats.<Thema>.terms (je Gerät, Schlüssel "a:Begriff" und "c:Begriff"), last[].lv, Spielarten eng und su im Verlauf. Merge: Einstellungen neuester gewinnt, lv höherer Wert, terms je Gerät Maximum, angezeigt die Summe.
 - docs/Inhalte-Englisch-Sachkunde.md: vollständig, erzeugt mit node tools/inhalte-liste.mjs aus den Datendateien, unsichere Stellen markiert ("unsicher").
 - SPEC.md, CHANGELOG.md (1.4.0), README.md, CLAUDE.md (Schemaversion 5) aktualisiert.
+
+3a. RÜCKMELDUNGEN VON MARCO ZU 1.4.0 (Vorschau) UND UMSETZUNG IN 1.4.1
+- Kontroll-Pfiff bei Englisch Farben zeigt nicht mehr, welche Farbe gesucht war: jetzt Bild der Frage (Farbkasten, auch Stufe 3), Hörtaste bei Hör-Aufgaben, eigene Antwort als Bild.
+- Farben kamen mehrfach hintereinander: Prüfroutine gegen doppelte Fragen in Spiel (G.seen, bis 40 Versuche) und Päckchen, Kennung je Wort (keyOf, sig "w|Wort"). Test im E2E: ein ganzes Englisch-Spiel ohne doppeltes Wort.
+- Zuordnen Getreide: Weizen und Brötchen bekamen roten Rahmen, sah falsch aus: Paarfarben jetzt Blau, Lila, Türkis, Bernstein, Magenta (Test: nie rot oder grün).
+- Stoff noch nicht gehabt (Beispiel Sonnenstand): Thema Himmelsrichtungen und Karte trägt "late": kommt mit Faktor 0,4 seltener, Hinweis "Raten ist okay", falsche Antwort zählt nicht (soft). Andere Themen oder einzelne Aufgaben lassen sich im Code mit late markieren. Eine Steuerung im Eltern-Bereich dafür gibt es noch nicht (dort gilt weiter aktuell, wiederholen, aus). Marco soll sagen, welche Themen noch hinein sollen.
+- Trainerteam: klein oben rechts in der Kopfzeile der Fragenkachel, groß erst bei Angebot, Hilfe, Antwort; Hilfe-Taste klein.
+- Graue Themenkästen in der Kreisliga-Karte: entfernt (auch in aufgeklappten anderen Ligen).
+- Fächer mit Symbolen (Taschenrechner, Buch, Sprechblase, Keimling, Würfel für Mix) statt + Aa En Sk.
+- Trainerbank: immer eingeklappt, bleibt nur offen, solange man sie selbst aufgeklappt hat, beim Zurückkehren aus einem Spiel wieder zu.
+- Tests 1.4.1: test/v141.test.mjs (6 Tests), E2E erweitert. 166 Tests grün, mehrere Gesamtläufe stabil. Version 1.4.1 an allen vier Stellen, icons.js in FILES. Nicht am Gerät gesehen.
 
 4. ENTSCHEIDUNGEN, ABWEICHUNGEN
 - Stufenschwelle Englisch: 8 von 10 richtig in der aktuellen Stufe (wie MASTER_K von MASTER_N). Stufe steigt pro Thema, sinkt nie (Merge nimmt den höheren Wert). Das Häkchen je Englisch-Thema verlangt Stufe 3 und "sicher".
@@ -56,11 +68,11 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 - Zwei Zeitprobleme in den Tests gefunden und behoben: (1) v14e2e erzwang eine Zuordnung, die mit Stimme in 1 von 5 Fällen eine Hör-Aufgabe wurde (Test, nicht App); (2) der alte e2e.test.mjs wartete nicht auf das Spielende beim Server und scheiterte unter Last im parallelen Lauf (Wartestelle jetzt mit Abfrage). Danach 10 Gesamtläufe hintereinander grün (160 von 160).
 
 7. ANKER
-- Branch: preview. Commit: siehe git log -1 (Version 1.4.0 a9f8e50, darauf ein Korrektur-Commit für die Tests, baut auf 81eb864 auf). Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
+- Branch: preview. Commit: siehe git log -1 (1.4.1; davor b95703c = 1.4.0 mit Testkorrekturen, a9f8e50 = 1.4.0). origin/preview b95703c, 1.4.1 nicht gepusht. Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
 
 8. NÄCHSTE SCHRITTE FÜR MARCO
 1. Die Liste docs/Inhalte-Englisch-Sachkunde.md lesen, besonders die mit "unsicher" markierten Stellen, und Korrekturen an Cowork oder hierher zurückgeben.
-2. Push von preview (nur auf deine ausdrückliche Anweisung, ich habe nicht gepusht):
+2. Push von preview für 1.4.1 (nur auf deine ausdrückliche Anweisung):
    git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
 3. Vorschau auf der NAS aktualisieren (Ordner torjaeger-preview):
    sudo sh deploy.sh

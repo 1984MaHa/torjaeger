@@ -6,6 +6,7 @@
 //  choice right, wrong [falsche Antworten]
 //  pic    tiles [[Emoji, Name]], right = Nummer der richtigen Kachel
 //  rose   Kompassrose mit Pfeil (Himmelsrichtung ablesen)
+// late (Thema oder Aufgabe): Stoff war in der Schule vielleicht noch nicht dran. Kommt seltener dran, eine falsche Antwort zählt nicht.
 // hint verrät die Lösung nie, ex erklärt sie nach der Antwort. unsure: Marco soll besonders prüfen.
 export const SU_TOPICS={
   su_sinne:{name:"Sinne und Sinnesorgane",tasks:[
@@ -67,7 +68,7 @@ export const SU_TOPICS={
       hint:"Überlege bei jedem Wort: Wird es wärmer oder kälter?",ex:"Gefrieren: Wasser wird zu Eis. Schmelzen: Eis wird zu Wasser. Verdunsten: Wasser wird zu Dampf. Kondensieren: Dampf wird wieder flüssig."},
     {k:"choice",q:"Bei wie viel Grad Celsius gefriert Wasser?",right:"0 Grad",wrong:["10 Grad","50 Grad","100 Grad"],
       hint:"Es ist der Punkt, an dem draußen im Winter Pfützen zu Eis werden.",ex:"Wasser gefriert bei 0 Grad Celsius. Bei 100 Grad kocht es."}]},
-  su_himmel:{name:"Himmelsrichtungen und Karte",tasks:[
+  su_himmel:{name:"Himmelsrichtungen und Karte",late:true,tasks:[
     {k:"rose",q:"Der rote Pfeil zeigt in eine Himmelsrichtung. Welche ist es?",
       hint:"Lies die Buchstaben an der Kompassrose. Oben steht N, die Buchstaben gehen im Uhrzeigersinn weiter.",ex:"Der Pfeil zeigt dorthin, wo der Buchstabe an der Kompassrose steht."},
     {k:"compass"},

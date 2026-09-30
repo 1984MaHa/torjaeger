@@ -455,11 +455,11 @@ test("Eltern-Bereich: Themensteuerung je Konto (aktuell, wiederholen, aus) für 
 });
 
 // ---------- Dateien ----------
-test("Neue Dateien stehen im Service Worker, Version 1.4.0 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
+test("Neue Dateien stehen im Service Worker, Version 1.4.1 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
   const ROOT=fileURLToPath(new URL("..",import.meta.url)),sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
-  for(const f of ["content-en.js","content-su.js","speech.js","tasks.js","inputs.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1\.4\.0"/);assert.match(sw,/VERSION = "1\.4\.0"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1\.4\.0"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.4.0");
+  for(const f of ["content-en.js","content-su.js","speech.js","tasks.js","inputs.js","icons.js"])assert.ok(sw.includes(`"js/${f}"`),f);
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1\.4.1"/);assert.match(sw,/VERSION = "1\.4.1"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1\.4.1"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.4.1");
   const doc=fs.readFileSync(path.join(ROOT,"docs/Inhalte-Englisch-Sachkunde.md"),"utf8");
   for(const [id,t] of Object.entries(EN_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const w of t.words){assert.ok(doc.includes(`| ${w[0]} | ${w[1]} |`),w[0]);assert.ok(doc.includes(w[3])&&doc.includes(w[4]),w[0]);}}
   for(const [id,t] of Object.entries(SU_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const d of t.tasks){if(d.hint)assert.ok(doc.includes(d.hint),d.hint);if(d.unsure)assert.ok(doc.includes(d.unsure),d.unsure);

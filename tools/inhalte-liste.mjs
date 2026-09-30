@@ -40,6 +40,7 @@ Keine Fragen nach persönlichen Erfahrungen, keine Schockbilder. „Tipp“ verr
 const ART={match:"Zuordnen",sort:"Sortieren",order:"Reihenfolge",choice:"Auswahl",pic:"Bild wählen",rose:"Kompassrose lesen",compass:"Kompassrose antippen"};
 for(const [id,t] of Object.entries(SU_TOPICS)){
   o+=`### ${t.name} (\`${id}\`)\n\n`;
+  if(t.late)o+="**Stoff vielleicht noch nicht in der Schule dran** (Marco, 30.09.2026): Das Thema kommt seltener dran, die Aufgaben zeigen den Hinweis „Raten ist okay“, eine falsche Antwort zählt nicht für die Wertung.\n\n";
   let n=0;
   for(const d of t.tasks){
     n++;o+=`**${n}. ${ART[d.k]}**${d.q?`: ${d.q}`:""}\n\n`;

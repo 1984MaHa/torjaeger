@@ -1,7 +1,7 @@
 // Spielregeln auf dem Konto-Stand: Ligen, sichere Themen, Aufstieg, Punkte, Sticker.
 // Alles reine Funktionen auf dem Stand `s` (kein DOM), damit sie getestet werden können.
 // Änderungen laufen über die apply*-Funktionen mit ctx = {deviceId, now}.
-import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
+import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,LATE_IDS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
 import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf} from "./model.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
 import {todayKey} from "./util.js";
@@ -68,6 +68,7 @@ export function weightOf(s,t){
   if(st&&st.last&&st.last.length>=3){const l=st.last.slice(-MASTER_N);w*=0.5+2.2*(1-l.reduce((a,x)=>a+x.ok,0)/l.length);}
   if(topicSafe(s,t))w*=.6;
   w=Math.max(.25,w);
+  if(LATE_IDS.includes(t))w*=.4; // Stoff vielleicht noch nicht gehabt: seltener
   return topicModeOf(s,t)==="wiederholen"?w*.35:w; // Wiederholen kommt seltener dran
 }
 export function nextTopic(s,pool,last,rnd=Math.random){
@@ -83,14 +84,16 @@ const touch=(s,ctx)=>{s.meta.updatedAt=ctx.now;};
 // Eine beantwortete Aufgabe: Antwortverlauf, Probetraining-Budget und Punkte.
 // help: höchste Hilfestufe in dieser Aufgabe (0 keine, 1 Tipp, 2 Erklärung). Hilfe kostet keine Punkte.
 // lv: Englisch-Stufe der Aufgabe, terms: [{id, ok}] Begriffe für die Statistik je Begriff.
-export function applyAnswer(s,ctx,{topic,ok,gain,li,trial,help=0,lv=0,terms=null}){
+// soft: Aufgabe mit Stoff, der vielleicht noch nicht dran war. Eine falsche Antwort zählt dann nicht (keine Wertung im Thema, kein Begriff).
+export function applyAnswer(s,ctx,{topic,ok,gain,li,trial,help=0,lv=0,terms=null,soft=false}){
+  const skip=soft&&!ok;
   const st=statOf(s,topic),dev=ctx.deviceId;
   const tot=st.tot[dev]||(st.tot[dev]={a:0,c:0});
-  tot.a++;if(ok)tot.c++;
+  if(!skip)tot.a++;if(ok)tot.c++;
   const entry={t:ctx.now,ok:ok?1:0,d:dev.slice(0,6)};if(help>0)entry.h=help;if(lv>0)entry.lv=lv;
-  st.last.push(entry);st.last=st.last.slice(-MASTER_N);
-  if(isEng(topic))promoteLevel(s,st,topic);
-  if(Array.isArray(terms)&&terms.length){const tm=st.terms=st.terms||{},d=tm[dev]||(tm[dev]={});
+  if(!skip){st.last.push(entry);st.last=st.last.slice(-MASTER_N);}
+  if(isEng(topic)&&!skip)promoteLevel(s,st,topic);
+  if(!skip&&Array.isArray(terms)&&terms.length){const tm=st.terms=st.terms||{},d=tm[dev]||(tm[dev]={});
     for(const x of terms){d["a:"+x.id]=(d["a:"+x.id]||0)+1;if(x.ok)d["c:"+x.id]=(d["c:"+x.id]||0)+1;}}
   if(help>0)helpOn(st,dev).n++;
   if(!trial&&leagueState(s,li)==="probe"){const l=lgOf(s,LIGEN[li].id);l.spent=Math.min(PROBE,l.spent+1);l.t=ctx.now;}

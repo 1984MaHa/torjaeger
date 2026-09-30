@@ -36,7 +36,7 @@ const PACKS={
     return out;}
 };
 // Doppelte Aufgaben: mit sig (Englisch, Sachkunde) zählt der Inhalt, nicht die Reihenfolge der Anzeige.
-const keyOf=T=>T.sig?T.q+"|"+T.sig:[T.q,T.choices?[...T.choices].sort().join(","):"",T.words?T.words.join(" "):"",String(T.a)].join("|");
+export const keyOf=T=>T.sig?(T.topic||"")+"|"+T.sig:[T.q,T.choices?[...T.choices].sort().join(","):"",T.words?T.words.join(" "):"",String(T.a)].join("|");
 // Standard: n verschiedene Aufgaben desselben Themas hintereinander. opts: {level} (Englisch-Stufe).
 function independent(t,n,opts){
   const seen=new Set(),out=[];
