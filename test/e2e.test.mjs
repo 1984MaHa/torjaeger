@@ -84,6 +84,8 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     assert.ok(has('id="avEdit"')&&has("avsvg"));
 
     // ----- Eine Runde -----
+    await clickData("fach","0:math");                              // Mathe antippen öffnet Mix und Themenblöcke
+    assert.ok(has("Mix: alles aus Mathe")&&has("data-play=\"0:topic:m_read\""),"Fachauswahl mit Themenblöcken");
     await clickData("play","0:math");
     await until(()=>has("Aufgabe 1 von 8"),"Aufgabe 1");
     // das Angebot des Trainers kommt von allein, schon bei der ersten Aufgabe (Tipp-Zeit 45 Sekunden, hier 100 mal schneller)
@@ -125,13 +127,49 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.meta.schemaVersion,2);
+    assert.equal(st.meta.schemaVersion,3);
     assert.equal(st.profile.avatar.body,"m");assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.avatar.hat,1);assert.equal(st.profile.avatar.pattern,1);assert.equal(st.profile.avatar.eyes,"#6a95c4");assert.equal(st.profile.avatar.socks,"#22252b");assert.equal(st.profile.avatar.mouth,1);assert.equal(st.profile.avatar.collar,1);assert.deepEqual([st.profile.avatar.face,st.profile.avatar.eyeShape,st.profile.avatar.brows,st.profile.avatar.nose,st.profile.avatar.freckles,st.profile.avatar.glasses,st.profile.avatar.build],[3,0,2,2,1,2,2]);assert.equal(st.profile.avatar.hatColor,"#2f6fde");assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
     assert.ok(helped.reduce((n,h)=>n+h.t1,0)>=3&&helped.reduce((n,h)=>n+h.t2,0)>=1&&helped.reduce((n,h)=>n+h.n,0)>=1,"Hilfe wurde gezählt: "+JSON.stringify(helped));
     const tot=Object.values(st.stats).flatMap(t=>t.last);assert.equal(tot.length,8);
     assert.ok(tot.filter(a=>a.h).length>=1);
+
+    // ----- Themenblock als Päckchen mit Kontroll-Pfiff -----
+    await clickId("home");await until(()=>has("Hallo Emil"),"Kabine vor dem Päckchen");
+    assert.equal((html.match(/class="lg current"/g)||[]).length,1,"nur die aktuelle Liga ist groß");
+    assert.ok(has('data-lgtoggle="1"')&&has("Schnuppern möglich")&&!has("data-trial="),"andere Ligen eingeklappt");
+    await clickData("lgtoggle","1");assert.ok(has('data-trial="1"'),"Antippen klappt auf, Schnuppern bleibt möglich");
+    await clickData("fach","0:math");
+    await clickData("play","0:topic:m_zehner");
+    await until(()=>has("Päckchen · Aufgabe 1 von 5"),"Päckchen startet");
+    for(let i=0;i<5;i++){
+      await until(()=>has(`Aufgabe ${i+1} von 5`),"Päckchen-Aufgabe "+(i+1));
+      assert.ok(!has('id="ovl"')&&!has("Richtig ist")&&!has("sc-goal"),"keine Rückmeldung im Päckchen");
+      await clickData("k","1");await clickData("k","ok");
+    }
+    await until(()=>has("Kontroll-Pfiff!"),"Kontroll-Pfiff");
+    assert.ok(has("Ich habe kontrolliert")&&!has('id="ovl"')&&!has("probebox"));
+    await clickData("probe","0");assert.ok(has("probebox"),"Probe auf Tippen");
+    await clickData("edit","1");assert.ok(has("Antwort ändern")&&has("Deine Antwort war"));
+    await clickData("k","2");await clickData("k","ok");
+    await until(()=>has("Kontroll-Pfiff!")&&has("data-probe"),"zurück in der Kontrolle");
+    await clickId("ctlDone");
+    for(let i=0;i<5;i++){
+      await until(()=>has('id="ovl"')||has('id="next"'),"Auswertung "+(i+1));
+      assert.ok(has("Auswertung"));
+      if(has('id="ovl"'))await clickId("ovl");else await clickId("next");
+    }
+    await until(()=>has("Zur Kabine"),"Ergebnis des Päckchens");
+    assert.ok(has("Kontroll-Pfiff"));
+    for(let n=0;n<200&&!((await get(`/api/profiles/${id}/state`)).state.stats.m_zehner||{}).ctl;n++)await sleep(25);
+    st=(await get(`/api/profiles/${id}/state`)).state;
+    const ctl=Object.values(st.stats.m_zehner.ctl);
+    assert.equal(ctl.reduce((n,c)=>n+c.n,0),1,"ein Kontroll-Pfiff");assert.equal(ctl.reduce((n,c)=>n+c.p,0),1,"eine Probe benutzt");
+    assert.ok(st.stats.m_zehner.last.length>=5,"mindestens die fünf Antworten des Päckchens (frühere Runden können dazukommen)");
+    assert.equal(st.history.length,2);assert.equal(st.history[1].mode,"topic");assert.equal(st.history[1].topic,"m_zehner");assert.equal(st.history[1].pk,true);
+    // aktuelle Liga wählen und abgleichen (Kreisliga ist hier nicht frei, also nur das Trainingscamp wählbar)
+    assert.deepEqual(st.progress.cur,{li:null,t:0});
 
     // ----- Eltern-Bereich -----
     await clickId("home");await until(()=>has("Hallo Emil"),"Kabine");

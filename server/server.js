@@ -12,7 +12,7 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 const { createAdmin } = require("./admin");
 
-const SERVER_VERSION = "1.1.5";
+const SERVER_VERSION = "1.2.0";
 const MAX_BODY = 2 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
 const ID_RE = /^[a-z0-9][a-z0-9-]{2,39}$/; // Konto-ID: streng, keine Punkte, keine Schrägstriche

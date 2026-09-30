@@ -1,9 +1,10 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
-import {LIGEN,RIVALS} from "./content.js";
+import {LIGEN,RIVALS,BONUS_FIX} from "./content.js";
 import {GEN} from "./generators.js";
+import {packOf,gradePack} from "./check.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyTrainer,settingsOf,roundLen,trialLen} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyTrainer,applyCurrent,applyControl,settingsOf,roundLen,trialLen} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore} from "./store.js";
 import {createSync} from "./sync.js";
@@ -23,7 +24,7 @@ let globalRec;                 // {state:{pin,...}, baseRev, dirty, lastSync}
 let accounts=[];               // [{id,name}]
 let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null;
-const UI={av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
+const UI={fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
 const S=()=>cur.rec.state;
 
@@ -179,9 +180,13 @@ async function updateApp(fromSync){
 }
 
 // ================= Spielablauf =================
-function startRound(li,mode,trial){
-  const L=LIGEN[li],pool=mode==="math"?L.math:mode==="deu"?L.deu:L.math.concat(L.deu);
+// mode: math, deu, mix oder topic (Themenblock als Päckchen mit Kontroll-Pfiff, topic = Thema)
+function startRound(li,mode,trial,topic){
+  const L=LIGEN[li];
   let len=trial?trialLen(S()):roundLen(S());
+  if(mode==="topic"&&L.math.concat(L.deu).includes(topic))return startPack(li,topic);
+  if(mode==="topic")mode="mix";
+  const pool=mode==="math"?L.math:mode==="deu"?L.deu:L.math.concat(L.deu);
   if(!trial&&leagueState(S(),li)==="probe")len=Math.min(roundLen(S()),budgetOf(S(),li));
   if(trial)commit((s,c)=>applyTrial(s,c,li));
   commit((s,c)=>applySel(s,c,li));
@@ -189,18 +194,29 @@ function startRound(li,mode,trial){
   nextTask();view="play";render();window.scrollTo(0,0);
   armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
+function setTask(T){
+  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;
+  if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
+  armIdle();
+}
 function nextTask(){
   const t=nextTopic(S(),G.pool,G.last);G.last=t;
-  G.task=Object.assign({topic:t},GEN[t]());G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;
-  if(G.task.type==="choice"&&!G.task.fixed)G.task.choices=shuffle(G.task.choices);
-  armIdle();
+  setTask(Object.assign({topic:t},GEN[t]()));
+}
+// Themenblock: ein Päckchen zusammenhängender Aufgaben. Keine Rückmeldung, bis der Kontroll-Pfiff vorbei ist.
+function startPack(li,topic){
+  let tasks=packOf(topic);
+  if(leagueState(S(),li)==="probe")tasks=tasks.slice(0,Math.max(1,Math.min(tasks.length,budgetOf(S(),li))));
+  commit((s,c)=>applySel(s,c,li));
+  G={li,mode:"topic",topic,trial:false,pack:true,phase:"solve",tasks,len:tasks.length,i:0,ans:[],finals:[],helps:[],probeOpen:{},probed:{},ei:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now(),pool:[topic]};
+  setTask(tasks[0]);view="play";render();window.scrollTo(0,0);armIdle();
 }
 // ----- Trainer: Angebot nach langer Pause, gestufte Hilfe -----
 let idleT=null,autoT=null;
 const AUTO_MS=1800; // so lange bleibt das Overlay nach einer richtigen Antwort
 function armIdle(){
   clearTimeout(idleT);
-  if(view!=="play"||!G||G.done||G.offerDone||G.helpLevel>0)return;
+  if(view!=="play"||!G||G.done||G.offerDone||G.helpLevel>0||(G.pack&&G.phase!=="solve"))return;
   const secs=settingsOf(S()).hintAfter;if(!secs)return; // 0 = der Trainer meldet sich nicht von selbst
   idleT=setTimeout(()=>{
     if(view==="play"&&G&&!G.done&&!G.offerDone&&!G.helpLevel&&document.visibilityState==="visible"){G.offer=true;G.offerDone=true;render();}
@@ -216,7 +232,9 @@ function helpStep(){
 }
 const trainers=()=>[cleanTrainer(globalRec.state.trainer,1),cleanTrainer(globalRec.state.trainer2,2)];
 function answer(val){
-  if(G.done)return;const T=G.task;let ok;
+  if(G.done)return;const T=G.task;
+  if(G.pack){packAnswer(val);return;}
+  let ok;
   if(T.type==="num")ok=Number(val)===T.a;else if(T.type==="pair")ok=Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];else ok=val===T.a;
   clearTimeout(idleT);
   G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok);G.offer=false;
@@ -226,16 +244,63 @@ function answer(val){
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
   tone(ok?[523,659,784]:[220,180],ok?.12:.18,S().settings.sound);
   render();
-  if(ok){ // richtig: kurzes Overlay, dann geht es von allein weiter (Tippen aufs Overlay ist schneller)
-    const g=G;clearTimeout(autoT);
-    autoT=setTimeout(()=>{if(view==="play"&&G===g&&G.done&&G.ok)next();},AUTO_MS);
-  }
+  if(ok)autoNext();
 }
-function next(){clearTimeout(autoT);G.i++;if(G.i>=G.len){finish();return;}nextTask();render();}
+// richtig: kurzes Overlay, dann geht es von allein weiter (Tippen aufs Overlay ist schneller)
+function autoNext(){const g=G;clearTimeout(autoT);autoT=setTimeout(()=>{if(view==="play"&&G===g&&G.done&&G.ok)next();},AUTO_MS);}
+function next(){
+  clearTimeout(autoT);G.i++;
+  if(G.i>=G.len){finish();return;}
+  if(G.pack)evalShow(G.i);else{nextTask();render();}
+}
+
+// ----- Päckchen: Schreiben, Kontroll-Pfiff, Auswertung -----
+function packAnswer(val){
+  clearTimeout(idleT);
+  if(G.phase==="edit"){G.finals[G.ei]=val;G.phase="check";render();window.scrollTo(0,0);return;}
+  if(G.phase!=="solve")return;
+  const i=G.i;G.ans[i]=val;G.finals[i]=val;G.helps[i]=G.helpLevel;
+  tone([440],.06,S().settings.sound);
+  if(i+1>=G.len){G.phase="check";render();window.scrollTo(0,0);return;}
+  G.i++;setTask(G.tasks[G.i]);render();window.scrollTo(0,0);
+}
+function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;render();}
+function editAnswer(i){
+  G.phase="edit";G.ei=i;setTask(G.tasks[i]);clearTimeout(idleT);render();window.scrollTo(0,0);
+}
+// Abgeben: alle Antworten zählen jetzt (Endantworten). Mit Kontrolle gibt es Bonus für selbst gefundene Fehler.
+function finishCheck(checked){
+  clearTimeout(idleT);
+  const grade=gradePack({tasks:G.tasks,answers:G.ans,finals:G.finals,checked});
+  G.grade=grade;G.checked=checked;G.gains=[];let streak=0;
+  G.tasks.forEach((T,i)=>{
+    const ok=grade.items[i].ok;let gain=0;
+    if(ok){streak++;gain=10+(streak>=3?5:0);}else streak=0;
+    G.gains[i]=gain;
+    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0}));
+  });
+  if(checked){
+    const probes=Object.keys(G.probed).length;
+    commit((s,c)=>applyControl(s,c,{topic:G.topic,probes,fixed:grade.fixed,bonus:grade.bonus}));
+  }
+  G.pts=G.gains.reduce((a,x)=>a+x,0)+(checked?grade.bonus:0);
+  G.phase="eval";G.i=0;G.res=[];G.streak=0;
+  evalShow(0);
+}
+// Auswertung: eine Torszene je Aufgabe mit der Antwort nach der Kontrolle
+function evalShow(i){
+  const T=G.tasks[i],it=G.grade.items[i];
+  G.task=T;G.done=true;G.given=G.finals[i];G.ok=it.ok;G.fixedNow=it.fixed;G.gain=G.gains[i]+(it.fixed?BONUS_FIX:0);G.offer=false;
+  G.shot=pickShot(it.ok);G.res.push(it.ok);
+  G.hist.push({topic:T.topic,ok:it.ok,q:T.q.replace(/<[^>]+>/g,""),given:String(G.given),right:rightText(T)});
+  tone(it.ok?[523,659,784]:[220,180],it.ok?.12:.18,S().settings.sound);
+  render();window.scrollTo(0,0);
+  if(it.ok)autoNext();
+}
 function finish(){
   const c=G.res.filter(Boolean).length,n=G.len,win=!G.trial&&c/n>=.6,perfect=!G.trial&&c===n&&n>=5;
   G.bonus=(win?20:0)+(perfect?30:0);G.pts+=G.bonus;
-  const r=commit((s,cx)=>applyRoundEnd(s,cx,{li:G.li,mode:G.mode,trial:G.trial,c,n,pts:G.pts,bonus:G.bonus,dur:(Date.now()-G.t0)/1000}));
+  const r=commit((s,cx)=>applyRoundEnd(s,cx,{li:G.li,mode:G.mode,trial:G.trial,c,n,pts:G.pts,bonus:G.bonus,dur:(Date.now()-G.t0)/1000,topic:G.pack?G.topic:undefined,pk:G.pack}));
   G.newSticker=r.newSticker;UI.celebrate=r.celebrate;
   view="result";render();window.scrollTo(0,0);scheduleSync(0);
 }
@@ -409,11 +474,19 @@ function bindAdmin($){
 
 function bind(){
   const $=id=>document.getElementById(id);
-  document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const [li,m]=b.dataset.play.split(":");startRound(Number(li),m,false);});
+  document.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const [li,m,t]=b.dataset.play.split(":");UI.fach=null;startRound(Number(li),m,false,t);});
+  document.querySelectorAll("[data-fach]").forEach(b=>b.onclick=()=>{UI.fach=UI.fach===b.dataset.fach?null:b.dataset.fach;render();});
+  document.querySelectorAll("[data-lgtoggle]").forEach(b=>b.onclick=()=>{const i=b.dataset.lgtoggle;UI.lgOpen[i]=!UI.lgOpen[i];render();});
+  document.querySelectorAll("[data-cur]").forEach(b=>b.onclick=()=>{const li=Number(b.dataset.cur);commit((s,c)=>applyCurrent(s,c,li));UI.fach=null;UI.lgOpen={};render();window.scrollTo(0,0);});
+  document.querySelectorAll("[data-probe]").forEach(b=>b.onclick=()=>probeToggle(Number(b.dataset.probe)));
+  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editAnswer(Number(b.dataset.edit)));
+  if($("ctlDone"))$("ctlDone").onclick=()=>finishCheck(true);
+  if($("ctlSkip"))$("ctlSkip").onclick=()=>finishCheck(false);
+  if($("editBack"))$("editBack").onclick=()=>{G.phase="check";render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
   if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);view="home";UI.celebrate="";render();window.scrollTo(0,0);};
-  if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false);};
+  if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
   if($("coachHelp"))$("coachHelp").onclick=helpStep;
   if($("coachYes"))$("coachYes").onclick=helpStep;
@@ -450,6 +523,7 @@ function bind(){
 // Jede Eingabe schiebt das Angebot des Trainers nach hinten
 for(const ev of ["pointerdown","keydown"])document.addEventListener(ev,()=>{if(view==="play"&&G&&!G.done&&!G.offer)armIdle();},true);
 document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&&e.target.tagName==="INPUT")return;
+  if(G.pack&&G.phase==="check")return;
   if(G.done&&(e.key==="Enter"||e.key===" ")){e.preventDefault();next();return;}if(G.done)return;
   const T=G.task;if(T.type!=="num"&&T.type!=="pair")return;
   if(/^[0-9]$/.test(e.key))typeDigit(e.key);else if(e.key==="Backspace")del();else if(e.key==="Enter")ok();});

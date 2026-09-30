@@ -1,7 +1,7 @@
 // Eltern-Bereich: baut das HTML für Konten, Lernstand, Einstellungen sowie Sicherungen und System.
 // Reine Darstellung, kennt weder Speicher noch Netz. Alle Namen laufen durch esc().
 import {LIGEN,TOPICS,PROBE,MASTER_N,topicsOf} from "./content.js";
-import {total,answersOf,helpOf} from "./model.js";
+import {total,answersOf,helpOf,ctlOf} from "./model.js";
 import {leagueState,budgetOf,topicSafe,safeCount,streakDays,settingsOf,stickerCount} from "./rules.js";
 import {esc} from "./util.js";
 import {avatarSVG} from "./avatardraw.js";
@@ -12,7 +12,8 @@ export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings"
 export const ROUND_CHOICES=[6,8,10];
 export const TRIAL_CHOICES=[2,3,5,8];
 export const HINT_CHOICES=[[0,"Aus"],[20,"20 s"],[30,"30 s"],[45,"45 s"],[60,"60 s"],[90,"90 s"]];
-const MODE={math:"Mathe",deu:"Deutsch",mix:"Mix"};
+const MODE={math:"Mathe",deu:"Deutsch",mix:"Mix",topic:"Päckchen"};
+const modeLabel=h=>h.mode==="topic"&&h.topic&&TOPICS[h.topic]?`Päckchen: ${TOPICS[h.topic]}`:(MODE[h.mode]||h.mode);
 
 const pad=n=>String(n).padStart(2,"0");
 export const fmtDateTime=iso=>{const d=new Date(iso);return isNaN(d)?"unbekannt":`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} Uhr`;};
@@ -68,13 +69,19 @@ function standTab(A){
   }).join("");
   const table=`<div class="trow thead"><span>Thema</span><span>Letzte ${MASTER_N}</span><span>Gesamt</span><span>Hilfe</span></div>${rows}
     <p class="small">Letzte ${MASTER_N}: richtige Antworten der letzten ${MASTER_N} Aufgaben. Gesamt: alle Antworten. Hilfe: in wie vielen Aufgaben der Trainer half, dahinter wie oft der Tipp und die Erklärung aufgerufen wurden.</p>`;
+  // Kontrolle: je Thema Kontroll-Pfiffe, benutzte Proben, selbst korrigierte Fehler
+  let cN=0,cP=0,cF=0;
+  const ctlRows=LIGEN.map((L,i)=>topicsOf(i).map(t=>{const c=ctlOf(s,t);cN+=c.n;cP+=c.p;cF+=c.f;
+    return c.n?`<div class="krow"><span>${esc(TOPICS[t])}</span><span>${c.n}</span><span>${c.p}</span><span>${c.f}</span></div>`:"";}).join("")).join("");
+  const ctl=`<section class="panel"><h3>Kontrollieren</h3>${cN?`<p class="small"><b>Kontroll-Pfiffe:</b> ${cN} (${cP}× Probe benutzt, ${cF} Fehler selbst gefunden und verbessert). Der Kontroll-Pfiff gehört zu den Themenblöcken (Päckchen).</p>
+    <div class="krow thead"><span>Thema</span><span>Pfiffe</span><span>Proben</span><span>Selbst korrigiert</span></div>${ctlRows}`:`<p class="note">Noch kein Kontroll-Pfiff. Der Kontroll-Pfiff kommt nach jedem Themenblock (Päckchen), wenn das Kind auf „Ich habe kontrolliert“ tippt.</p>`}</section>`;
   const games=(s.history||[]).slice(-12).reverse().map(h=>{
     const L=LIGEN.find(x=>x.id===h.liga);
-    return `<div class="grow"><span>${fmtDay(h.d)}</span><span>${esc(L?L.name:h.liga)}</span><span>${esc(MODE[h.mode]||h.mode)}${h.trial?" (Schnuppern)":""}</span><span>${h.c} von ${h.n}${h.pts!==undefined?`, ${h.pts} P.`:""}</span><span>${fmtDur(h.dur)}</span></div>`;}).join("");
+    return `<div class="grow"><span>${fmtDay(h.d)}</span><span>${esc(L?L.name:h.liga)}</span><span>${esc(modeLabel(h))}${h.trial?" (Schnuppern)":""}</span><span>${h.c} von ${h.n}${h.pts!==undefined?`, ${h.pts} P.`:""}</span><span>${fmtDur(h.dur)}</span></div>`;}).join("");
   const probes=LIGEN.slice(1).map((L,k)=>{const i=k+1,st=leagueState(s,i);return st==="probe"||st==="wait"?`<span class="pill">${esc(L.name)}: Probetraining, noch ${budgetOf(s,i)} von ${PROBE}</span>`:"";}).join("");
   return `${chips(A)}<section class="panel"><h3>${esc(a.name)}</h3>${summary}${probes?`<div class="sumrow">${probes}</div>`:""}
     <p class="small"><b>Hilfe vom Trainer:</b> ${helpN} Aufgaben mit Hilfe (${t1}× Tipp, ${t2}× Erklärung). Hilfe kostet keine Punkte.</p></section>
-    <section class="panel"><h3>Themen</h3>${table}</section>
+    <section class="panel"><h3>Themen</h3>${table}</section>${ctl}
     <section class="panel"><h3>Letzte Spiele</h3>${games?`<div class="grow thead"><span>Datum</span><span>Liga</span><span>Modus</span><span>Ergebnis</span><span>Dauer</span></div>${games}`:`<p class="note">Noch kein Spiel beendet.</p>`}</section>
     <section class="panel"><h3>Trainingstage</h3>${days.length?`<div class="chipsT">${days.slice(-14).reverse().map(d=>`<span>${fmtDay(d)}</span>`).join("")}</div><p class="small">${days.length} Tage insgesamt, die letzten 14 sind aufgeführt.</p>`:`<p class="note">Noch kein Trainingstag.</p>`}</section>`;
 }

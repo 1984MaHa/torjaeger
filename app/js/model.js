@@ -1,14 +1,15 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 2):
+// Konto (profile-Stand, schemaVersion 3):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
-//   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel
-//   stats     je Thema: tot (Antworten je Gerät: a, c), last (letzte 10 Antworten {t, ok, d, h?}) und help (je Gerät: n, t1, t2)
-//   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?}
+//   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
+//   stats     je Thema: tot (Antworten je Gerät: a, c), last (letzte 10 Antworten {t, ok, d, h?}), help (je Gerät: n, t1, t2) und ctl (Kontrolle je Gerät: n Kontroll-Pfiffe, p benutzte Proben, f selbst korrigierte Fehler)
+//   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?} (pk = Päckchen, topic = Themenblock)
 //   settings  sound, t, perRound, trialN, trialDaily, hintAfter
 // Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
+// Schemaversion 2 (bis App 1.1.5) hatte weder progress.cur noch stats.ctl noch topic und pk im Verlauf.
 //
 // Zähler stehen je Gerät getrennt. Jedes Gerät schreibt nur seinen eigenen Zähler, die
 // Anzeige ist die Summe. So geht beim Zusammenführen nichts verloren und doppeltes
@@ -17,7 +18,7 @@ import {PROBE} from "./content.js";
 import {clone} from "./util.js";
 import {defaultTrainer,defaultTrainer2} from "./avatar.js";
 
-export const SCHEMA_VERSION=2;        // Konto-Stand
+export const SCHEMA_VERSION=3;        // Konto-Stand
 export const GLOBAL_SCHEMA_VERSION=2; // globale Einstellungen
 
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
@@ -30,7 +31,7 @@ export function newProfile({id,name,deviceId,now=Date.now()}){
   return{
     meta:{schemaVersion:SCHEMA_VERSION,deviceId,rev:0,updatedAt:now,createdAt:now,resetAt:0},
     profile:{id,name,t:now,avatar:null,avatarAsked:false},
-    progress:{dev:{},days:[],lg:{},sel:0},
+    progress:{dev:{},days:[],lg:{},sel:0,cur:{li:null,t:0}},
     stats:{},history:[],
     settings:defaultSettings()
   };
@@ -42,6 +43,7 @@ export function lgOf(s,id){return s.progress.lg[id]||(s.progress.lg[id]=defaultL
 export const devOf=(s,deviceId)=>s.progress.dev[deviceId]||(s.progress.dev[deviceId]={points:0,rounds:0,wins:0,stickers:0});
 export function total(s,field){let n=0;for(const k in s.progress.dev)n+=s.progress.dev[k][field]||0;return n;}
 export function helpOf(s,topic){const st=s.stats[topic];let n=0,t1=0,t2=0;if(st&&st.help)for(const k in st.help){n+=st.help[k].n||0;t1+=st.help[k].t1||0;t2+=st.help[k].t2||0;}return{n,t1,t2};}
+export function ctlOf(s,topic){const st=s.stats[topic];let n=0,p=0,f=0;if(st&&st.ctl)for(const k in st.ctl){n+=st.ctl[k].n||0;p+=st.ctl[k].p||0;f+=st.ctl[k].f||0;}return{n,p,f};}
 export function statOf(s,topic){return s.stats[topic]||(s.stats[topic]={tot:{},last:[]});}
 export function answersOf(s,topic){const st=s.stats[topic];let a=0,c=0;if(st)for(const k in st.tot){a+=st.tot[k].a||0;c+=st.tot[k].c||0;}return{a,c};}
 
@@ -55,6 +57,12 @@ const PROFILE_MIGRATIONS=[
     s.profile=Object.assign({avatar:null,avatarAsked:false},s.profile);
     s.settings=Object.assign(defaultSettings(),s.settings);
     s.meta.schemaVersion=2;
+    return s;
+  }},
+  // 2 -> 3 (App 1.2.0): gewählte aktuelle Liga (Vorgabe: die höchste freie). stats.ctl, topic und pk entstehen erst bei Nutzung.
+  {from:2,to:3,run:s=>{
+    s.progress=Object.assign({cur:{li:null,t:0}},s.progress);
+    s.meta.schemaVersion=3;
     return s;
   }}
 ];

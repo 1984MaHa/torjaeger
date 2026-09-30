@@ -1,5 +1,31 @@
 # Änderungen
 
+## 1.2.0 (Vorschau: aktuelle Liga, Trainingscamp, Spielauswahl, Sticker, Kontroll-Pfiff)
+Schemaversion 3. Ein Stand im Format 1.1.5 wird beim ersten Start ohne Verlust migriert.
+
+### Neu
+- **Fokus auf die aktuelle Liga:** Nur sie ist groß dargestellt (Themen, Fortschritt, Spielauswahl). Die anderen Ligen sind schmale Zeilen mit Name, Klasse und Status (Gesperrt, Schnuppern möglich, Probetraining, Frei, Durchgespielt), Antippen klappt sie auf, Schnuppern und „Hier spielen“ bleiben möglich. Vorgabe ist die höchste ganz freie Liga, das Kind kann jede spielbare Liga wählen (wird im Konto gespeichert und abgeglichen, der neueste Stand gewinnt).
+- **Spielauswahl je Fach:** „Mathe“ und „Deutsch“ öffnen „Mix: alles aus dem Fach“ und je einen Themenblock pro Thema (Häkchen bei „sicher“, kleiner Fortschrittsbalken). Das fachübergreifende Mix-Spiel bleibt.
+- **Kontroll-Pfiff:** Ein Themenblock ist ein Päckchen aus 3 bis 6 zusammenhängenden Aufgaben (Teilen mit Rest: gleicher Teiler, wachsender Dividend, wie auf Emils Arbeitsblatt). Keine Rückmeldung während des Päckchens. Danach die Übersicht mit „Probe“ je Aufgabe (Umkehraufgabe, Gegenaufgabe, Tauschaufgabe, Rechtschreibstrategie, nie die Lösung) und „Antwort ändern“. Erst „Ich habe kontrolliert ✓“ beendet das Päckchen, dann folgt die Auswertung mit Torszenen. Selbst gefundene und richtig verbesserte Fehler geben 8 Bonuspunkte und den Jubelruf „Selbst gefunden, stark!“. „Ohne Kontrolle abgeben“ geht auch, dann ohne Bonus. Mix-Spiele, Schnuppern und Probetraining-Spiele bleiben mit Sofort-Rückmeldung.
+- **24 verschiedene Sticker:** eigene Form, eigener Farbverlauf, eigenes Motiv (eigene SVG-Zeichnungen, keine Vereinslogos) und ein großer Jubelruf (Tooor!, Volltreffer!, Wahnsinn!, Ballzauber!, Kracher!, Knaller-Kicker!, Hammer!, Weltklasse!, Jaaa!, Supertor! und weitere). Der bisherige Fußballbegriff steht klein darunter. Gesammelte Sticker bleiben, nur das Aussehen ist neu.
+- **Eltern-Bereich:** Lernstand zeigt „Kontrollieren“ (Kontroll-Pfiffe, benutzte Proben, selbst korrigierte Fehler je Thema). Der Verlauf nennt Päckchen mit Thema.
+
+### Geändert
+- **„Bambini-Liga“ heißt jetzt „Trainingscamp“** (Stoff Klasse 2). Die interne ID `L1` bleibt, es gibt keine Datenmigration wegen des Namens, die Freischaltlogik ist unverändert.
+- Die Anzeigetafel oben zeigt die aktuelle Liga (vorher die höchste freie).
+
+### Datenmodell (Schemaversion 3)
+- Neu im Konto: `progress.cur` (`{li, t}`), `stats.<Thema>.ctl` (je Gerät `n`, `p`, `f`), `history[].topic` und `history[].pk`.
+- Migration 2 nach 3 ohne Verlust (Unbekanntes bleibt, Eingabe unverändert), migrierter Stand geht zurück auf den Server, ältere Apps können nichts mehr überschreiben (409).
+- Zusammenführen: aktuelle Liga neuester gewinnt, Kontroll-Zähler je Gerät summieren. Regeln in SPEC.md.
+
+### Technik
+- Neue Dateien: `app/js/check.js` (Päckchen, Probe, Auswertung), `app/js/stickers.js` (Sticker), beide in `FILES` von `sw.js`. Bausteine der Generatoren (`mk` in `generators.js`) und Gegenaufgaben (`inv`) für die Probe.
+- Version 1.2.0 an allen vier Stellen (`version.js`, `sw.js`, `server.js`, `package.json`).
+
+### Tests
+125 Tests (vorher 103), neu in `test/v12.test.mjs` und im Ende-zu-Ende-Test: Migration 2 nach 3 mit Fixture im Format 1.1.5, aktuelle Liga und ihr Abgleich zwischen zwei Geräten, Kontroll-Zähler summieren, Päckchen-Generatoren (Teiler gleich, Werte gültig, Dividend steigt), Kontroll-Pfiff (Bonus nur für falsch nach richtig verbessert), Probe verrät die Lösung nie, 24 verschiedene Sticker, Umbenennung (kein „Bambini“ mehr in `app/`), Startseite, Fachauswahl, Päckchen-Ansichten, Kontroll-Statistik im Eltern-Bereich, ein ganzes Päckchen mit Kontroll-Pfiff durch die echte `app.js`.
+
 ## 1.1.5
 - Behoben: Die Sprechblase der Trainer ragte über die weiße Fragenbox hinaus (Rand und Innenabstand wurden nicht zur Breite gerechnet). Lange Wörter brechen um, Bilder in Beispielen werden schmaler.
 

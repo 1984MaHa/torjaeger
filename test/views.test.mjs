@@ -27,7 +27,7 @@ test("Kabine, Konten, Spiel und Ergebnis lassen sich rendern (mit Namen mit Sond
   const s=newProfile({id:"k-abc12345",name:"<b>Emil</b>",deviceId:"d1",now:1000});
   const home=homeHTML(s,UI,env);
   assert.ok(home.includes("&lt;b&gt;Emil&lt;/b&gt;")&&!home.includes("<b>Emil</b>"),"Name muss entschärft sein");
-  assert.ok(home.includes("Zuletzt abgeglichen")&&home.includes("Bambini-Liga"));
+  assert.ok(home.includes("Zuletzt abgeglichen")&&home.includes("Trainingscamp"));
   assert.ok(accountsHTML([{id:"k-abc12345",name:"Emil"}],UI,env).includes('data-acct="k-abc12345"'));
   assert.ok(accountsHTML([],{...UI,newAcct:false,acctMsg:""},{...env,hasPin:false}).includes("Neues Konto"));
   // ein ganzes Spiel in jeder Liga und jedem Modus, jede Aufgabe wird gerendert

@@ -12,11 +12,11 @@ const v1=()=>JSON.parse(fs.readFileSync(new URL("./fixtures/state-v1.json",impor
 const clone=o=>JSON.parse(JSON.stringify(o));
 const dev=(id,t)=>({deviceId:id,now:t});
 
-test("Schema ist 2 (Konto und global)",()=>{assert.equal(SCHEMA_VERSION,2);assert.equal(GLOBAL_SCHEMA_VERSION,2);});
+test("Schema ist 3 (Konto) und 2 (global)",()=>{assert.equal(SCHEMA_VERSION,3);assert.equal(GLOBAL_SCHEMA_VERSION,2);});
 
 test("Migration 1 nach 2: Stand im Format 1.0.0 bleibt vollständig erhalten",()=>{
   const old=v1(),s=migrateProfile(old);
-  assert.equal(s.meta.schemaVersion,2);
+  assert.equal(s.meta.schemaVersion,SCHEMA_VERSION); // 1 -> 2 -> 3 in einem Zug
   // nichts verloren
   assert.equal(total(s,"points"),1800);assert.equal(total(s,"rounds"),25);assert.equal(total(s,"wins"),17);assert.equal(total(s,"stickers"),17);
   assert.deepEqual(s.progress.days,old.progress.days);assert.equal(s.progress.sel,1);

@@ -1,7 +1,7 @@
 // Spielregeln auf dem Konto-Stand: Ligen, sichere Themen, Aufstieg, Punkte, Sticker.
 // Alles reine Funktionen auf dem Stand `s` (kein DOM), damit sie getestet werden können.
 // Änderungen laufen über die apply*-Funktionen mit ctx = {deviceId, now}.
-import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,topicsOf} from "./content.js";
+import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,topicsOf} from "./content.js";
 import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings} from "./model.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
 import {todayKey} from "./util.js";
@@ -25,6 +25,13 @@ export function leagueState(s,i){
 }
 export const playable=(s,i)=>{const x=leagueState(s,i);return x==="open"||x==="probe";};
 export function topLeague(s){let t=0;LIGEN.forEach((_,i)=>{if(leagueState(s,i)!=="locked")t=i;});return t;}
+// Aktuelle Liga (groß dargestellt): die gewählte, wenn sie spielbar ist, sonst die höchste ganz freie.
+export function defaultLeague(s){let t=0;LIGEN.forEach((_,i)=>{if(leagueState(s,i)==="open")t=i;});return t;}
+export function currentLeague(s){
+  const c=s.progress.cur;
+  if(c&&Number.isInteger(c.li)&&c.li>=0&&c.li<LIGEN.length&&playable(s,c.li))return c.li;
+  return defaultLeague(s);
+}
 // Einstellungen je Konto mit Vorgaben (ältere Stände ohne Felder funktionieren weiter).
 export const settingsOf=s=>Object.assign(defaultSettings(),s.settings);
 export const roundLen=s=>{const n=settingsOf(s).perRound;return[6,8,10].includes(n)?n:ROUND;};
@@ -92,7 +99,7 @@ export function checkPromotions(s,ctx){
 }
 
 // Spielende: Bonus, Spiele, Siege, Sticker, Trainingstag, Verlauf, Aufstieg.
-export function applyRoundEnd(s,ctx,{li,mode,trial,c,n,pts,bonus,dur}){
+export function applyRoundEnd(s,ctx,{li,mode,trial,c,n,pts,bonus,dur,topic,pk}){
   const dev=devOf(s,ctx.deviceId);
   const win=!trial&&c/n>=.6;
   dev.points+=bonus;dev.rounds++;
@@ -103,6 +110,7 @@ export function applyRoundEnd(s,ctx,{li,mode,trial,c,n,pts,bonus,dur}){
   const msg=checkPromotions(s,ctx);
   const h={id:ctx.now+"-"+ctx.deviceId,t:ctx.now,d,liga:LIGEN[li].id,mode,trial:!!trial,c,n,pts};
   if(Number.isFinite(dur)&&dur>=0)h.dur=Math.round(dur); // Dauer in Sekunden
+  if(topic)h.topic=topic;if(pk)h.pk=true; // Themenblock als Päckchen
   s.history.push(h);
   s.history=s.history.slice(-200);
   touch(s,ctx);
@@ -139,6 +147,21 @@ export function applyTrainer(g,ctx,{name,look},which=1){
   g.updatedAt=ctx.now;
 }
 export function applySel(s,ctx,li){s.progress.sel=li;touch(s,ctx);}
+// Das Kind wählt die aktuelle Liga (nur spielbare). Der neueste Stand gewinnt beim Zusammenführen.
+export function applyCurrent(s,ctx,li){
+  if(!Number.isInteger(li)||li<0||li>=LIGEN.length||!playable(s,li))return false;
+  s.progress.cur={li,t:ctx.now};touch(s,ctx);return true;
+}
+// Kontroll-Pfiff eines Päckchens: je Thema Pfiffe, benutzte Proben und selbst korrigierte Fehler (Zähler je Gerät).
+// bonus: Punkte für selbst gefundene Fehler. Nur Stand und Zähler, die Antworten selbst laufen über applyAnswer.
+export function applyControl(s,ctx,{topic,probes=0,fixed=0,bonus=0}){
+  const st=statOf(s,topic),dev=ctx.deviceId;st.ctl=st.ctl||{};
+  const c=st.ctl[dev]||(st.ctl[dev]={n:0,p:0,f:0});
+  c.n++;c.p+=Math.max(0,probes|0);c.f+=Math.max(0,fixed|0);
+  if(bonus>0)devOf(s,dev).points+=bonus;
+  touch(s,ctx);
+}
+export const fixBonus=fixed=>fixed*BONUS_FIX;
 
 // Zurücksetzen: Spielstand leer, Name und Einstellungen bleiben. resetAt sorgt dafür, dass der leere
 // Stand auf allen Geräten gewinnt (siehe merge.js).

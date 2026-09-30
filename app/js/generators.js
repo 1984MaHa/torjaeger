@@ -19,6 +19,21 @@ const PERF=[["laufen","ich bin gelaufen","ich habe gelaufen","ich bin gelauft"],
 const REDE=[["Emil","sagt","Ich spiele heute im Tor","."],["Der Trainer","ruft","Alle kommen zu mir","."],["Mama","fragt","Hast du deine Schuhe dabei","?"],["Tim","fragt","Wann beginnt das Spiel","?"],["Die Trainerin","sagt","Heute üben wir Pässe","."],["Emil","ruft","Gib mir den Ball","!"]];
 const STEIG=[["schnell","schneller","am schnellsten","schnellerer"],["groß","größer","am größten","großer"],["gut","besser","am besten","guter"],["viel","mehr","am meisten","vieler"],["hoch","höher","am höchsten","hocher"],["stark","stärker","am stärksten","starker"],["klein","kleiner","am kleinsten","kleinerer"],["laut","lauter","am lautesten","lautster"],["weit","weiter","am weitesten","weiterer"]];
 
+// Bausteine für Aufgaben, die auch als Päckchen (check.js) vorkommen. inv: Gegenaufgabe für die Probe (check.js).
+export const mk={
+  rest(a,b){const q=Math.floor(a/b),r=a%b;
+    return{type:"pair",q:`${a} : ${b} = ? <mark>Rest</mark> ?`,vis:groupsSVG(a,b),a:[q,r],labels:["Ergebnis","Rest"],inv:{op:"rest",y:b},
+      ex:`${q} · ${b} = ${q*b}. Bis ${a} fehlen noch ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`,hint:`Suche die größte Zahl aus der ${b}er-Reihe, die in ${a} passt. Der Rest muss kleiner als ${b} sein.`};},
+  einmaleins(a,b,div){
+    if(!div)return{type:"num",q:`${a} · ${b} = ?`,a:a*b,inv:{op:"*",y:b},ex:`${a} · ${b} = ${a*b}. Tipp: ${a} · ${b} ist dasselbe wie ${b} · ${a}.`};
+    return{type:"num",q:`${a*b} : ${b} = ?`,a:a,inv:{op:"/",y:b},ex:`${a} · ${b} = ${a*b}, also ${a*b} : ${b} = ${a}.`};},
+  plus(a,b,minus){
+    return minus?{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Rechne Stelle für Stelle: ${a} − ${b} = ${a-b}.`}
+      :{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`Rechne Stelle für Stelle: ${a} + ${b} = ${a+b}.`};},
+  mult(a,b){const z=a-a%10,e=a%10;return{type:"num",q:`${a} · ${b} = ?`,a:a*b,inv:{op:"*",y:b},ex:`${z} · ${b} = ${z*b} und ${e} · ${b} = ${e*b}. Zusammen ${a*b}.`,hint:`Zerlege ${a} in ${z} und ${e}.`};},
+  div(b,q){const a=b*q,big=Math.floor(q/10)*10*b;return{type:"num",q:`${a} : ${b} = ?`,a:q,inv:{op:"/",y:b},ex:`${big} : ${b} = ${big/b} und ${a-big} : ${b} = ${(a-big)/b}. Zusammen ${q}.`,hint:`Zerlege ${a} in Zahlen, die gut durch ${b} gehen.`};}
+};
+
 const WA_HINT="<b>Nomen:</b> Passt der, die oder das davor?<br><b>Verb:</b> Passt ich, er oder wir davor?<br><b>Adjektiv:</b> Passt es zwischen der und ein Nomen, wie „der ___ Ball“?";
 export const GEN={
   // ---- Klasse 2 ----
@@ -31,14 +46,14 @@ export const GEN={
       ex:`Gelegt ist ${n}. ${dazu?"Dazu":"Weg"} bei Z: ${valid[0]}. ${dazu?"Dazu":"Weg"} bei E: ${valid[1]}.`};},
   m_zehner(){const unit=Math.random()<.6?"Zehner":"Einer",plus=Math.random()<.55,k=R(1,4);let a,res;
     if(unit==="Zehner"){a=plus?R(11,99-10*k):R(10*k+1,98);res=plus?a+10*k:a-10*k;}else{a=plus?R(11,95-k):R(k+10,98);res=plus?a+k:a-k;}
-    const op=plus?"+":"−",v=unit==="Zehner"?10*k:k;return{type:"num",q:`${a} ${op} ${k} <mark>${unit}</mark> = ?`,a:res,ex:`${k} ${unit} sind ${v}. ${a} ${op} ${v} = ${res}.`};},
+    const op=plus?"+":"−",v=unit==="Zehner"?10*k:k;return{type:"num",q:`${a} ${op} ${k} <mark>${unit}</mark> = ?`,a:res,inv:{op:plus?"+":"-",y:v},ex:`${k} ${unit} sind ${v}. ${a} ${op} ${v} = ${res}.`};},
   m_mal(){let r=R(2,5),c=R(2,6);if(r===c)c=c===6?5:c+1;const ex=`${r} Reihen mit je ${c} Punkten: ${r} · ${c} = ${r*c}.`;
-    if(Math.random()<.5){const right=`${r} · ${c}`;return{type:"choice",q:"Welche <mark>Malaufgabe</mark> passt zum Bild? Zähle die Reihen.",vis:fieldSVG(r,c),choices:[right,`${r} + ${c}`,`${r+1} · ${c}`,`${r} · ${c+1}`],a:right,ex};}
-    return{type:"num",q:"Wie viele Punkte sind es? Rechne mit <mark>mal</mark>.",vis:fieldSVG(r,c),a:r*c,ex};},
+    if(Math.random()<.5){const right=`${r} · ${c}`;return{type:"choice",q:"Welche <mark>Malaufgabe</mark> passt zum Bild? Zähle die Reihen.",vis:fieldSVG(r,c),choices:[right,`${r} + ${c}`,`${r+1} · ${c}`,`${r} · ${c+1}`],a:right,probeText:"Zähle die Reihen und die Punkte in jeder Reihe noch einmal. Passt deine Malaufgabe genau zum Bild?",ex};}
+    return{type:"num",q:"Wie viele Punkte sind es? Rechne mit <mark>mal</mark>.",vis:fieldSVG(r,c),a:r*c,probeText:`Rechne die Tauschaufgabe: ${c} · ${r} = ? Kommt dasselbe heraus wie bei deiner Antwort?`,ex};},
   m_rechnen(){const t=R(0,2);let a,b;
-    if(t===0){do{a=R(12,88);b=R(3,9);}while(a%10+b<10||a+b>99);const s=10-a%10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`Erst bis zum Zehner: ${a} + ${s} = ${a+s}. Dann noch ${b-s}: ${a+b}.`};}
-    if(t===1){do{a=R(21,95);b=R(3,9);}while(a%10>=b);const s=a%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst zum Zehner: ${a} − ${s} = ${a-s}. Dann noch ${b-s} weg: ${a-b}.`};}
-    a=R(40,95);b=R(11,a-5);const bz=b-b%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst die Zehner: ${a} − ${bz} = ${a-bz}. Dann die Einer: ${a-bz} − ${b%10} = ${a-b}.`};},
+    if(t===0){do{a=R(12,88);b=R(3,9);}while(a%10+b<10||a+b>99);const s=10-a%10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`Erst bis zum Zehner: ${a} + ${s} = ${a+s}. Dann noch ${b-s}: ${a+b}.`};}
+    if(t===1){do{a=R(21,95);b=R(3,9);}while(a%10>=b);const s=a%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst zum Zehner: ${a} − ${s} = ${a-s}. Dann noch ${b-s} weg: ${a-b}.`};}
+    a=R(40,95);b=R(11,a-5);const bz=b-b%10;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst die Zehner: ${a} − ${bz} = ${a-bz}. Dann die Einer: ${a-bz} − ${b%10} = ${a-b}.`};},
   d_wortart(){const k=R(0,2),w=pick([NOMEN,VERBEN,ADJ][k]),names=["Nomen","Verb","Adjektiv"];
     return{type:"choice",fixed:true,q:`Welche Wortart ist <b>${w[0]}</b>?`,choices:names,a:names[k],ex:`${names[k]}-Probe: „${w[1]}“ passt.`,hint:WA_HINT};},
   d_verl(){const v=pick(VERL);return{type:"choice",fixed:true,q:`Welcher Buchstabe fehlt? <b>${v[0].replace("_","<mark>_</mark>")}</b>`,choices:[v[1],v[2]].sort(),a:v[1],
@@ -47,19 +62,16 @@ export const GEN={
     return{type:"tap",q:"Wo ist der erste Satz zu Ende? Tippe auf das Wort, nach dem der <mark>Punkt</mark> kommt.",words:w,a:w1.length-1,ex:`Richtig ist: ${p[0]}. ${p[1]}.`,
       hint:"Lies laut. Wo deine Stimme nach unten geht, ist der Satz zu Ende. Nach dem Punkt geht es groß weiter.",tapLabel:"Punkt setzen!",mark:true};},
   // ---- Klasse 3 ----
-  m3_rest(){const b=R(2,9),q=R(1,9),r=Math.random()<.8?R(1,b-1):0,a=b*q+r;
-    return{type:"pair",q:`${a} : ${b} = ? <mark>Rest</mark> ?`,vis:groupsSVG(a,b),a:[q,r],labels:["Ergebnis","Rest"],
-      ex:`${q} · ${b} = ${q*b}. Bis ${a} fehlen noch ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`,hint:`Suche die größte Zahl aus der ${b}er-Reihe, die in ${a} passt. Der Rest muss kleiner als ${b} sein.`};},
-  m3_1x1(){const a=R(2,10),b=R(2,10);if(Math.random()<.5)return{type:"num",q:`${a} · ${b} = ?`,a:a*b,ex:`${a} · ${b} = ${a*b}. Tipp: ${a} · ${b} ist dasselbe wie ${b} · ${a}.`};
-    return{type:"num",q:`${a*b} : ${b} = ?`,a:a,ex:`${a} · ${b} = ${a*b}, also ${a*b} : ${b} = ${a}.`};},
+  m3_rest(){const b=R(2,9),q=R(1,9),r=Math.random()<.8?R(1,b-1):0;return mk.rest(b*q+r,b);},
+  m3_1x1(){const a=R(2,10),b=R(2,10);return mk.einmaleins(a,b,Math.random()>=.5);},
   m3_htz(){const n=R(101,999),H=Math.floor(n/100),Z=Math.floor(n/10)%10,E=n%10,t=R(0,2);
     if(t===2)return{type:"num",q:`${H} <mark>H</mark> + ${Z} <mark>Z</mark> + ${E} <mark>E</mark> = ?`,a:n,ex:`${H} Hunderter, ${Z} Zehner und ${E} Einer sind ${n}.`};
     const w=t===0?"Hunderter":"Zehner";return{type:"num",q:`Wie viele <mark>${w}</mark> stehen an der Stelle in <b>${n}</b>?`,a:t===0?H:Z,ex:`${n} = ${H} H + ${Z} Z + ${E} E.`};},
   m3_plus(){const t=R(0,3);let a,b;
-    if(t===0){a=R(1,6)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(a+b>999)b=100;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`Erst die Hunderter, dann die Zehner: ${a} + ${b} = ${a+b}.`};}
-    if(t===1){a=R(4,9)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(b>a)b=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst die Hunderter weg, dann die Zehner: ${a} − ${b} = ${a-b}.`};}
-    if(t===2){a=R(100,899);b=R(1,9)*10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,ex:`${b/10} Zehner dazu: ${a} + ${b} = ${a+b}.`};}
-    a=R(1,9)*100;b=R(1,9)*10+R(1,9);if(b>a)a+=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,ex:`Erst ${b-b%10} weg: ${a-(b-b%10)}. Dann noch ${b%10} weg: ${a-b}.`};},
+    if(t===0){a=R(1,6)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(a+b>999)b=100;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`Erst die Hunderter, dann die Zehner: ${a} + ${b} = ${a+b}.`};}
+    if(t===1){a=R(4,9)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(b>a)b=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst die Hunderter weg, dann die Zehner: ${a} − ${b} = ${a-b}.`};}
+    if(t===2){a=R(100,899);b=R(1,9)*10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`${b/10} Zehner dazu: ${a} + ${b} = ${a+b}.`};}
+    a=R(1,9)*100;b=R(1,9)*10+R(1,9);if(b>a)a+=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst ${b-b%10} weg: ${a-(b-b%10)}. Dann noch ${b%10} weg: ${a-b}.`};},
   m3_sach(){const b=R(3,6);let q=R(3,8),r=R(1,b-1),a=b*q+r;
     const S1=[`${a} Kinder fahren zum Turnier. In ein Auto passen ${b} Kinder. Wie viele Autos braucht man?`,q+1,`${a} : ${b} = ${q} Rest ${r}. Die ${r} übrigen Kinder brauchen auch ein Auto, also ${q+1} Autos.`],
       S2=[`Emil verteilt ${a} Sticker gerecht an ${b} Freunde. Wie viele Sticker bekommt jeder?`,q,`${a} : ${b} = ${q} Rest ${r}. Jeder bekommt ${q}, ${r} Sticker bleiben übrig.`],
@@ -79,8 +91,8 @@ export const GEN={
   // ---- Klasse 4 ----
   m4_stelle(){const n=R(10000,999999),names=[["Zehntausender",10000],["Tausender",1000],["Hunderter",100]],p=pick(names),dg=Math.floor(n/p[1])%10;
     return{type:"num",q:`Welche Ziffer steht an der <mark>${p[0]}</mark>-Stelle von <b>${fmt(n)}</b>?`,a:dg,ex:`In ${fmt(n)} steht an der ${p[0]}-Stelle die ${dg}.`,hint:"Von rechts: Einer, Zehner, Hunderter, Tausender, Zehntausender, Hunderttausender."};},
-  m4_mult(){const a=R(12,99),b=R(3,9),z=a-a%10,e=a%10;return{type:"num",q:`${a} · ${b} = ?`,a:a*b,ex:`${z} · ${b} = ${z*b} und ${e} · ${b} = ${e*b}. Zusammen ${a*b}.`,hint:`Zerlege ${a} in ${z} und ${e}.`};},
-  m4_div(){const b=R(2,9),q=R(11,40),a=b*q,big=Math.floor(q/10)*10*b;return{type:"num",q:`${a} : ${b} = ?`,a:q,ex:`${big} : ${b} = ${big/b} und ${a-big} : ${b} = ${(a-big)/b}. Zusammen ${q}.`,hint:`Zerlege ${a} in Zahlen, die gut durch ${b} gehen.`};},
+  m4_mult(){return mk.mult(R(12,99),R(3,9));},
+  m4_div(){return mk.div(R(2,9),R(11,40));},
   m4_runden(){const n=R(1001,9989),down=Math.floor(n/100)*100,up=down+100,right=n%100>=50?up:down,wrong=right===up?down:up,z=Math.round(n/10)*10;
     const ch=[fmt(right),fmt(wrong)];if(z!==right&&z!==wrong)ch.push(fmt(z));
     return{type:"choice",q:`Runde <b>${fmt(n)}</b> auf <mark>Hunderter</mark>.`,choices:ch,a:fmt(right),ex:`Die Zehnerziffer ist ${Math.floor(n/10)%10}. ${n%100>=50?"Ab 5 wird aufgerundet":"Unter 5 wird abgerundet"}: ${fmt(right)}.`,hint:"Schau auf die Ziffer rechts neben den Hundertern. 0 bis 4: abrunden. 5 bis 9: aufrunden."};},

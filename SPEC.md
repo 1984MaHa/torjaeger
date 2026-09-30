@@ -1,4 +1,4 @@
-# Torjäger-Liga: gebauter Stand (Version 1.1.5)
+# Torjäger-Liga: gebauter Stand (Version 1.2.0)
 
 Diese Datei beschreibt, was der Code heute tut. Absicht, Entscheidungen und Roadmap stehen im Vault (`Projects/Torjaeger/`).
 
@@ -12,13 +12,31 @@ Browser (Service Worker, IndexedDB)  <──HTTPS, /api──>  server/server.js
 Es gibt zwei Betriebsarten aus demselben Repo: **Live** (Branch `main`, Port 8080) und **Vorschau** (Branch `preview`, Port 8081, eigene Daten, Band VORSCHAU), siehe Abschnitt Vorschau.
 
 ## Spiel
-- Ligen: Bambini-Liga (Klasse 2), Kreisliga (Klasse 3), Bezirksliga (Klasse 4). Themen und Generatoren wie im Prototyp (`content.js`, `generators.js`).
-- Ein Spiel hat je Konto 6, 8 (Vorgabe) oder 10 Aufgaben (Mathe, Deutsch oder Mix). Richtig gibt 10 Punkte, ab der dritten richtigen Antwort in Folge 15. Sieg ab 60 Prozent gibt 20 Bonuspunkte und einen Sticker, ein perfektes Spiel (mindestens 5 Aufgaben) zusätzlich 30.
+- Ligen: **Trainingscamp** (Klasse 2, früher „Bambini-Liga“, interne ID `L1` unverändert), Kreisliga (Klasse 3), Bezirksliga (Klasse 4). Themen und Generatoren wie im Prototyp (`content.js`, `generators.js`).
+- **Aktuelle Liga:** Die Startseite stellt nur die aktuelle Liga groß dar (Themen mit Häkchen, Fortschrittsbalken, Spielauswahl). Jede andere Liga ist eine schmale Zeile mit Name, Klasse und Status (Gesperrt, Schnuppern möglich, Probetraining: noch n Aufgaben, Wartet auf Freigabe, Frei, Durchgespielt). Antippen klappt sie auf (Zustand nur in der Ansicht, `UI.lgOpen`): frei oder Probetraining zeigt „Hier spielen“ (macht sie zur aktuellen Liga), gesperrt zeigt den Freispiel-Hinweis und Schnuppern. Vorgabe für „aktuell“ ist die höchste ganz freie Liga (`defaultLeague`). Das Kind kann jede spielbare Liga wählen (`applyCurrent`, gespeichert als `progress.cur`). Eine gewählte Liga, die nicht mehr spielbar ist (zum Beispiel wieder gesperrt), gilt nicht, dann greift die Vorgabe (`currentLeague`).
+- Ein Spiel hat je Konto 6, 8 (Vorgabe) oder 10 Aufgaben. Richtig gibt 10 Punkte, ab der dritten richtigen Antwort in Folge 15. Sieg ab 60 Prozent gibt 20 Bonuspunkte und einen Sticker, ein perfektes Spiel (mindestens 5 Aufgaben) zusätzlich 30.
+- **Spielauswahl:** „Mathe“ und „Deutsch“ öffnen darunter „Mix: alles aus Mathe“ (bzw. Deutsch, adaptiv, Sofort-Rückmeldung wie bisher) und je einen **Themenblock** pro Thema der Liga (Name, Häkchen bei „sicher“, kleiner Balken der letzten 10 Antworten). Das fachübergreifende **Mix-Spiel** und das Schnuppern bleiben wie bisher mit Sofort-Rückmeldung. Themenblöcke zählen für Punkte, Sticker, Statistik (`stats`, `history`) und Aufstieg wie jedes Spiel.
 - Ein Thema ist sicher, wenn von den letzten 10 Antworten mindestens 8 richtig sind. Schwache Themen kommen öfter dran.
 - Aufstieg: Sind alle Themen einer Liga sicher, beginnt in der nächsten Liga das Probetraining mit 20 Aufgaben. Danach geben die Eltern per PIN ganz frei. Sie können auch früher freigeben oder wieder sperren.
 - Schnuppern: je Konto 2, 3 (Vorgabe), 5 oder 8 Aufgaben, einmal pro Tag (abschaltbar), in gesperrten Ligen bis 2 Ligen über der höchsten freien.
 - Tiefere Ligen sind immer spielbar.
 - Konten: schlichte Auswahl „Wer spielt?“ mit Avatar-Kacheln. Neues Konto nur mit Eltern-PIN (beim allerersten Konto wird die PIN festgelegt). Die PIN (4 Ziffern) gilt für alle Konten und Geräte.
+
+### Päckchen und Kontroll-Pfiff (Themenblock)
+Anlass war ein Hausaufgabenblatt mit Päckchen zu je 3 Aufgaben (gleicher Teiler, wachsender Dividend) und dem Feld „Ich habe kontrolliert!“. Ein Themenblock wird deshalb als **Päckchen** gespielt (`check.js`, Steuerung in `app.js`):
+1. **Schreiben:** 3 bis 6 zusammenhängende Aufgaben (`packLen`: Teilen mit Rest 6, Einmaleins 5, Rechnen bis 1000 und Malnehmen und Teilen groß 4, sonst 5). Keine Rückmeldung richtig oder falsch, kein Spielstand im Kopf der Ansicht, die Taste heißt „Eintragen“. Die Trainer-Hilfe ist wie sonst da.
+2. **Kontroll-Pfiff:** Übersicht aller Aufgaben mit der eigenen Antwort. Je Aufgabe **Probe** (klappt die Probe auf) und „Antwort ändern“ (Aufgabe mit Zahlenblock, die eigene Eingabe ist vorher leer). Noch keine Rückmeldung.
+3. **Abgabe:** „Ich habe kontrolliert ✓“ (mit Kontrolle) oder „Ohne Kontrolle abgeben“ (kein Kontroll-Bonus, keine Kontroll-Statistik). Erst jetzt zählen alle Endantworten (`applyAnswer` je Aufgabe, Punkte 10, ab der dritten richtigen in Folge 15).
+4. **Auswertung:** je Aufgabe die Torszene wie im normalen Spiel (richtig: Overlay und automatisch weiter, falsch: Fehlschuss, Erklärung, Weiter). Eine selbst gefundene Korrektur zeigt „Selbst gefunden, stark!“.
+5. **Bonus:** Jede Aufgabe, die zuerst falsch war und nach der Kontrolle richtig ist, gibt `BONUS_FIX` = 8 Bonuspunkte (weniger als ein Tor, zusätzlich zu den 10 Punkten für die richtige Endantwort). Unverändert falsche Antworten und richtig-nach-falsch zählen normal, dafür gibt es keinen Bonus (`gradePack`).
+6. **Statistik:** je Konto und Thema `stats.<Thema>.ctl` je Gerät `{n: Kontroll-Pfiffe, p: benutzte Proben (je Aufgabe einmal), f: selbst korrigierte Fehler}`. Der Eltern-Bereich zeigt sie unter Lernstand („Kontrollieren“). Im Verlauf tragen Päckchen `mode: "topic"`, `topic` und `pk: true`.
+
+**Generatoren:** Teilen mit Rest (gleicher Teiler, Dividend steigt in Schritten von 1 bis 3, der Rest wächst oder springt zurück), Einmaleins (gleiche Reihe, die andere Zahl steigt, Malnehmen oder Teilen), Rechnen bis 1000 (gleiche Zahl dazu oder weg, die andere steigt in Zehner- oder Hunderterschritten), Malnehmen groß (gleicher Faktor, Zehnerschritte), Teilen groß (gleicher Teiler, Ergebnis steigt um 1). Alle anderen Themen bekommen verschiedene Aufgaben desselben Generators. Päckchen kommen nicht im Mix vor.
+
+**Probe** (`probeOf`): rechnet mit der Antwort des Kindes und nennt nie die Lösung. Teilen mit Rest: „Teiler · Ergebnis + Rest = ?“, Mal: „Antwort : Zahl = ?“ (Umkehraufgabe), Geteilt: „Antwort · Zahl = ?“, Plus: „Antwort − Zahl = ?“, Minus: „Antwort + Zahl = ?“ (Gegenaufgabe), Punktefeld: Tauschaufgabe. Deutsch: Strategie ohne Lösungswörter (Verlängern, Ableiten, Artikelprobe, Satzmelodie, Frageprobe, Laut sprechen). Ein Test prüft, dass die Lösung im Probetext nie vorkommt (außer als Zahl aus der Aufgabe selbst).
+
+### Sammelalbum (`stickers.js`)
+24 Sticker, jeder mit eigener Form (24 verschiedene, zum Beispiel rund, Stern, Schild, Wimpel, Sechseck, Banner), eigenem Farbverlauf und eigenem Motiv (eigene SVG-Zeichnungen, keine Vereinslogos). Groß steht ein Jubelruf („Tooor!“, „Volltreffer!“, „Wahnsinn!“, „Ballzauber!“, „Kracher!“, „Knaller-Kicker!“, „Hammer!“, „Weltklasse!“, „Jaaa!“, „Supertor!“ und 14 weitere), klein darunter der bisherige Fußballbegriff (`STICKERS` in `content.js`). Die Nummer eines Stickers ist weiter der Index, gesammelte Sticker behalten also ihren Platz (nur das Aussehen ist neu). Ein Test prüft, dass Jubelruf, Form, Verlauf, Motiv und SVG je 24 verschieden sind.
 
 ### Avatar (Spieler)
 - `avatar.js` (Daten, Paletten, Vorlagen, Prüfung `cleanLook`), `avatardraw.js` (SVG), `avatarui.js` (Baukasten), keine externen Ressourcen, keine bekannten Figuren oder Vereinslogos. Stil: Comic mit dunkler Kontur, Schattierung und Glanzlichtern, natürlichere Proportionen: eiförmiger Kopf mit Wangen und Kinn (kein Kreis), Kopf im Verhältnis kleiner, mandelförmige Augen, Nase, Lippen, Ohren, Hände mit Daumen.
@@ -37,15 +55,15 @@ Es gibt zwei Betriebsarten aus demselben Repo: **Live** (Branch `main`, Port 808
 - Ist eine Aufgabe länger als die Tipp-Zeit ohne Eingabe (Vorgabe 45 Sekunden, je Konto 20 bis 90 oder aus) offen, bietet Trainer oder Trainerin (abwechselnd) freundlich einen Tipp an (einmal je Aufgabe, auch bei der ersten Aufgabe einer Runde). Jede Eingabe schiebt die Zeit nach hinten.
 - Hilfe kostet keine Punkte. Genutzt wird je Thema gezählt (`stats.<Thema>.help`) und in den letzten 10 Antworten vermerkt (`h`). Der Lernstand im Eltern-Bereich zeigt es.
 
-## Datenmodell (schemaVersion 2)
+## Datenmodell (schemaVersion 3)
 Konto-Stand (`data/profiles/<id>.json`, Feld `state`):
 | Bereich | Inhalt |
 |---|---|
 | `meta` | `schemaVersion`, `deviceId` (letzter Schreiber), `rev` (Server-Revision), `updatedAt`, `createdAt`, `resetAt` |
 | `profile` | `id`, `name`, `t`, `avatar` (Aussehen, siehe unten, oder `null`, mit eigenem `t`), `avatarAsked` |
-| `progress` | `dev` (je Gerät `points`, `rounds`, `wins`, `stickers`), `days` (Trainingstage), `lg` (je Liga `probe`, `spent`, `open`, `trial`, `t`), `sel` |
-| `stats` | je Thema `tot` (je Gerät `a`, `c`), `last` (letzte 10 Antworten `{t, ok, d, h?}`) und `help` (je Gerät `n` Aufgaben mit Hilfe, `t1` Tipps, `t2` Erklärungen) |
-| `history` | je Spiel `{id, t, d, liga, mode, trial, c, n, pts, dur?}` (`dur` in Sekunden), höchstens 200 |
+| `progress` | `dev` (je Gerät `points`, `rounds`, `wins`, `stickers`), `days` (Trainingstage), `lg` (je Liga `probe`, `spent`, `open`, `trial`, `t`), `sel` (zuletzt gespielte Liga), `cur` (`{li, t}`: vom Kind gewählte aktuelle Liga, `li` ist `null` bis zur ersten Wahl) |
+| `stats` | je Thema `tot` (je Gerät `a`, `c`), `last` (letzte 10 Antworten `{t, ok, d, h?}`), `help` (je Gerät `n` Aufgaben mit Hilfe, `t1` Tipps, `t2` Erklärungen) und `ctl` (je Gerät `n` Kontroll-Pfiffe, `p` benutzte Proben, `f` selbst korrigierte Fehler) |
+| `history` | je Spiel `{id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?}` (`dur` in Sekunden, `mode` ist `math`, `deu`, `mix` oder `topic`, `topic` und `pk: true` bei einem Päckchen), höchstens 200 |
 | `settings` | `sound`, `t`, `perRound` (6, 8, 10), `trialN` (Schnupper-Aufgaben), `trialDaily` (nur einmal pro Tag), `hintAfter` (Tipp-Zeit in Sekunden, 0 = aus) |
 
 `profile.avatar`: `{v, body (j oder m), hair (Index in der Liste der Auswahl, der letzte Eintrag ist Ohne Haare), hairColor, hat (0 bis 5), hatColor, eyes, pattern (0 bis 3), collar (0 oder 1), mouth (0 oder 1), socks, face (0 bis 4), nose, brows, eyeShape, glasses (je 0 bis 2), freckles (0 oder 1), build (0 bis 2), skin, shirt, shorts, boots (Hexfarben), number, shirtName, team, c1, c2, t}`. Ein Avatar ohne `body` (frühe Vorschau) gilt als Junge. Alle Werte laufen beim Lesen durch `cleanLook` (falsche Werte werden ersetzt, Texte bereinigt).
@@ -63,8 +81,9 @@ Dateiformat auf dem Server: `{id, name, rev, savedAt, device, schemaVersion, sta
 - Stufe 0 ist das Prototypformat (localStorage-Schlüssel `torjaeger`, Struktur ohne `meta`): `migratePrototype` überführt es ohne Verlust und erhält unbekannte Felder. Die App importiert keine Prototyp-Stände, die Funktion ist für Tests und Werkzeuge da.
 - Stufe 1 nach 2 (App 1.1.0, Stand im Format 1.0.0 wie Emils echter Stand): ergänzt `profile.avatar` (`null`) und `profile.avatarAsked` (`false`) und füllt die neuen `settings`-Felder mit Vorgaben (vorhandene Werte wie `sound` und `t` bleiben). `stats.help` und `history.dur` entstehen erst bei Nutzung. Global: `trainer` und `trainer2` bekommen die Vorgabe (ein nie geänderter Eintrag mit `t` 0 wird immer durch die aktuelle Vorgabe ersetzt).
 - Ein migrierter Stand geht beim nächsten Abgleich zurück auf den Server (Konto und global), damit dort die neue Schemaversion steht und ältere Apps nichts überschreiben.
+- Stufe 2 nach 3 (App 1.2.0, Stand im Format 1.1.5): ergänzt `progress.cur` (`{li: null, t: 0}`, also die Vorgabe „höchste freie Liga“). `stats.<Thema>.ctl`, `history[].topic` und `history[].pk` entstehen erst bei Nutzung. Alles Vorhandene bleibt, Unbekanntes auch. Ein Stand im Format 1.0.0 läuft in einem Zug 1 nach 2 nach 3. Global bleibt die Schemaversion 2.
 - Neue Stufen: Eintrag in `PROFILE_MIGRATIONS` und `SCHEMA_VERSION` erhöhen. Ein Stand mit neuerer Schemaversion als die App kennt wird nie verändert, die App lädt sich neu.
-- Test: `test/schema2.test.mjs` mit `test/fixtures/state-v1.json` (Format 1.0.0).
+- Tests: `test/schema2.test.mjs` mit `test/fixtures/state-v1.json` (Format 1.0.0), `test/v12.test.mjs` mit `test/fixtures/state-v2.json` (Format 1.1.5, Schema 2).
 
 ## Abgleich (`sync.js`)
 1. Jede Änderung wird sofort in IndexedDB gespeichert (nach jeder beantworteten Aufgabe, nach Hilfe, nach Spielende, bei Freigaben und Einstellungen).
@@ -78,7 +97,8 @@ Dateiformat auf dem Server: `{id, name, rev, savedAt, device, schemaVersion, sta
 ### Regeln beim Zusammenführen (`merge.js`, reine Funktion)
 - Zähler: je Gerät der größere Wert, angezeigt wird die Summe. Das entspricht der Summe der Zuwächse je Gerät, ist unabhängig von der Reihenfolge und zählt bei wiederholtem Zusammenführen nichts doppelt.
 - Je Thema: Antwortzähler je Gerät wie oben. Die letzten 10 Antworten sind die 10 mit den neuesten Zeitstempeln aus der Vereinigung beider Stände.
-- **Tipp-Zähler** (`stats.<Thema>.help`): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler). Themen ohne Hilfe bekommen kein leeres Feld.
+- **Tipp-Zähler** (`stats.<Thema>.help`) und **Kontroll-Zähler** (`stats.<Thema>.ctl`): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler). Themen ohne Hilfe oder Kontrolle bekommen kein leeres Feld.
+- **Aktuelle Liga** (`progress.cur`): der neuere Stand gewinnt (eigener Zeitstempel `cur.t`, bei Gleichstand die Textform). Hat nur ein Stand eine Wahl, bleibt sie. Die Wahl wirkt nur, solange die Liga spielbar ist.
 - Trainingstage und Verlauf: Vereinigung.
 - Ligen-Freigaben: je Liga der neuere Stand (`t`). Sind Freigabezustand gleich, zählt der größere Probetraining-Verbrauch, `trial` ist das spätere Datum. Name und Einstellungen: der neuere Stand.
 - **Aussehen** (`profile.avatar`): der neuere Stand gewinnt, nach dem eigenen `avatar.t` (nicht nach `profile.t`, Name und Aussehen ändern sich also unabhängig). Bei Gleichstand entscheidet die Textform, unabhängig von der Reihenfolge. Hat nur ein Stand einen Avatar, bleibt er. `avatarAsked` ist wahr, sobald ein Stand es meldet.
@@ -90,7 +110,7 @@ Dateiformat auf dem Server: `{id, name, rev, savedAt, device, schemaVersion, sta
 ## Eltern-Bereich (`admin.js`, `adminapi.js`, `server/admin.js`)
 Zugang: Taste „Eltern“ auf „Wer spielt?“ (nur wenn es eine PIN gibt), Eltern-PIN. Die App prüft die PIN lokal und beim Server (`/api/admin/verify`); ohne Verbindung zählt die lokale Prüfung. Die PIN bleibt nur im Arbeitsspeicher, solange der Bereich offen ist. Vier Bereiche:
 - **Konten:** anlegen, umbenennen, zurücksetzen (vorher offene Änderungen senden, der Server sichert), löschen (Papierkorb), Ligen je Konto freigeben und sperren, Probe-Kontingent.
-- **Lernstand** je Konto: Trefferquote je Thema (letzte 10 und gesamt), Hilfe je Thema, letzte 12 Spiele (Datum, Liga, Modus, Ergebnis, Dauer), Trainingstage, Punkte, Sticker.
+- **Lernstand** je Konto: Trefferquote je Thema (letzte 10 und gesamt), Hilfe je Thema, **Kontrollieren** (Kontroll-Pfiffe, benutzte Proben und selbst korrigierte Fehler je Thema), letzte 12 Spiele (Datum, Liga, Modus, bei Päckchen „Päckchen: Thema“, Ergebnis, Dauer), Trainingstage, Punkte, Sticker.
 - **Einstellungen:** Eltern-PIN ändern (alte PIN nötig), Trainer (Name, Aussehen), je Konto Ton, Aufgaben pro Runde (6, 8, 10), Schnuppern (Aufgabenzahl, einmal pro Tag an oder aus), Tipp-Zeit (aus, 20, 30, 45, 60, 90 Sekunden).
 - **Sicherungen und System:** Liste der Sicherungen auf der NAS (Papierkorb, Sicherungen vor Aktionen, Sicherungen vor Updates, Tagessicherungen) mit Datum und Größe, Wiederherstellen je Konto (vorher wird der aktuelle Stand gesichert), Geräteliste mit änderbarem Namen (Kennung, Art, zuletzt gesehen, zuletzt gesendet), App-, Server- und Schemaversion, Umgebung (Live oder Vorschau).
 Die Trainerbank in der Kabine behält Freigeben und Sperren der Ligen für das aktuelle Konto. „Spielstand zurücksetzen“ gibt es nur noch im Eltern-Bereich (der Server prüft die PIN).
@@ -143,7 +163,7 @@ Es gibt keine Anmeldung am Server für Spielstände. Der Zugriff ist nur über T
 Daten nur in `data/` (nicht im Repo, nicht im Image). `deploy.sh` sichert vor dem `git pull` nach `data/backups/pre-deploy-<JJJJMMTT-HHMM>/` (Konten, Einstellungen, alte Phase-0-Datei). Schemaversion plus Migration, Server lehnt veraltete Schreiber ab, IndexedDB wird nie geleert.
 
 ## Bekannte Grenzen
-- Eine laufende Spielrunde wird nicht gespeichert. Beendet man die App mittendrin, bleiben beantwortete Aufgaben (Antworten, Punkte, Probetraining-Verbrauch, Hilfe) erhalten, das Spiel selbst (Spielzähler, Sticker, Verlauf) nicht.
+- Eine laufende Spielrunde wird nicht gespeichert. Beendet man die App mittendrin, bleiben beantwortete Aufgaben (Antworten, Punkte, Probetraining-Verbrauch, Hilfe) erhalten, das Spiel selbst (Spielzähler, Sticker, Verlauf) nicht. Ein Päckchen wird erst bei der Abgabe gespeichert (dann vollständig): Beendet man die App mitten im Päckchen, gehen dessen Antworten verloren.
 - Kein Server-Login für Spielstände, keine Verschlüsselung der Daten auf der Platte. Die Admin-Aktionen sind mit der PIN geschützt (4 Ziffern, Schutz vor Kindern, nicht vor Angreifern im Tailnet).
 - Hyper Backup ist nicht eingerichtet: Sicherungen liegen auf derselben Platte.
 - Die Geräteliste kann iPad und Mac nicht unterscheiden (Safari auf dem iPad meldet sich oft als Mac): dafür gibt es die Namen.

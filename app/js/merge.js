@@ -6,7 +6,8 @@
 //  - Trainingstage und Spielverlauf: Vereinigung.
 //  - Ligen-Freigaben, Name, Einstellungen: der neuere Stand gewinnt.
 //  - Aussehen (profile.avatar) und Trainer (global): der neuere Stand gewinnt, je mit eigenem Zeitstempel.
-//  - Tipp-Nutzung (stats.<Thema>.help): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler).
+//  - Tipp-Nutzung (stats.<Thema>.help) und Kontrolle (stats.<Thema>.ctl): je Gerät der größere Wert, angezeigt wird die Summe (wie die Antwortzähler).
+//  - Gewählte aktuelle Liga (progress.cur): der neuere Stand gewinnt (eigener Zeitstempel t).
 //  - Zurücksetzen (meta.resetAt): der Stand mit dem späteren Zurücksetzen gewinnt vollständig.
 //  - Unbekannte Felder bleiben erhalten.
 // Das Ergebnis ist unabhängig von der Reihenfolge und ändert sich nicht, wenn man erneut zusammenführt.
@@ -84,13 +85,14 @@ export function mergeProfile(local,remote){
   out.progress=Object.assign({},clone(o.progress),clone(n.progress),{
     dev:mergeDevMap(lp.dev,rp.dev,aNewer),
     days:[...new Set([...(lp.days||[]),...(rp.days||[])])].sort().slice(-120),
-    lg,sel:n.progress.sel});
+    lg,sel:n.progress.sel,cur:clone(newerBy(lp.cur,rp.cur)||{li:null,t:0})});
 
   const stats={};
   for(const t of new Set([...Object.keys(local.stats||{}),...Object.keys(remote.stats||{})])){
     const x=local.stats[t]||{},y=remote.stats[t]||{};
     stats[t]=Object.assign({},clone(y),clone(x),{tot:mergeDevMap(x.tot,y.tot,aNewer),last:mergeLast(x.last,y.last)});
     if(x.help||y.help)stats[t].help=mergeDevMap(x.help,y.help,aNewer);
+    if(x.ctl||y.ctl)stats[t].ctl=mergeDevMap(x.ctl,y.ctl,aNewer);
   }
   out.stats=stats;
 
