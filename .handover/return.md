@@ -64,6 +64,10 @@ Projekt: Torjäger-Liga. Auftrag 1.3.0 (Avatare neu) ist gebaut, getestet und lo
 - main, origin/main: adb3c07. origin/preview: f320e81 (lokal voraus, nicht gepusht).
 - Arbeitsbaum: sauber nach dem Rückübergabe-Commit.
 
+8a. NACHBESSERUNG NACH MARCOS ERSTER SICHT (Screenshot Vorschau, Foto von Emil)
+- Marco: Bäckchen ragten über den Kopf und sind Quatsch (jetzt klein, dezent, im Gesicht, Vorgabe aus, migrierte Avatare ebenfalls aus). Zöpfe hingen neben dem Kopf in der Luft (jetzt am Kopf, über den Schultern). Pony und andere Frisuren wirkten wie ein Helm (Haarkappe enger, Seiten enden über den Ohren). Halbzopf mit blauer Schleife bei Jungen (jetzt kleiner Haarbüschel mit Haargummi). Cap wirkte aufgesetzt (Cap und Mütze eng am Kopf). Kleidung nicht wählbar (Auswahl war da, aber die Ganzkörperfigur trägt immer das Trikot: Schritt 5 zeigt jetzt das Porträt mit der Kleidung). Zu viel Scrollen (Vorschau oben fest, Zurück, Würfel, Weiter unten fest). Emil nachbaubar: neuer Kragen Rund, dunkler, Haarfarbe sandblond, vorbelegte Vorlage Torjäger (Fransen, blaue Augen, Sommersprossen, Schulterstreifen, dunkler Rundkragen, schwarze Hose und Stutzen). Gelobt: Münder, Brauen, Sommersprossen.
+- Weiter nicht mit dem Auge geprüft. Tests 135 grün. Noch nicht gepusht.
+
 9. NÄCHSTE SCHRITTE FÜR MARCO (einzeln, unverschachtelt)
 1. Vorschau-Stand hochladen:
    git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview

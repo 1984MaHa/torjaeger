@@ -18,7 +18,7 @@ const OLD_HAIR={j:["kurz","wuschel","igel","locken","tolle","stoppel","scheitel"
 export const HATS=["Keine","Cap","Cap verkehrt","Mütze","Stirnband","Bandana","Hut"];
 export const EYE_COLORS=["#4a3426","#7a5a2a","#6a95c4","#5f9b6a","#8a97a3"];
 export const PATTERNS=["Einfarbig","Schulterstreifen","Querstreifen","Brustband"];
-export const COLLARS=["V-Ausschnitt","Rundkragen"];
+export const COLLARS=["V-Ausschnitt","Rundkragen","Rund, dunkler"];
 export const MOUTHS=["Lächeln","Breites Lachen","Ernst","Überrascht"];
 export const FACES=["Oval","Rund","Eckig","Herz","Lang"];
 export const NOSES=["Klein","Mittel","Groß"];
@@ -29,14 +29,14 @@ export const BUILDS=["Schlank","Normal","Kräftig"];
 export const OUTFITS=["Trikot","T-Shirt","Sportjacke"];
 export const BEARDS=["Ohne","Vollbart","Kinnbart","Schnurrbart","Dreitagebart"];
 export const GEARS=["Keins","Pfeife","Klemmbrett"];
-export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#d9c58a","#b8341f","#22252b","#e75a9c","#2f6fde","#9aa0a8"];
+export const HAIR_COLORS=["#2b1d14","#5a3825","#8a5a2b","#c48b3c","#e6c15a","#d9c58a","#b8341f","#22252b","#e75a9c","#2f6fde","#9aa0a8","#cfa457"];
 export const SKIN_TONES=["#ffe0c7","#f6c9a0","#e9b98a","#e3a877","#c68642","#a86b3c","#8d5524","#5c3a21"];
 export const SHIRT_COLORS=["#e5484d","#2f6fde","#ffc83d","#34a853","#ff8a00","#8e44ad","#22252b","#f4f4f4","#17b3b3","#f27fb1"];
 export const SHORTS_COLORS=["#f4f4f4","#22252b","#1f3f8f","#e5484d","#34a853","#ffc83d","#8a8f98","#ff8a00"];
 export const BOOT_COLORS=["#22252b","#f4f4f4","#e5484d","#2f6fde","#d7f000","#ff8a00","#e75a9c"];
 export const BG_COLORS=["#ffd9e0","#ffe3c2","#fff1b0","#d6f0d2","#cdeef0","#d3e2ff","#e3d8ff","#e6e9ec"];
 export const JACKET_COLORS=["#1f2a44","#22252b","#2f6fde","#e5484d","#34a853","#8e44ad","#ff8a00","#17b3b3"];
-export const COLOR_NAMES={"#2b1d14":"dunkelbraun","#5a3825":"braun","#8a5a2b":"hellbraun","#c48b3c":"dunkelblond","#e6c15a":"blond","#d9c58a":"aschblond","#b8341f":"kupferrot","#22252b":"schwarz","#e75a9c":"pink","#2f6fde":"blau","#9aa0a8":"grau",
+export const COLOR_NAMES={"#2b1d14":"dunkelbraun","#5a3825":"braun","#8a5a2b":"hellbraun","#c48b3c":"dunkelblond","#e6c15a":"blond","#d9c58a":"aschblond","#b8341f":"kupferrot","#22252b":"schwarz","#e75a9c":"pink","#2f6fde":"blau","#9aa0a8":"grau","#cfa457":"sandblond",
   "#ffe0c7":"sehr hell","#f6c9a0":"hell","#e9b98a":"hell gebräunt","#e3a877":"mittel","#c68642":"gebräunt","#a86b3c":"braun gebräunt","#8d5524":"dunkel","#5c3a21":"sehr dunkel",
   "#e5484d":"rot","#ffc83d":"gelb","#34a853":"grün","#ff8a00":"orange","#8e44ad":"lila","#f4f4f4":"weiß","#17b3b3":"türkis","#f27fb1":"rosa","#1f3f8f":"dunkelblau","#8a8f98":"grau","#d7f000":"neongelb","#4a3426":"braun","#7a5a2a":"haselnuss","#6a95c4":"blau","#5f9b6a":"grün","#8a97a3":"grau","#1f2a44":"nachtblau",
   "#ffd9e0":"zartrosa","#ffe3c2":"pfirsich","#fff1b0":"zartgelb","#d6f0d2":"zartgrün","#cdeef0":"zarttürkis","#d3e2ff":"zartblau","#e3d8ff":"zartlila","#e6e9ec":"hellgrau"};
@@ -53,7 +53,7 @@ export const TEMPLATES=[
   {name:"Wirbel", look:{body:"j",hair:"locken",hairColor:"#5a3825",skin:"#c68642",shirt:"#2f6fde",shorts:"#1f3f8f",boots:"#f4f4f4",number:"7", team:"Blaue Wirbel", c1:"#2f6fde",c2:"#ffc83d"}},
   {name:"Rakete", look:{body:"j",hair:"tolle",hairColor:"#b8341f",skin:"#ffe0c7",shirt:"#ff8a00",shorts:"#1f3f8f",boots:"#f4f4f4",number:"8", team:"Raketen",      c1:"#ff8a00",c2:"#1f3f8f"}},
   {name:"Nacht",  look:{body:"j",hair:"stoppel",hairColor:"#2b1d14",skin:"#e3a877",shirt:"#22252b",shorts:"#22252b",boots:"#d7f000",number:"1", team:"Nachtfalken",  c1:"#22252b",c2:"#d7f000"}},
-  {name:"Torjäger",look:{body:"j",hair:"fransen",hairColor:"#e6c15a",skin:"#ffe0c7",eyes:"#6a95c4",shirt:"#2f6fde",shorts:"#22252b",socks:"#22252b",boots:"#f4f4f4",pattern:1,collar:1,mouth:1,number:"10",team:"Blau Weiß",c1:"#2f6fde",c2:"#f4f4f4"}},
+  {name:"Torjäger",look:{body:"j",hair:"fransen",hairColor:"#cfa457",skin:"#ffe0c7",eyes:"#6a95c4",shirt:"#2f6fde",shorts:"#22252b",socks:"#22252b",boots:"#f4f4f4",pattern:1,collar:2,mouth:1,freckles:1,number:"10",team:"Blau Weiß",c1:"#2f6fde",c2:"#f4f4f4"}},
   {name:"Sonne",  look:{body:"m",hair:"pferdeschwanz",hairColor:"#e6c15a",skin:"#ffe0c7",shirt:"#ffc83d",shorts:"#22252b",boots:"#22252b",number:"10",team:"Gelbe Sonnen", c1:"#ffc83d",c2:"#22252b"}},
   {name:"Wald",   look:{body:"m",hair:"zoepfe",hairColor:"#22252b",skin:"#8d5524",shirt:"#34a853",shorts:"#f4f4f4",boots:"#e5484d",number:"11",team:"Grüne Wälder", c1:"#34a853",c2:"#f4f4f4"}},
   {name:"Eis",    look:{body:"m",hair:"lang",hairColor:"#c48b3c",skin:"#f6c9a0",shirt:"#17b3b3",shorts:"#f4f4f4",boots:"#22252b",number:"5", team:"Eiskristalle", c1:"#17b3b3",c2:"#f4f4f4"}},
@@ -88,7 +88,7 @@ export function cleanLook(look,fallback){
     eyes:hex(l.eyes,b.eyes||"#4a3426"),pattern:int(l.pattern,0,PATTERNS.length-1,b.pattern||0),collar:int(l.collar,0,COLLARS.length-1,b.collar||0),mouth:int(l.mouth,0,MOUTHS.length-1,b.mouth||0),
     socks:hex(l.socks,shirt),
     face:int(l.face,0,FACES.length-1,b.face||0),nose:int(l.nose,0,NOSES.length-1,b.nose===undefined?1:b.nose),brows:int(l.brows,0,BROWS.length-1,b.brows===undefined?1:b.brows),
-    eyeShape:int(l.eyeShape,0,EYESHAPES.length-1,b.eyeShape===undefined?1:b.eyeShape),freckles:bool(l.freckles,b.freckles),cheeks:bool(l.cheeks,b.cheeks===undefined?1:b.cheeks),
+    eyeShape:int(l.eyeShape,0,EYESHAPES.length-1,b.eyeShape===undefined?1:b.eyeShape),freckles:bool(l.freckles,b.freckles),cheeks:bool(l.cheeks,b.cheeks||0),
     glasses:int(l.glasses,0,GLASSES.length-1,b.glasses||0),build:int(l.build,0,BUILDS.length-1,b.build===undefined?1:b.build),
     outfit:int(l.outfit,0,OUTFITS.length-1,b.outfit||0),outfitColor:hex(l.outfitColor,b.outfitColor||shirt),bg:hexOrEmpty(l.bg,b.bg||""),
     shirt,shorts:hex(l.shorts,b.shorts),boots:hex(l.boots,b.boots),
@@ -124,7 +124,7 @@ export function randomPatch(step,look,rnd=Math.random){
     case 1:{const t=TEMPLATES.filter(x=>x.look.body===l.body);const p=pick(t,rnd).look;return{hair:p.hair,hairColor:p.hairColor,skin:p.skin,shirt:p.shirt,outfitColor:p.shirt,shorts:p.shorts,boots:p.boots,c1:p.c1,c2:p.c2,team:p.team,number:p.number};}
     case 2:return{face:Math.floor(rnd()*FACES.length),skin:pick(SKIN_TONES,rnd),build:Math.floor(rnd()*BUILDS.length)};
     case 3:return{hair:pick(H.slice(0,12),rnd),hairColor:pick(HAIR_COLORS,rnd)};
-    case 4:return{eyeShape:Math.floor(rnd()*EYESHAPES.length),eyes:pick(EYE_COLORS,rnd),mouth:Math.floor(rnd()*MOUTHS.length),nose:Math.floor(rnd()*NOSES.length),brows:Math.floor(rnd()*BROWS.length),freckles:rnd()<.3?1:0,cheeks:rnd()<.75?1:0};
+    case 4:return{eyeShape:Math.floor(rnd()*EYESHAPES.length),eyes:pick(EYE_COLORS,rnd),mouth:Math.floor(rnd()*MOUTHS.length),nose:Math.floor(rnd()*NOSES.length),brows:Math.floor(rnd()*BROWS.length),freckles:rnd()<.3?1:0,cheeks:rnd()<.25?1:0};
     case 5:{const hat=rnd()<.5?0:1+Math.floor(rnd()*(HATS.length-1));return{outfit:Math.floor(rnd()*OUTFITS.length),outfitColor:pick(SHIRT_COLORS,rnd),glasses:rnd()<.3?1+Math.floor(rnd()*2):0,hat,hatColor:pick(SHIRT_COLORS,rnd),bg:pick(BG_COLORS,rnd)};}
     case 6:{const a=pick(SHIRT_COLORS,rnd);let c=pick(SHIRT_COLORS,rnd);if(c===a)c="#f4f4f4";return{shirt:a,c1:a,c2:c,socks:rnd()<.5?a:c,shorts:pick(SHORTS_COLORS,rnd),boots:pick(BOOT_COLORS,rnd),pattern:Math.floor(rnd()*PATTERNS.length),collar:Math.floor(rnd()*COLLARS.length),number:String(1+Math.floor(rnd()*99))};}
   }
@@ -134,8 +134,8 @@ export function randomPatch(step,look,rnd=Math.random){
 // ---------- Trainer (zwei: Trainer und Trainerin, gelten für alle Konten) ----------
 export const TRAINER_NAME="Trainer",TRAINER2_NAME="Trainerin";
 // Vorgaben nach den Fotos: Trainer mit Glatze, Brille, dunkler Jacke. Trainerin blond, schulterlang, Creolen.
-export const defaultTrainerLook=()=>({v:3,hair:"ohne",hairColor:"#8a5a2b",browColor:"",skin:"#f6c9a0",face:0,eyeShape:1,eyes:"#6a95c4",brows:1,nose:1,mouth:1,cheeks:1,freckles:0,glasses:2,hat:0,hatColor:"#2f6fde",bg:"#d3e2ff",jacket:"#1f2a44",beard:0,beardColor:"#8a5a2b",earrings:0,gear:1});
-export const defaultTrainer2Look=()=>({v:3,hair:"halblang",hairColor:"#d9c58a",browColor:"",skin:"#f6c9a0",face:0,eyeShape:1,eyes:"#6a95c4",brows:1,nose:1,mouth:0,cheeks:1,freckles:0,glasses:0,hat:0,hatColor:"#e5484d",bg:"#ffe3c2",jacket:"#22252b",beard:0,beardColor:"#d9c58a",earrings:1,gear:1});
+export const defaultTrainerLook=()=>({v:3,hair:"ohne",hairColor:"#8a5a2b",browColor:"",skin:"#f6c9a0",face:0,eyeShape:1,eyes:"#6a95c4",brows:1,nose:1,mouth:1,cheeks:0,freckles:0,glasses:2,hat:0,hatColor:"#2f6fde",bg:"#d3e2ff",jacket:"#1f2a44",beard:0,beardColor:"#8a5a2b",earrings:0,gear:1});
+export const defaultTrainer2Look=()=>({v:3,hair:"halblang",hairColor:"#d9c58a",browColor:"",skin:"#f6c9a0",face:0,eyeShape:1,eyes:"#6a95c4",brows:1,nose:1,mouth:0,cheeks:0,freckles:0,glasses:0,hat:0,hatColor:"#e5484d",bg:"#ffe3c2",jacket:"#22252b",beard:0,beardColor:"#d9c58a",earrings:1,gear:1});
 export const defaultTrainer=()=>({name:TRAINER_NAME,look:defaultTrainerLook(),t:0});
 export const defaultTrainer2=()=>({name:TRAINER2_NAME,look:defaultTrainer2Look(),t:0});
 const OLD_TRAINER_HAIR=["ohne","kurz","scheitel","halblang"];

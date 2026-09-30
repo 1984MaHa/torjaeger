@@ -46,7 +46,7 @@ test("Migration 3 nach 4: Stand im Format 1.2.1 bleibt vollständig erhalten, de
   assert.equal(a.hair,"zoepfe");
   for(const k of ["body","hairColor","skin","hat","hatColor","eyes","pattern","collar","mouth","socks","face","nose","brows","eyeShape","freckles","glasses","build","shirt","shorts","boots","number","shirtName","team","c1","c2"])assert.equal(a[k],o[k],k);
   // neue Merkmale bekommen nächstliegende Werte
-  assert.equal(a.browColor,"");assert.equal(a.cheeks,1);assert.equal(a.outfit,0);assert.equal(a.outfitColor,o.shirt);assert.equal(a.bg,"");
+  assert.equal(a.browColor,"");assert.equal(a.cheeks,0);assert.equal(a.outfit,0);assert.equal(a.outfitColor,o.shirt);assert.equal(a.bg,"");
   // ohne Avatar und von Schema 1 und 2 aus geht es auch
   const n=clone(old);n.profile.avatar=null;assert.equal(migrateProfile(n).profile.avatar,null);
   assert.equal(migrateProfile(fx("state-v1.json")).meta.schemaVersion,4);assert.equal(migrateProfile(fx("state-v2.json")).meta.schemaVersion,4);
@@ -152,6 +152,23 @@ test("Ganzkörperfigur: alle Frisuren, Kopfformen, Muster und Haltungen vorn und
   for(const c of ["#2f6fde","#1f3f8f","#ffc83d","#d7f000"])assert.ok(f.includes(c),c);assert.ok(f.includes(">7<"));
   assert.notEqual(figureG({...BASE,collar:0},"front"),figureG({...BASE,collar:1},"front"));
   for(let b=0;b<3;b++)clean(avatarSVG({...BASE,build:b},{px:100}),"Körperbau");
+});
+
+test("Nachbesserung: Zöpfe hängen am Kopf, Halbzopf ohne Schleife, Bäckchen im Gesicht, Emil ist nachbaubar",()=>{
+  const z=figureG({...BASE,hair:"zoepfe",hat:0},"front");
+  const xs=[...z.matchAll(/<ellipse cx="([\d.]+)" cy="(5[0-9]|6[0-4])(?:\.\d)?" rx="5.6"/g)].map(m=>+m[1]);
+  assert.ok(xs.length>=2&&xs.every(x=>x>=28&&x<=38||x>=82&&x<=92),"Zöpfe beginnen am Kopf");
+  for(const body of ["j","m"]){for(const view of ["front","back"])assert.ok(!group(figureG({...BASE,body,hair:"halbzopf",c2:"#2f6fde"},view),"kopf").includes("#2f6fde"),"keine farbige Schleife");}
+  const ch=group(figureG({...BASE,cheeks:1},"front"),"cheeks");
+  for(const c of ch.matchAll(/cx="([\d.]+)" cy="[\d.]+" r="([\d.]+)"/g))assert.ok(+c[1]-+c[2]>=38&&+c[1]+ +c[2]<=82,"Bäckchen im Gesicht");
+  assert.equal(cleanLook(BASE).cheeks,0,"Bäckchen sind Vorgabe aus");
+  // Emil (Foto): sandblondes Haar mit Fransen, blaue Augen, Sommersprossen, blaues Trikot mit Schulterstreifen, dunkler Rundkragen, schwarze Hose und Stutzen
+  const e=cleanLook(TEMPLATES.find(t=>t.name==="Torjäger").look);
+  assert.deepEqual([e.hair,e.eyes,e.freckles,e.pattern,e.collar,e.shorts,e.socks],["fransen","#6a95c4",1,1,2,"#22252b","#22252b"]);
+  assert.notEqual(figureG({...e,collar:2},"front"),figureG({...e,collar:1},"front"));
+  // Schritt 5 zeigt das Porträt mit der Kleidung
+  const s5=avatarBuilderHTML({look:{...BASE,outfit:2,outfitColor:"#34a853"},name:"x",first:false,step:5});
+  assert.ok(s5.includes("avclip")&&s5.includes("#34a853"));
 });
 
 // ---------- Kopfbedeckungen ----------

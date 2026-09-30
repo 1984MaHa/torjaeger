@@ -1,6 +1,8 @@
 # Änderungen
 
 ## 1.3.0 (Vorschau: neue Avatare)
+Nachbesserung nach Marcos erster Sicht: Bäckchen dezent und klein, Vorgabe aus; Zöpfe hängen am Kopf; Haarkappe enger (Pony und Co. wirken nicht mehr wie ein Helm); Halbzopf mit Haargummi statt Schleife; Cap und Mütze eng am Kopf; Schritt 5 zeigt das Porträt mit der Kleidung; Vorschau oben und Weiter-Leiste unten bleiben stehen (weniger Scrollen); neuer Kragen „Rund, dunkler“ und Haarfarbe „sandblond“, damit sich Emil nachbauen lässt (Vorlage Torjäger).
+
 Schemaversion 4 (Konto) und 3 (global). Ein Stand im Format 1.2.1 wird beim ersten Start ohne Verlust migriert.
 
 ### Neu

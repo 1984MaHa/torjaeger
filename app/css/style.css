@@ -185,7 +185,11 @@ details summary::-webkit-details-marker{display:none}
 .stepchip b{font-family:var(--display);font-size:1.2rem}
 .stepchip.on{background:var(--goal);color:#fff;box-shadow:0 3px 0 #1f8a45}
 .avhead{display:block;line-height:0}
-.avnav{justify-content:space-between}
+.avstick{position:sticky;top:0;z-index:6;padding-top:8px;padding-bottom:8px;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.avstick .avprev{gap:10px;flex-wrap:nowrap}
+.avstick .avprev svg{max-height:26vh;width:auto}
+.avstick .seg{margin-top:0}
+.avnav{justify-content:space-between;position:sticky;bottom:0;z-index:6;padding:8px;background:#fdfdf8;border-radius:14px;box-shadow:0 -3px 10px rgba(0,0,0,.14)}
 .avnav .btn[disabled]{opacity:.4}
 .sw.auto{width:auto;min-width:46px;padding:0 12px;border-radius:23px;background:#fff;font-family:var(--body);font-size:.85rem;color:var(--ink)}
 .numpick{display:flex;gap:14px;align-items:center}

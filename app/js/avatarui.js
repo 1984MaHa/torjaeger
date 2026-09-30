@@ -38,7 +38,7 @@ function stepControls(step,l,A,prev,adult){
     ${field("Merkmal",opts(A,"gear",GEARS,l.gear))}
     ${field("Ohrringe",opts(A,"earrings",["Ohne","Mit"],l.earrings))}
     ${field("Hintergrund",swatches(A,"bg",BG_COLORS,l.bg,"Hintergrund","Auto"))}`;
-  if(step===5)return `<p class="note">So siehst du im Porträt aus (Kachel, Sprechblase). Im Spiel trägst du dein Trikot.</p>
+  if(step===5)return `<p class="note">Rechts oben siehst du dein Porträt (Kachel, Sprechblase) mit der Kleidung. Im Spiel trägst du dein Trikot, das stellst du im letzten Schritt ein.</p>
     ${field("Kleidung",opts(A,"outfit",OUTFITS,l.outfit))}
     ${l.outfit?field("Farbe der Kleidung",swatches(A,"outfitColor",SHIRT_COLORS,l.outfitColor,"Farbe der Kleidung")):""}
     ${field("Brille",opts(A,"glasses",GLASSES,l.glasses))}
@@ -74,13 +74,13 @@ export function avatarBuilderHTML(D){
   const A=(k,v)=>`data-av="${k}:${v}"`;
   const prev=(patch,label)=>avatarSVG({...l,hat:step===5?l.hat:0,...patch},{crop:"head",px:70,label});
   const chips=STEPS.map(([n,t])=>`<button class="stepchip ${n===step?"on":""}" data-avstep="${n}" aria-label="Schritt ${n}: ${esc(t)}" aria-current="${n===step}"><b>${n}</b><span>${esc(t)}</span></button>`).join("");
-  const big=step>=2&&step<=5?`<div class="avhead">${avatarSVG(l,{crop:"head",px:190,view,label:"Kopf vergrößert"})}</div>`:"";
+  const big=step===5?`<div class="avhead">${avatarSVG(l,{crop:"bust",px:150,view,label:"Porträt"})}</div>`:(step>=2&&step<=4?`<div class="avhead">${avatarSVG(l,{crop:"head",px:140,view,label:"Kopf vergrößert"})}</div>`:"");
   const views=`<span class="seg">${[["front","Vorne"],["back","Hinten"]].map(([v,n])=>`<button class="segb ${v===view?"on":""}" data-avview="${v}" aria-pressed="${v===view}">${n}</button>`).join("")}</span>`;
   const body=step===1?genderStep(D,l):stepControls(step,l,A,prev,false);
   const last=step===6;
   return `<div><h1 class="title">${D.first?"Dein Spieler":"Spieler ändern"}</h1><p class="lead">Schritt ${step} von 6: ${esc(STEPS[step-1][1])}</p></div>
   <nav class="stepchips" aria-label="Schritte">${chips}</nav>
-  <section class="panel"><div class="avprev">${avatarSVG(l,{px:250,view,pose:"stand"})}${big}${step===6?`<div class="avcrest">${crestSVG(l,64)}<span>${esc(l.team)}</span></div>`:""}</div>
+  <section class="panel avstick"><div class="avprev">${avatarSVG(l,{px:190,view,pose:"stand"})}${big}${step===6?`<div class="avcrest">${crestSVG(l,64)}<span>${esc(l.team)}</span></div>`:""}</div>
     <div class="row" style="justify-content:center;margin-top:8px">${views}</div></section>
   <section class="panel"><h3>${esc(STEPS[step-1][1])}</h3>${body}</section>
   <div class="row avnav"><button class="btn ghost" id="avBack" ${step===1?"disabled":""}>Zurück</button>${step===1?"":`<button class="btn ghost" id="avDice" aria-label="Würfeln: Zufallsvorschlag für diesen Schritt">🎲 Würfeln</button>`}${last?`<button class="btn" id="avSave">Fertig</button>`:`<button class="btn" id="avNext">Weiter</button>`}</div>
