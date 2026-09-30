@@ -174,7 +174,8 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     }
     await until(()=>has("Zur Kabine"),"Ergebnis des Päckchens");
     assert.ok(has("Kontroll-Pfiff"));
-    for(let n=0;n<200&&!((await get(`/api/profiles/${id}/state`)).state.stats.m_zehner||{}).ctl;n++)await sleep(25);
+    // warten, bis Kontroll-Zähler und Spielende (Verlauf) beim Server angekommen sind (unter Last dauert der Abgleich länger)
+    for(let n=0;n<300;n++){const x=(await get(`/api/profiles/${id}/state`)).state;if(((x.stats.m_zehner||{}).ctl)&&x.history.length>=2)break;await sleep(25);}
     st=(await get(`/api/profiles/${id}/state`)).state;
     const ctl=Object.values(st.stats.m_zehner.ctl);
     assert.equal(ctl.reduce((n,c)=>n+c.n,0),1,"ein Kontroll-Pfiff");assert.equal(ctl.reduce((n,c)=>n+c.p,0),1,"eine Probe benutzt");

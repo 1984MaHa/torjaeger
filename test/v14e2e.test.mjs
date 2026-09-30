@@ -99,7 +99,8 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     await until(()=>has("Hallo Emil"),"zurück in die Kabine");
 
     // ----- Sachkunde-Päckchen mit allen vier neuen Aufgabenarten, Kontroll-Pfiff und Probe -----
-    const forced=[()=>GEN.en_tiere({level:2}),()=>{for(;;){const T=GEN.su_verkehr();if(T.type==="sort")return T;}},()=>{for(;;){const T=GEN.su_getreide();if(T.type==="order")return T;}},()=>GEN.en_tiere({level:1})];
+    const forced=[()=>{for(;;){const T=GEN.en_tiere({level:2});if(T.type==="match")return T;}}, // mit Stimme wird 1 von 5 Aufgaben zur Hör-Aufgabe: hier nicht
+      ()=>{for(;;){const T=GEN.su_verkehr();if(T.type==="sort")return T;}},()=>{for(;;){const T=GEN.su_getreide();if(T.type==="order")return T;}},()=>GEN.en_tiere({level:1})];
     const made=[];let k=0;
     const real=GEN.su_wasser;
     GEN.su_wasser=()=>{const T=forced[k%forced.length]();k++;made.push(T);const c=Object.assign({},T);delete c.topic;return c;};

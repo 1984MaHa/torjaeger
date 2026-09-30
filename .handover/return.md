@@ -53,10 +53,10 @@ Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgab
 
 6. TESTS
 - node --test: 160 Tests grün (vorher 135). Neu: test/v14.test.mjs (24 Tests: Migration 4 nach 5 mit Fixture test/fixtures/state-v4.json, Inhalte und Eindeutigkeit der Emoji, Partner und Schreibweisen, alle Themen und Stufen mit je 120 bis 400 Stichproben, Zuordnen richtig und falsch und Paar lösen, Sortieren, Reihenfolge, Bild wählen, Kompassrose, Vorlesen mit und ohne Stimme, Themensteuerung, Aufstieg ohne Englisch und Sachkunde, Stufenwechsel, Begriffsstatistik, Merge, Ansichten, Eltern-Bereich, Dateien) und test/v14e2e.test.mjs (echte app.js mit Fake-DOM gegen echten Server: Kreisliga freigeben, Englisch ohne Stimme, Stimme kommt später, 🔊 antippen, Päckchen mit allen vier neuen Aufgabenarten, Probe, Antwort ändern, Kontroll-Bonus, Eltern-Themensteuerung und Abgleich mit dem Server). Bestehende Tests nur auf Schema 5 angepasst (Erwartungswerte 4 nach 5, settings mit topicMode).
-- Die Ende-zu-Ende-Prüfung lief in zehn Wiederholungen bis auf einen früheren Lauf stabil (der eine Fehler war eine zu strenge Erwartung im Test und ist behoben).
+- Zwei Zeitprobleme in den Tests gefunden und behoben: (1) v14e2e erzwang eine Zuordnung, die mit Stimme in 1 von 5 Fällen eine Hör-Aufgabe wurde (Test, nicht App); (2) der alte e2e.test.mjs wartete nicht auf das Spielende beim Server und scheiterte unter Last im parallelen Lauf (Wartestelle jetzt mit Abfrage). Danach 10 Gesamtläufe hintereinander grün (160 von 160).
 
 7. ANKER
-- Branch: preview. Commit: siehe git log -1 (Version 1.4.0, baut auf 81eb864 auf). Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
+- Branch: preview. Commit: siehe git log -1 (Version 1.4.0 a9f8e50, darauf ein Korrektur-Commit für die Tests, baut auf 81eb864 auf). Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
 
 8. NÄCHSTE SCHRITTE FÜR MARCO
 1. Die Liste docs/Inhalte-Englisch-Sachkunde.md lesen, besonders die mit "unsicher" markierten Stellen, und Korrekturen an Cowork oder hierher zurückgeben.
