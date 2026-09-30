@@ -1,6 +1,6 @@
 # Rückübergabe claude-code an cowork, 2026-09-30
 
-**Auftrag:** Version 1.5.0, feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
+**Auftrag:** Version 1.5.0 (ausgeliefert als 1.5.1, weil der Service Worker unter gleicher Versionsnummer die alte Fassung im Cache behielt), feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
 **Stand:** gebaut, lokal getestet (`node --test`: 170 von 170 grün), Vorschau auf der NAS läuft mit 1.5.0. Danach Nachbesserung nach Marcos erster Sicht (siehe unten), noch nicht gepusht. Nicht nach main gemerged, nicht live.
 
 ## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat

@@ -30,11 +30,11 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 6 (Konto) und 4 (global), Version 1.5.0 an allen vier Stellen",()=>{
+test("Schema ist 6 (Konto) und 4 (global), Version 1.5.1 an allen vier Stellen",()=>{
   assert.equal(SCHEMA_VERSION,6);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1\.5\.0"/);assert.match(sw,/VERSION = "1\.5\.0"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1\.5\.0"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.0");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.1"/);assert.match(sw,/VERSION = "1.5.1"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.1"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.1");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{
@@ -304,7 +304,7 @@ test("Trainerteam im Eltern-Bereich: Name und Farben von Polo, Hose und Stutzen"
 });
 
 test("Name der Mannschaft steht auf Kachel „Wer spielt?“, in der Kabine und auf der Anzeigetafel, der Name des Kindes bleibt in der Begrüßung",()=>{
-  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.0"},UI={newAcct:false,acctMsg:"",adminAsk:false,parent:false,pinMsg:""};
+  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.1"},UI={newAcct:false,acctMsg:"",adminAsk:false,parent:false,pinMsg:""};
   const s=newProfile({id:"k-abc12345",name:"Emil",deviceId:"d1"});applyAvatar(s,dev("d1",5),{...defaultLook("Emil"),team:"Die Wirbel"});
   assert.ok(accountsHTML([{id:"k-a",name:"Emil",avatar:s.profile.avatar}],UI,env).includes("Die Wirbel"));
   const home=homeHTML(s,UI,env);assert.ok(home.includes("Die Wirbel")&&home.includes("Hallo Emil!"));
@@ -337,7 +337,7 @@ test("PIN des Kindes: 4 Ziffern, freiwillig, Eltern sehen sie, der neuere Stand 
 });
 
 test("Wer spielt?: Konto mit PIN ist markiert und fragt die PIN, Mein Spieler und Eltern-Bereich zeigen sie",()=>{
-  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.0"};
+  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.1"};
   const acc=[{id:"k-a",name:"Emil",avatar:null,locked:true},{id:"k-b",name:"Mia",avatar:null,locked:false}];
   let h=accountsHTML(acc,{newAcct:false,acctMsg:"",adminAsk:false},env);
   assert.ok(h.includes("Emil (PIN)")&&!h.includes("Mia (PIN)")&&!h.includes('id="kidPin"'));

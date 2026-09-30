@@ -1,7 +1,7 @@
 # Änderungen
 
-## 1.5.0 (Vorschau: feste Bild-Vorlagen statt Avatar-Baukasten)
-Der gezeichnete Avatar-Baukasten (1.3.0) ist ersetzt durch **feste Bild-Vorlagen** aus Marcos Bildern: Emil vorn und hinten, dazu Trainer und Trainerin. Schemaversion 6 (Konto) und 4 (global). Ein Stand im Format 1.4.1 wird beim ersten Start ohne Verlust migriert, Emils Trikotfarben, Nummer, Name und Mannschaftsname bleiben.
+## 1.5.1 (Vorschau: feste Bild-Vorlagen statt Avatar-Baukasten)
+1.5.1 ist 1.5.0 mit höherer Versionsnummer, damit der Service Worker den alten Cache verwirft (unter 1.5.0 blieb auf dem iPad die erste Fassung stehen). Der gezeichnete Avatar-Baukasten (1.3.0) ist ersetzt durch **feste Bild-Vorlagen** aus Marcos Bildern: Emil vorn und hinten, dazu Trainer und Trainerin. Schemaversion 6 (Konto) und 4 (global). Ein Stand im Format 1.4.1 wird beim ersten Start ohne Verlust migriert, Emils Trikotfarben, Nummer, Name und Mannschaftsname bleiben.
 
 ### Neu
 - **Figuren aus Bildern:** Emil (blondes Haar, blaues Trikot mit weißen Streifen) als Ganzfigur von vorn und hinten, Trainer (Glatze, Brille) und Trainerin (blond, Bob, Creolen) als Brustbild. Alle freigestellt (durchsichtiger Hintergrund), Markenlogos auf Trikotbrust und Stutzen sind übermalt. Die Originale liegen in `assets-src/`, die fertigen Bilder in `app/img/` (zusammen etwa 0,9 MB, alle im Offline-Cache).
