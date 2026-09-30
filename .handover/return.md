@@ -3,22 +3,22 @@
 **Stand:** 2026-09-30
 **Von:** claude-code
 **An:** cowork
-**Auftrag:** Version 1.2.0 (Anpassungen nach Testlauf 30.09.2026), Modus bauen, Stufe voll
+**Auftrag:** Version 1.2.0 (Anpassungen nach Testlauf 30.09.2026), danach Fehlerkorrektur 1.2.1. Modus bauen, Stufe voll
 
 ```
 Rückübergabe claude-code nach cowork, 2026-09-30.
-Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und committed, nicht gepusht, nicht deployed.
+Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, auf preview gepusht und in der Vorschau deployed. Auf Marcos Anweisung ist main lokal nachgezogen (siehe 2), noch nicht nach origin gepusht, Live nicht deployed.
 
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
-- Marco hat nach der Fertigstellung selbst ausgeführt: (a) git push origin preview (Ergebnis: origin/preview steht auf 1d57caf, geprüft per git fetch), (b) SSH auf die NAS und Vorschau-Deploy (sudo sh deploy.sh im Ordner torjaeger-preview). Ergebnis: /api/health der Vorschau meldet {"ok":true,"preview":"VORSCHAU","serverVersion":"1.2.0"}. Sonst nichts: kein Merge, kein Branch-Wechsel, kein Live-Deploy.
-- Ausdrücklich NOCH NICHT ausgeführt: Merge nach main, Live-Deploy, visuelle Abnahme der neuen Ansichten und Test auf iPad/iPhone (Marco prüft die Vorschau als Nächstes). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
+- Marco hat selbst ausgeführt: (a) git push origin preview (nach 1.2.0 auf 1d57caf, nach 1.2.1 auf ca15a8d, jeweils per git fetch bestätigt), (b) SSH auf die NAS und Vorschau-Deploy (sudo sh deploy.sh im Ordner torjaeger-preview), zweimal: 1.2.0 (Health-Antwort meldete {"ok":true,"preview":"VORSCHAU","serverVersion":"1.2.0"}) und 1.2.1 (Marco: "ist durch, läuft jetzt"). (c) Den Screenshot mit der unklaren Frage Schal/Schall geschickt (siehe 5). Claude hat auf Marcos "push it" gepusht (Befehl lief von Claude aus).
+- Ausdrücklich NOCH NICHT ausgeführt: git push origin main, Live-Deploy auf der NAS (Ordner torjaeger), Test auf iPad/iPhone und visuelle Abnahme der neuen Ansichten sind von Marco nicht als erledigt gemeldet (Marco prüft die Vorschau). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
 
 2. STAND JE UMGEBUNG
-- Anker am Start stimmten: preview baab42f, main 882d8e1, Arbeitsbaum nur M .handover/current.md.
-- preview (lokal): 8473864 "Version 1.2.0: aktuelle Liga, Trainingscamp, Spielauswahl, 24 Sticker, Kontroll-Pfiff" (Elternteil baab42f). Darauf folgt ein zweiter Commit mit dieser Rückübergabe (.handover/return.md).
-- origin/preview: 1d57caf (von Marco gepusht). origin/main und main: 882d8e1 (Live 1.1.5, unberührt).
-- Live läuft 1.1.5. Die Vorschau auf der NAS läuft 1.2.0 (Server-Version laut Health-Antwort, App-Version 1.2.0 nach "Jetzt laden" auf dem Gerät).
-- Version 1.2.0 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, package.json). Neue Dateien app/js/check.js und app/js/stickers.js stehen in FILES von sw.js.
+- Anker am Start stimmten: preview baab42f, main 882d8e1, Arbeitsbaum nur M .handover/current.md. Seither drei Code-Commits auf preview: 8473864 (1.2.0), ca15a8d (1.2.1) und die Rückübergabe-Commits.
+- preview und origin/preview: ca15a8d enthält 1.2.1, danach folgt der Commit mit dieser Rückübergabe (lokal, gepusht erst nach Marcos "push it").
+- main (lokal): auf Marcos Anweisung ("zieh auch die Hauptseite nach") per Fast-Forward auf preview gebracht, enthält also 1.2.1. origin/main: 882d8e1 (Live 1.1.5), NICHT gepusht. Hinweis: Der Auftrag sagte "nicht nach main mergen"; Marco hat das in der Sitzung bewusst geändert, bevor er alle Punkte auf dem iPad abgenommen hat (keine Abnahme gemeldet).
+- Live läuft 1.1.5 und bleibt so, bis Marco origin/main pusht und im Live-Ordner deployed. Die Vorschau auf der NAS läuft 1.2.1.
+- Version 1.2.1 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, package.json). Neue Dateien app/js/check.js und app/js/stickers.js stehen in FILES von sw.js.
 
 3. WAS UMGESETZT IST (Auftragspunkte)
 - Fokus: Nur die aktuelle Liga groß (Themen mit Häkchen, Fortschrittsbalken, Spielauswahl). Andere Ligen schmale Zeile: Name, Klasse, Status (Gesperrt, Schnuppern möglich, Probetraining: noch n Aufgaben, Wartet auf Freigabe, Frei, Durchgespielt). Antippen klappt auf. Frei oder Probetraining: Taste "Hier spielen" macht sie zur aktuellen Liga. Gesperrt: Freispiel-Hinweis und Schnuppern. Vorgabe "aktuell" = höchste ganz freie Liga, Wahl liegt in progress.cur {li, t} (Merge: neuester gewinnt). Die Anzeigetafel oben folgt der aktuellen Liga.
@@ -42,10 +42,12 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und comm
 - Keine Abweichung vom Auftrag bei den Nicht-Zielen: kein Merge nach main, keine Modi Phase 3, kein Aufgabenkatalog, keine Einführungstour, keine npm-Pakete, keine externen Ressourcen.
 
 5. RÜCKMELDUNGEN UND WÜNSCHE VON MARCO IN DIESER SITZUNG
-- Keine neuen. Marco hat nur "ja weiter" gesagt.
+- Marco (Abnahme der Vorschau, Screenshot "Doppelte Mitlaute"): Die Frage "Welches Wort ist richtig geschrieben?" bot Schal und Schall an. Beide sind richtig und meinen Verschiedenes, das verwirrt beim Üben. Umgesetzt in 1.2.1: Das Paar ist raus (ersetzt durch Kette und Kete), ein Test stellt sicher, dass bei dieser Aufgabe nie zwei echte Wörter zur Wahl stehen.
+- Selbst gefunden beim Durchsehen (gleiche Art Fehler): Beim Perfekt galten ich habe gelaufen, gefahren, geschwommen, gesprungen als falsch, sind aber regional oder je nach Bedeutung richtig. In 1.2.1 stehen bei diesen vier Verben nur eindeutig falsche Formen zur Wahl (zum Beispiel ich habe gelauft). Test ergänzt. Nicht geprüft: Die übrigen Wortlisten wurden nur gelesen, nicht gegen ein Wörterbuch geprüft (auffällig aber unkritisch: Werk und Werg bei Verlängern).
+- Marco: "zieh auch die Hauptseite nach": als Merge von preview nach main verstanden (lokal, Fast-Forward). Falls Marco damit etwas anderes meinte (zum Beispiel nur den Live-Deploy), bitte bei ihm nachfragen. Marco: Bitte bei Aufgaben immer eindeutige Fragen, das Üben darf Kinder nicht verwirren.
 
 6. TESTS
-- node --test: 125 Tests, alle grün, vier Läufe hintereinander (vorher 103). Neu: test/v12.test.mjs (21 Tests) und ein Abschnitt im Ende-zu-Ende-Test (ganzes Päckchen mit Probe, Antwort ändern und Kontroll-Pfiff durch die echte app.js, Stand auf dem Server geprüft).
+- node --test: 127 Tests, alle grün (vorher 103, 1.2.0 hatte 125). Neu: test/v12.test.mjs (23 Tests, darunter Eindeutigkeit von Doppelte Mitlaute und Perfekt) und ein Abschnitt im Ende-zu-Ende-Test (ganzes Päckchen mit Probe, Antwort ändern und Kontroll-Pfiff durch die echte app.js, Stand auf dem Server geprüft).
 - Fünf bestehende Tests wurden angepasst, weil sich das Verhalten bewusst ändert: Schema 3 (admin, adminview, schema2, e2e), Name Trainingscamp (views), Fachauswahl öffnet erst das Panel (e2e). Keine Erwartung wurde gelockert.
 - Nicht geprüft (Marco): wie die 24 Sticker und die Ansichten aussehen, Bedienung auf iPad und iPhone, Zahlenblock im Päckchen, Sticker-Motive lesbar bei 64 Pixeln.
 
@@ -60,7 +62,7 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und comm
 - Arbeitsbaum: sauber nach dem Rückübergabe-Commit.
 
 9. NÄCHSTE SCHRITTE FÜR MARCO (einzeln, unverschachtelt)
-1. ERLEDIGT (Marco): Push und Vorschau-Deploy, siehe Abschnitt 1. Die folgenden Befehle 1 bis 3 nur bei einem weiteren Stand wiederholen:
+1. ERLEDIGT (Marco): Push von preview und Vorschau-Deploy 1.2.1. Nur bei einem weiteren Stand wiederholen (Schritte 1 bis 3):
    git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
 2. Branch der Vorschau auf der NAS prüfen (nur prüfen):
    cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh --check
@@ -74,8 +76,10 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und comm
    - Album: 24 verschiedene Sticker mit Jubelruf groß, Fußballbegriff klein. Ein Konto mit schon gesammelten Stickern (Emils Stand als Sicherung einspielen) behält sie.
    - Eltern-Bereich, Lernstand: Abschnitt "Kontrollieren" mit Pfiffen, Proben, selbst korrigierten Fehlern. Letzte Spiele nennt "Päckchen: Thema".
    - Name überall Trainingscamp (Startseite, Eltern-Bereich, Ergebnis).
-6. Nach der Abnahme entscheidet Marco über den Merge nach main und den Live-Deploy (nicht Teil dieses Auftrags):
-   git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" checkout main
-   git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" merge preview
-7. Cowork: Plan und Index im Vault auf Version 1.2.0 nachziehen (Abschnitt G als umgesetzt markieren, Päckchengröße, Bonus 8, Jubelruf-Liste verweisen auf stickers.js). Dort schreibt nur Cowork.
+6. LIVE (Marco, erst nach Abnahme der Vorschau): main ist lokal schon nachgezogen. Dann pushen:
+   git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin main
+   Danach auf der NAS im Live-Ordner (sichert vorher data/, Emils Stand wird ohne Verlust migriert):
+   cd /volume1/docker/torjaeger && sudo sh deploy.sh
+   Danach auf dem iPad der Live-App "Jetzt laden" tippen.
+7. Cowork: Plan und Index im Vault auf Version 1.2.1 nachziehen (Abschnitt G als umgesetzt markieren, Päckchengröße, Bonus 8, Jubelrufe stehen in stickers.js). Dort schreibt nur Cowork.
 ```
