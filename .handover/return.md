@@ -1,7 +1,7 @@
 # Rückübergabe claude-code an cowork, 2026-09-30
 
 **Auftrag:** Version 1.5.0 (ausgeliefert als 1.5.1, weil der Service Worker unter gleicher Versionsnummer die alte Fassung im Cache behielt), feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
-**Stand:** gebaut, lokal getestet (`node --test`: 170 von 170 grün), Vorschau auf der NAS läuft mit 1.5.0. Danach Nachbesserung nach Marcos erster Sicht (siehe unten), noch nicht gepusht. Nicht nach main gemerged, nicht live.
+**Stand:** Version 1.5.2 gebaut, in der Vorschau abgenommen, nach `main` gemerged und von Marco live deployt. 173 von 173 Tests grün.
 
 ## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat
 - Angewiesen: "ja so starten", also 1.5.0 auf `preview` von `b19e72d` aus bauen (nicht von `adb3c07`).
@@ -25,9 +25,9 @@
 - **PIN des Kindes** (neu, nicht im Auftrag): freiwillig, 4 Ziffern, `profile.pin = {code, t}`, Klartext. Kachel zeigt "(PIN)" und fragt beim Antippen. Kind setzt sie in "Mein Spieler", Eltern sehen, ändern und entfernen sie im Eltern-Bereich bei jedem Konto. Zusammenführen: neuerer Stand gewinnt, Zurücksetzen behält sie. Kein Schemawechsel (Feld optional). Sicherheit bewusst schwach: Komfort, kein Schutz vor Eltern.
 
 ## Abnahme und Merge
-- Marco hat 1.5.2 in der Vorschau abgenommen ("passt so für mich") und den Merge nach main angewiesen. Ausgeführt von mir: Fast-Forward-Merge von `preview` nach `main`, Push `main`. **Live-Deploy noch nicht ausgeführt** (macht Marco: `cd /volume1/docker/torjaeger && sudo sh deploy.sh`, `deploy.sh` sichert `data/` vorher).
-- Stand danach: `main`, `preview` und die `origin/*` auf demselben Commit. Live läuft bis zum Deploy weiter 1.4.1, Vorschau 1.5.2.
-- Nach dem Live-Deploy Emils migrierten Stand prüfen (Farben, Nummer, Name, Mannschaft). Emils Nummer und Name kommen aus dem alten Avatar.
+- Marco hat 1.5.2 in der Vorschau abgenommen ("passt so für mich") und den Merge nach main angewiesen. Ausgeführt von mir: Fast-Forward-Merge von `preview` nach `main`, Push `main`. **Live-Deploy hat Marco danach selbst ausgeführt** (`cd /volume1/docker/torjaeger && sudo sh deploy.sh`), Marco meldet: durch und live.
+- Stand danach: `main`, `preview` und die `origin/*` auf demselben Commit. Live und Vorschau laufen mit 1.5.2.
+- Offen: Marcos Prüfung von Emils migriertem Stand auf dem iPad (nicht bestätigt). Zu prüfen (Farben, Nummer, Name, Mannschaft). Emils Nummer und Name kommen aus dem alten Avatar.
 
 ## Zweite Sicht von Marco (Version 1.5.2)
 - Ursache für "sieht aus wie vorher": Service-Worker-Cache. Die Nachbesserung trug dieselbe Nummer 1.5.0, `sw.js` war unverändert. Marco hat mit hartem Neuladen geholfen. Deshalb gab es 1.5.1 und jetzt 1.5.2. **Lehre: jede Auslieferung braucht eine neue Versionsnummer.**
