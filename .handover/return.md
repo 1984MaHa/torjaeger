@@ -3,80 +3,83 @@
 **Stand:** 2026-09-30
 **Von:** claude-code
 **An:** cowork
-**Auftrag:** Version 1.2.0 (Anpassungen nach Testlauf 30.09.2026), danach Fehlerkorrektur 1.2.1. Modus bauen, Stufe voll
+**Auftrag:** Version 1.3.0 (Avatare neu). Modus bauen, Stufe voll
 
 ```
 Rückübergabe claude-code nach cowork, 2026-09-30.
-Projekt: Torjäger-Liga. Auftrag 1.2.0 ist umgesetzt, als 1.2.1 nachgebessert, nach preview und main gepusht und in Vorschau UND Live deployed (alles von Marco ausgeführt, siehe 1).
+Projekt: Torjäger-Liga. Auftrag 1.3.0 (Avatare neu) ist gebaut, getestet und lokal auf preview committed. NICHT gepusht, NICHT deployed, NICHT im Browser angesehen (siehe 1 und 6).
 
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
-- Marco hat selbst ausgeführt: (a) git push origin preview (nach 1.2.0 auf 1d57caf, nach 1.2.1 auf ca15a8d, jeweils per git fetch bestätigt), (b) SSH auf die NAS und Vorschau-Deploy (sudo sh deploy.sh im Ordner torjaeger-preview), zweimal: 1.2.0 (Health-Antwort meldete {"ok":true,"preview":"VORSCHAU","serverVersion":"1.2.0"}) und 1.2.1 (Marco: "ist durch, läuft jetzt"). (c) Den Screenshot mit der unklaren Frage Schal/Schall geschickt (siehe 5). Claude hat auf Marcos "push it" gepusht (Befehl lief von Claude aus).
-- Ausdrücklich NOCH NICHT gemeldet oder ausgeführt: Abnahme der neuen Ansichten auf iPad und iPhone, Kontrolle von Emils Stand nach der Migration im Live (Punkte, Sticker, Ligen), Bereinigen der Testrunden in Emils Konto (entscheidet Marco). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
-- Zusätzlich von Marco ausgeführt nach der Abnahme der Vorschau: Anweisung "zieh auch die Hauptseite nach" (Claude: lokaler Fast-Forward preview nach main), "push main" (Claude hat main gepusht, origin/main = adb3c07), danach Live-Deploy auf der NAS im Ordner torjaeger (sudo sh deploy.sh). Marco: "live ist durch". Live läuft damit 1.2.1 (laut Marco; die Health-Antwort des Live-Servers wurde hier nicht gesehen).
+- Nichts. Marco hat nur den Start freigegeben ("ja" nach der Ankerprüfung). Kein Push, kein Merge, kein Branch-Wechsel, keine Befehle auf der NAS, keine Tests auf iPad oder iPhone, keine Anweisung zu main oder Live.
+- Ausdrücklich NOCH NICHT ausgeführt: Push von preview, Vorschau-Deploy auf der NAS, Abnahme auf dem iPad, Kontrolle von Emils migriertem Stand. main und Live sind unberührt (Live läuft weiter 1.2.1).
+- Ich (Claude) habe die Seite bewusst nicht im Browser oder in der Vorschau geöffnet und keine Screenshots gemacht (Wunsch von Marco, er prüft visuell selbst). Die neue Zeichnung ist nur per Test geprüft (Struktur, Geometrie, Marker), nicht mit dem Auge.
 
 2. STAND JE UMGEBUNG
-- Anker am Start stimmten: preview baab42f, main 882d8e1, Arbeitsbaum nur M .handover/current.md. Seither drei Code-Commits auf preview: 8473864 (1.2.0), ca15a8d (1.2.1) und die Rückübergabe-Commits.
-- preview und origin/preview: ca15a8d enthält 1.2.1, danach folgt der Commit mit dieser Rückübergabe (lokal, gepusht erst nach Marcos "push it").
-- main und origin/main: adb3c07 (Fast-Forward von preview, von Claude auf Marcos Anweisung gepusht). Der Auftrag sagte "nicht nach main mergen"; Marco hat das in der Sitzung bewusst geändert, ohne dass eine Abnahme aller Punkte auf dem iPad gemeldet wurde.
-- Live läuft 1.2.1 (Marco: Deploy durch). Die Vorschau läuft ebenfalls 1.2.1. Vor dem Live-Deploy sichert deploy.sh data/ nach data/backups/pre-deploy-<Zeit>/ (Rückweg über den Eltern-Bereich, Sicherungen vor Updates).
-- Version 1.2.1 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, package.json). Neue Dateien app/js/check.js und app/js/stickers.js stehen in FILES von sw.js.
+- Anker am Start stimmten alle: preview f320e81, main adb3c07, Arbeitsbaum nur M .handover/current.md.
+- preview (lokal): Code-Commit 2dc3c1b (Version 1.3.0), darauf ein Commit mit dieser Rückübergabe. origin/preview steht noch auf f320e81 (nicht gepusht).
+- main und origin/main: adb3c07, unverändert. Live läuft 1.2.1, die Vorschau läuft 1.2.1 (so wie vor der Sitzung).
+- Version 1.3.0 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, version in package.json). Keine neue Datei in app/ (nur drei neu geschriebene), also keine Änderung an FILES in sw.js nötig (Test prüft es).
 
 3. WAS UMGESETZT IST (Auftragspunkte)
-- Fokus: Nur die aktuelle Liga groß (Themen mit Häkchen, Fortschrittsbalken, Spielauswahl). Andere Ligen schmale Zeile: Name, Klasse, Status (Gesperrt, Schnuppern möglich, Probetraining: noch n Aufgaben, Wartet auf Freigabe, Frei, Durchgespielt). Antippen klappt auf. Frei oder Probetraining: Taste "Hier spielen" macht sie zur aktuellen Liga. Gesperrt: Freispiel-Hinweis und Schnuppern. Vorgabe "aktuell" = höchste ganz freie Liga, Wahl liegt in progress.cur {li, t} (Merge: neuester gewinnt). Die Anzeigetafel oben folgt der aktuellen Liga.
-- Umbenennung: Trainingscamp (ID L1 bleibt). In app/ steht kein "Bambini" mehr (Test). In SPEC und CHANGELOG steht der alte Name nur noch als Verweis auf die Umbenennung.
-- Spielauswahl: Mathe und Deutsch öffnen darunter "Mix: alles aus Mathe/Deutsch" plus je einen Themenblock pro Thema (Name, Häkchen sicher, kleiner Balken der letzten 10, Hinweis Päckchen). Das Mix-Spiel bleibt direkt. Themenblöcke zählen für Punkte, Sticker, Statistik, Aufstieg.
-- Sticker: 24 Designs in app/js/stickers.js (24 Formen, 24 Verläufe, 24 eigene SVG-Motive, 24 Jubelrufe). Jubelruf groß, Fußballbegriff klein darunter. Index bleibt, Emils gesammelte Sticker behalten ihren Platz.
-- Kontroll-Pfiff: Themenblock = Päckchen (Schreiben ohne Rückmeldung, Übersicht mit Probe und Antwort ändern, "Ich habe kontrolliert ✓" oder "Ohne Kontrolle abgeben", Auswertung mit Torszenen). Bonus nur für falsch und nach Kontrolle richtig. Statistik je Konto und Thema (stats.<Thema>.ctl), Anzeige im Eltern-Bereich unter Lernstand ("Kontrollieren").
-- Päckchen-Generatoren im Stil des Blatts: Teilen mit Rest (gleicher Teiler, Dividend steigt, Rest wächst oder springt), Einmaleins, Rechnen bis 1000, Malnehmen groß, Teilen groß. Andere Themen: verschiedene Aufgaben desselben Generators.
-- Datenmodell: Schemaversion 3 (Konto), global bleibt 2. Migration 2 nach 3 ohne Verlust, Test mit test/fixtures/state-v2.json (Format 1.1.5, mit altem Code erzeugt). Merge-Regeln in SPEC.md.
+- Zielstil: flach, keine Konturlinien, große Farbflächen, eine hellere Glanzfläche. Großer runder Kopf, Punkt-Augen mit Lichtpunkt (Augenfarbe als Farbfläche), Bogen-Brauen, Strich-Nase, rosa Bäckchen, Mund als Lächel-Linie oder offenes Lachen (weiße Zähne, rosa Zunge). Ohren mit hellerem Innenbereich. Keine Lippen, keine Fläche oder Kontur um Mund und Kinn, Schatten nur als Fläche am Hals. Tests prüfen das an der Zeichnung (Konturfarbe fehlt, Mundgruppe nur Rosé und Mundinneres, nach der Kopfform nur Brauen, Augen, Nase, Bäckchen, Mund).
+- Ganzkörperfigur ist die Hauptfigur (Kopf groß, kurzer Körper, Arme, Hände, Hose, Stutzen, Schuhe), vorn und hinten, Haltung stand oder shoot. Die Torszene zeigt die Figur von hinten in Schusspose (Schussbein nach außen gehoben, Arme ausgestreckt). Vorn: Kragen, Muster, kleine Nummer auf der Brust. Das Brustbild (Kachel, Trainerbank, Sprechblasen, Admin) ist ein Ausschnitt derselben Figur im runden Pastellkreis, der Kopf ist dieselbe Zeichnung (Test vergleicht den Kopf in Ganzkörper, Brustbild und Kopfausschnitt).
+- Baukasten in 6 Schritten (Reihenfolge von Marco) mit großer Ganzkörper-Vorschau, Umschalter Vorne und Hinten, bei den Schritten 2 bis 5 zusätzlich der Kopf vergrößert, Zurück, Weiter, Würfel (ab Schritt 2, nur Felder des Schritts), Fertig (in jedem Schritt, speichert) und Schrittleiste (jeder Schritt einzeln antippbar, auch später über "Mein Spieler"). Schritt 1 Junge oder Mädchen nur Vorauswahl (Reihenfolge der Frisuren und Vorschläge, nichts eingeschränkt). Schritt 2 Kopfform zuerst, dann Hautton (8 Töne) und Körperbau. Schritt 3 Frisur (19), Haarfarbe (11), Brauenfarbe (wie Haare oder eigene). Schritt 4 Augenform, Augenfarbe, Mund (Lächeln, Breites Lachen, Ernst, Überrascht), Nase, Brauen, Sommersprossen, Bäckchen. Kein Bart bei Kindern. Schritt 5 Kleidung fürs Porträt (Trikot, T-Shirt, Sportjacke mit Farbe), Brille, Kopfbedeckung (Cap, Cap verkehrt, Mütze, Stirnband, Bandana, Hut) mit Farbe, Hintergrund. Schritt 6 Trikot und Verein (alles wie bisher, plus Name und Nummer).
+- Kopfbedeckungen: alle Vorderansichten enden bei y 33, die Brauen beginnen bei y 34,9. Test für jede Kopfform mal jede Kopfbedeckung mal jede Frisur (auch mit Brille). Cap, Cap verkehrt, Mütze, Bandana und Hut verdecken die Frisur oben, nur Koteletten und hängende Haare bleiben. Das Stirnband liegt über dem Haaransatz.
+- Rückansicht: jede der 19 Frisuren hat eine eigene Hinterkopf-Zeichnung (Test: alle verschieden, kein Gesicht, keine Vorderfrisur, Ohren da). Zöpfe, Pferdeschwanz und lange Haare enden über dem Namensfeld. Jede Kopfbedeckung hat eine eigene Rückansicht.
+- Trikotrücken: Rückenfeld x 44 bis 76, y 92 bis 129. Name gebogen (Buchstaben einzeln auf einem Kreisbogen), über der Nummer, automatisch skaliert (Test mit leerem Namen, EMIL, MAXIMILIAN, WOLFGANGXY, AAAAAAAAAA, WWWWWWWWWW und Nummern 1, 7, 10, 88, 99, 00: alles im Feld, Grundlinie der Nummer y 127, Hose beginnt y 128).
+- Trainerteam: derselbe Kopf und Stil als Brustbild, derselbe Baukasten im Eltern-Bereich (Schritte 2 bis 5 mit Schrittleiste und Würfel), Extras nur für Erwachsene: Bart (Vollbart, Kinnbart, Schnurrbart, Dreitagebart, Bartfarbe), Merkmal (Pfeife oder Klemmbrett), Ohrringe, Brille, Kopfbedeckung. Namen einstellbar, Vorgaben "Trainer" und "Trainerin" bleiben (Trainer mit Glatze, Brille, dunkler Jacke, Pfeife; Trainerin blond halblang mit Creolen).
+- Datenmodell: schemaVersion 4 (Konto), global 3. Migration 3 nach 4 (Avatar über cleanLook, Zeitstempel bleibt) und global 2 nach 3 (Trainer). Fixtures im Format 1.2.1, mit dem ALTEN Code erzeugt (git archive HEAD vor den Änderungen): test/fixtures/state-v3.json (Mädchen, Zöpfe, Mütze, Nummer 88, Name WOLFGANGXY) und test/fixtures/global-v2.json (Trainer "Coach Kai" mit Vollbart). Zusammenführen: Aussehen neuester gewinnt (unverändert, auch mit neuen Feldern getestet).
+- Doku: SPEC.md (Avatar, Trainer, Datenmodell 4, Migration, Merge), CHANGELOG.md (1.3.0), README.md, CLAUDE.md (Schemaversion 4 und 3).
 
-4. ENTSCHEIDUNGEN UND ABWEICHUNGEN (Felder, die der Auftrag offen ließ)
-- Päckchengröße: Teilen mit Rest 6, Einmaleins 5, Rechnen bis 1000 und Malnehmen und Teilen groß je 4, alle anderen 5 (Grenzen 3 bis 6 im Code). Grund: Teilen mit Rest braucht Länge, damit der Rest wachsen und springen kann. Das Blatt hat 3er-Päckchen, bei Bedarf in PACK_N (app/js/check.js) kürzen.
-- Päckchen nicht im Mix (Empfehlung des Auftrags übernommen).
-- Kontroll-Bonus: 8 Punkte je selbst gefundenem und richtig verbessertem Fehler (BONUS_FIX in content.js), zusätzlich zu den 10 Punkten für die richtige Endantwort. Weniger als ein Tor, ein Test sichert das.
-- "Ohne Kontrolle abgeben" zählt die Antworten, wie sie zuletzt im Päckchen standen, ohne Bonus und ohne Kontroll-Statistik. Bei "Antwort ändern" ist das Eingabefeld zuerst leer (die alte Antwort steht darüber), damit das Kind neu nachdenkt.
-- Probe zählt je Aufgabe einmal (erstes Aufklappen). Die Probe rechnet mit der Antwort des Kindes (Teilen mit Rest: Teiler · Ergebnis + Rest = ?). Die Lösung kommt nie im Text vor, Test mit Zufallsaufgaben aller Themen. Einzige Ausnahme im Test: eine Zahl, die schon in der Aufgabe steht oder selbst der Rechenschritt ist (zum Beispiel 4 Zehner = 40), das ist kein Verrat.
-- Liga-Auswahl "Hier spielen" erlaubt auch Ligen im Probetraining (spielbar), nicht gesperrte und nicht wartende. Wechsel wird wie jede Änderung sofort lokal gespeichert und abgeglichen.
-- Ein Päckchen wird erst bei der Abgabe gespeichert (dann vollständig). Bricht die App mittendrin ab, gehen die Antworten dieses Päckchens verloren (beim normalen Spiel bleibt jede beantwortete Aufgabe erhalten). In SPEC.md unter Bekannte Grenzen. Alternative wäre Zwischenspeichern, hier bewusst nicht gebaut.
-- Trainer-Hilfe gilt im Päckchen wie sonst. Das Angebot nach der Tipp-Zeit kommt nur beim Schreiben, nicht im Kontroll-Pfiff.
-- .handover/current.md (Marcos Auftrag, war als geändert vorgemerkt) ist im 1.2.0-Commit mit enthalten, damit der Arbeitsbaum sauber ist.
-- Abweichung vom Auftrag (von Marco angewiesen): Merge nach main, Push und Live-Deploy wurden in dieser Sitzung doch gemacht. Sonst keine Abweichung bei den Nicht-Zielen: keine Modi Phase 3, kein Aufgabenkatalog, keine Einführungstour, keine npm-Pakete, keine externen Ressourcen.
+4. ENTSCHEIDUNGEN UND ABWEICHUNGEN (Felder, die der Auftrag offen ließ, und Annahmekorrekturen)
+- Frisur ist jetzt ein Schlüssel (hair: "zoepfe" statt Zahl je Junge oder Mädchen). Grund: Junge und Mädchen dürfen nichts einschränken, eine Liste je Geschlecht passte nicht mehr. 19 Frisuren in einer Liste (die alten Listen ergeben zusammen 18 verschiedene, neu ist Halblang), alte Indizes werden über eine feste Tabelle umgerechnet, nichts geht verloren (Test).
+- Porträt-Kleidung und Trikot sind getrennte Felder (outfit, outfitColor). Standard ist Trikot, also sehen migrierte Avatare im Porträt aus wie vorher. Die Ganzkörperfigur trägt immer das Trikot.
+- Kopfformen 5 (wie 1.1.4), Frisuren 19, Hauttöne 8, Haarfarben 11, Münder 4, Kopfbedeckungen 7 (neu Hut), Bärte 5 Werte (Ohne plus 4 Formen). Mindestens so viel Vielfalt wie 1.1.4.
+- Mund "Breites Grinsen" heißt jetzt "Breites Lachen". Alter Wert 0 und 1 bleiben gleich belegt.
+- Brauen: Dicke Dünn, Normal, Dick wie bisher, Farbe wie die Haare, solange browColor leer ist.
+- Bart bei der Trainerin ist im Baukasten auch wählbar (Vorgabe aus, Würfel gibt ihr keinen). Auftrag nannte "Trainer und Trainerin", also nicht eingeschränkt.
+- Trainerteam nur als Brustbild, keine Ganzkörperfigur (Auftrag Abschnitt 5 nennt Ganzkörper und Brustbild, die Abnahme nur "im neuen Stil, baubar"). Wenn Marco die Trainer ganz sehen will, ist das ein eigener kleiner Auftrag.
+- Global wurde auf Schemaversion 3 angehoben (Auftrag: "falls nötig"). Grund: Trainer-look ist neu aufgebaut, ältere Apps sollen ihn nicht falsch lesen, sondern sich neu laden (wie bei Schema 3 im Konto).
+- Würfel in Schritt 1 nimmt eine Vorlage des gewählten Geschlechts (nur 5 Möglichkeiten). Schritt 3 würfelt aus den ersten 12 der Reihenfolge, damit die Vorschläge zum Geschlecht passen.
+- Querstreifen und Brustband laufen nur auf der Vorderseite, damit Name und Nummer auf dem Rücken lesbar bleiben (Schulterstreifen laufen hinten mit).
+- Namensschrift: Buchstabenbreite 0,58 mal Schriftgröße angenommen (Lilita One), Grenze 32 Einheiten. Bei 10 Buchstaben entsteht eine kleine Schrift (etwa 5,5). Wenn der Name auf dem iPad zu klein wirkt, in backLayout (avatardraw.js) das Feld oder den Faktor ändern.
+- SVG-Kennung avclip (Kreisausschnitt) kommt in jeder Brustbild-Grafik mehrfach vor, alle mit derselben Form. Doppelte Kennungen sind streng genommen ungültiges HTML, funktionieren aber in Safari und Chrome. Bei Problemen auf eindeutige Kennungen umstellen.
+- Bestehende Tests angepasst, nichts gelockert: Schema 4 und 3 (admin, adminview, schema2, v12, e2e), Frisuren als Schlüssel (admin, schema2, e2e), Baukasten im e2e neu durchgespielt (6 Schritte, Würfel, Rückansicht, Trainer mit Bart und Klemmbrett). Die Tests der alten Zeichnung in test/avatar.test.mjs (Comic-Kontur, Zahl-Frisuren, alte Oberfläche) sind durch test/v13.test.mjs ersetzt. Die Tests zu Torszene, Sprechblase, Bewegung, Tipps und Trainerblock blieben unverändert erhalten.
+- Keine Gedankenstriche in App, Doku und Tests. Keine externen Ressourcen, keine Fotos, keine Bibliotheken, keine Änderungen an Aufgaben, Ligen, Kontroll-Pfiff, Stickern.
 
 5. RÜCKMELDUNGEN UND WÜNSCHE VON MARCO IN DIESER SITZUNG
-- Marco (Abnahme der Vorschau, Screenshot "Doppelte Mitlaute"): Die Frage "Welches Wort ist richtig geschrieben?" bot Schal und Schall an. Beide sind richtig und meinen Verschiedenes, das verwirrt beim Üben. Umgesetzt in 1.2.1: Das Paar ist raus (ersetzt durch Kette und Kete), ein Test stellt sicher, dass bei dieser Aufgabe nie zwei echte Wörter zur Wahl stehen.
-- Selbst gefunden beim Durchsehen (gleiche Art Fehler): Beim Perfekt galten ich habe gelaufen, gefahren, geschwommen, gesprungen als falsch, sind aber regional oder je nach Bedeutung richtig. In 1.2.1 stehen bei diesen vier Verben nur eindeutig falsche Formen zur Wahl (zum Beispiel ich habe gelauft). Test ergänzt. Nicht geprüft: Die übrigen Wortlisten wurden nur gelesen, nicht gegen ein Wörterbuch geprüft (auffällig aber unkritisch: Werk und Werg bei Verlängern).
-- Marco: "zieh auch die Hauptseite nach": als Merge von preview nach main verstanden (lokal, Fast-Forward). Falls Marco damit etwas anderes meinte (zum Beispiel nur den Live-Deploy), bitte bei ihm nachfragen. Marco: Bitte bei Aufgaben immer eindeutige Fragen, das Üben darf Kinder nicht verwirren.
+- Keine neuen. Marco hat nur den Start freigegeben. Die Klarstellung (Ganzkörper ist Hauptfigur, Vorlagen nur für den Stil, Baukasten mit Vorschau vorn und hinten) kam vorher über den Cross-Handover und ist umgesetzt.
 
 6. TESTS
-- node --test: 127 Tests, alle grün (vorher 103, 1.2.0 hatte 125). Neu: test/v12.test.mjs (23 Tests, darunter Eindeutigkeit von Doppelte Mitlaute und Perfekt) und ein Abschnitt im Ende-zu-Ende-Test (ganzes Päckchen mit Probe, Antwort ändern und Kontroll-Pfiff durch die echte app.js, Stand auf dem Server geprüft).
-- Fünf bestehende Tests wurden angepasst, weil sich das Verhalten bewusst ändert: Schema 3 (admin, adminview, schema2, e2e), Name Trainingscamp (views), Fachauswahl öffnet erst das Panel (e2e). Keine Erwartung wurde gelockert.
-- Nicht geprüft (Marco): wie die 24 Sticker und die Ansichten aussehen, Bedienung auf iPad und iPhone, Zahlenblock im Päckchen, Sticker-Motive lesbar bei 64 Pixeln.
+- node --test: 134 Tests, alle grün (vorher 127). Neu: test/v13.test.mjs mit 17 Tests: Migration 3 nach 4 mit Fixture 1.2.1, alte Frisuren, globale Migration, Zusammenführen, flacher Stil ohne Mund- und Kinnkontur, kein Bart bei Kindern, Kopf im Brustbild gleich Ganzkörper, alle Frisuren vorn und hinten, Kopfbedeckungen über der Brauenlinie (alle Kombinationen), Hinterkopf je Frisur, Rückenfeld mit langen Namen und 88, Baukasten 6 Schritte, Junge oder Mädchen ohne Einschränkung, Würfel, Trainerteam, Emils Stand nach Migration.
+- NICHT geprüft (Marco): wie die Figuren tatsächlich aussehen (Proportionen, Gesicht, Haare, Trikotrücken, Schusspose), Lesbarkeit von Name und Nummer auf dem iPad, Bedienung des Baukastens auf iPad und iPhone, Form und Sitz jeder Kopfbedeckung, Wirkung der 19 Hinterkopf-Zeichnungen, Trainerbank und Sprechblasen. Die Zeichnungen sind von Hand als Pfade geschrieben und nur strukturell geprüft. Mit Überarbeitungen in avatardraw.js ist zu rechnen.
 
 7. RESTPOSTEN
 - Echter Blocker: keiner.
-- Bewusst offen: Hyper Backup nicht eingerichtet. Emils Konto im Live enthält noch Testrunden von Marco (entscheidet Marco). Zwischenspeichern eines laufenden Päckchens nicht gebaut. Die Vorschau hat eigene Daten: ein Konto dort startet bei Null, zum Prüfen der Migration eines Live-Stands müsste eine Sicherung von Emils Konto in die Vorschau zurückgespielt werden (Eltern-Bereich, Sicherungen, oder Datei von Hand).
-- Kosmetisch: Tailscale auf der NAS 1.58.2. Sticker-Motive sind einfache Zeichnungen, bei Bedarf verfeinern (wie die Avatare). Jubelrufe und Motive sind meine Wahl, Liste in app/js/stickers.js (DESIGNS).
+- Bewusst offen: Abnahme von 1.3.0 auf dem iPad (Marco), Kontrolle von Emils migriertem Stand, iPad-Abnahme von 1.2.1, Hyper Backup, Testrunden in Emils Konto, Zwischenspeichern laufender Päckchen, Trainer nur als Brustbild.
+- Kosmetisch: Zeichnung im Detail nachschärfen nach Marcos Sicht (Haarformen, Schusspose, Hut), Sticker-Motive einfach, Tailscale auf der NAS 1.58.2.
 
 8. ANKER
-- Branch: preview. Code-Commit 8473864 (Elternteil baab42f). Danach ein Commit mit dieser Datei.
-- main, origin/main, preview, origin/preview: alle adb3c07 (vor dem Rückübergabe-Commit dieser Änderung). Arbeitsbaum nach dem Commit sauber, Branch preview ausgecheckt.
+- Branch: preview. Code-Commit 2dc3c1b (Elternteil f320e81). Danach ein Commit mit dieser Datei.
+- main, origin/main: adb3c07. origin/preview: f320e81 (lokal voraus, nicht gepusht).
 - Arbeitsbaum: sauber nach dem Rückübergabe-Commit.
 
 9. NÄCHSTE SCHRITTE FÜR MARCO (einzeln, unverschachtelt)
-1. ERLEDIGT (Marco): Push von preview und Vorschau-Deploy 1.2.1. Nur bei einem weiteren Stand wiederholen (Schritte 1 bis 3):
+1. Vorschau-Stand hochladen:
    git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
-2. Branch der Vorschau auf der NAS prüfen (nur prüfen):
-   cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh --check
-3. Vorschau aktualisieren (sichert vorher data/, holt den Code, baut den Container):
+2. Vorschau auf der NAS aktualisieren (sichert vorher data/, holt den Code, baut den Container):
    cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh
-4. Auf dem iPad die Vorschau öffnen (https://energizer.tailfc5923.ts.net:8443). Die App meldet "Es gibt eine neue Version", dort "Jetzt laden" tippen. Im Eltern-Bereich unter Sicherungen und System sollte Schemaversion "Server 3, App 3" und App-Version 1.2.0 stehen.
-5. Testcheckliste (Vorschau, mit einem Testkonto):
-   - Startseite: nur eine Liga groß, die anderen schmale Zeilen mit Status. Zeile antippen klappt auf, Schnuppern geht. Nach dem Freischalten der Kreisliga ist sie die große Liga, "Hier spielen" im Trainingscamp wechselt zurück. Wechsel auf einem zweiten Gerät nach dem Abgleich sichtbar.
-   - Mathe antippen: Mix plus Themenblöcke. Deutsch genauso. Mix-Spiel startet direkt.
-   - Themenblock starten: Päckchen schreiben, keine Rückmeldung, dann Kontroll-Pfiff. Probe tippen (keine Lösung sichtbar), Antwort ändern, "Ich habe kontrolliert ✓", dann Torszenen. Selbst gefundener Fehler: "Selbst gefunden, stark!" und +8 Bonus. Teilen mit Rest: Teiler gleich, Dividend steigt.
-   - Album: 24 verschiedene Sticker mit Jubelruf groß, Fußballbegriff klein. Ein Konto mit schon gesammelten Stickern (Emils Stand als Sicherung einspielen) behält sie.
-   - Eltern-Bereich, Lernstand: Abschnitt "Kontrollieren" mit Pfiffen, Proben, selbst korrigierten Fehlern. Letzte Spiele nennt "Päckchen: Thema".
-   - Name überall Trainingscamp (Startseite, Eltern-Bereich, Ergebnis).
-6. ERLEDIGT (Marco): Live. main gepusht, Live-Deploy durch. Offen für Marco: auf dem iPad in der Live-App "Jetzt laden" tippen (falls noch nicht), im Eltern-Bereich unter Sicherungen und System prüfen (Server 3, App 3, Version 1.2.1) und Emils Punkte, Sticker und Ligen kontrollieren. Rückweg bei Problemen: Eltern-Bereich, Sicherungen vor Updates, Konto wiederherstellen.
-7. Cowork: Plan und Index im Vault auf Version 1.2.1 nachziehen (Abschnitt G als umgesetzt markieren, Päckchengröße, Bonus 8, Jubelrufe stehen in stickers.js). Dort schreibt nur Cowork.
+3. Auf dem iPad die Vorschau öffnen (https://energizer.tailfc5923.ts.net:8443), "Jetzt laden" tippen. Im Eltern-Bereich unter Sicherungen und System: Schemaversion Konten "Server 4, App 4", global "Server 3, App 3", App-Version 1.3.0.
+4. Testcheckliste (Vorschau):
+   - Emils Konto (Sicherung einspielen) oder ein Testkonto: Mein Spieler in der Kabine. Sieht das migrierte Kind gleich aus (Farben, Nummer, Name, Trikot)?
+   - Neues Testkonto: Baukasten startet mit Schritt 1. Schritte 1 bis 6 durchgehen, Zurück, Weiter, Würfel (nicht in Schritt 1), Vorne/Hinten umschalten, Schrittleiste oben antippen, Fertig.
+   - Junge wählen und trotzdem Zöpfe und Pferdeschwanz nehmen, Mädchen mit Igel: alles muss gehen.
+   - Jede Kopfbedeckung (Cap, Cap verkehrt, Mütze, Stirnband, Bandana, Hut) mit mehreren Kopfformen: Augen und Brauen immer frei?
+   - Gesicht: nichts sieht nach Bart oder Lippen aus, auch bei Breites Lachen und Überrascht.
+   - Hinten-Ansicht: zu jeder Frisur ein passender Hinterkopf, kein Gesicht. Name gebogen über der Nummer, nichts über der Hose, Test mit langem Namen (zehn Buchstaben) und Nummer 88.
+   - Torszene (eine Aufgabe falsch und richtig): Figur von hinten mit Schusspose, Trikot sauber, Ball trifft.
+   - Kachel in Wer spielt?, Kabine, Trainerbank, Sprechblasen: Brustbild im Pastellkreis, gleiches Gesicht wie der Ganzkörper.
+   - Eltern-Bereich, Einstellungen: Trainer und Trainerin mit Schritten 2 bis 5, Bart (nur Erwachsene), Klemmbrett oder Pfeife, Würfel, speichern. In einer Aufgabe mit Hilfe sehen beide im neuen Stil aus.
+5. Wenn alles gut ist: Anweisung an Claude "zieh main nach" (lokaler Fast-Forward, danach push main und Live-Deploy wie bei 1.2.1). Nicht vorher.
+6. Cowork: Plan und Index im Vault auf 1.3.0 nachziehen (Abschnitt H als umgesetzt markieren, Hinweise aus Abschnitt 4 oben, insbesondere: Frisur als Schlüssel, getrennte Felder outfit und Trikot, Trainer nur Brustbild, Global Schema 3). Dort schreibt nur Cowork.
 ```
