@@ -1,79 +1,54 @@
-# Rückübergabe claude-code nach Cowork
+# Rückübergabe claude-code an cowork, 2026-09-30
 
-**Stand:** 2026-09-30
-**Von:** claude-code
-**An:** cowork
-**Auftrag:** Version 1.4.0 (Englisch und Sachkunde) und Nachbesserung 1.4.1. Modus bauen, Stufe voll
+**Auftrag:** Version 1.5.0, feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
+**Stand:** gebaut und lokal getestet (`node --test`: 167 von 167 grün). Committet auf `preview`, **nicht gepusht, nicht nach main gemerged, nicht deployed**.
 
-```
-Rückübergabe claude-code nach cowork, 2026-09-30.
-Projekt: Torjäger-Liga. Auftrag 1.4.0 (Englisch und Sachkunde, vier neue Aufgabenarten, Vorlesen, Themensteuerung) ist gebaut, getestet und lokal auf preview committed. NICHT gepusht, NICHT deployed, NICHT im Browser angesehen (siehe 1 und 6).
+## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat
+- Angewiesen: "ja so starten", also 1.5.0 auf `preview` von `b19e72d` aus bauen (nicht von `adb3c07`).
+- Nichts selbst ausgeführt gemeldet: kein Push, kein Merge, kein Branch-Wechsel, keine Befehle auf der NAS, keine Tests auf iPad oder iPhone.
+- **Noch nicht ausgeführt:** Push von `preview`, `deploy.sh` für die Vorschau auf der NAS, Sichtprüfung auf dem iPad, Merge nach `main`, Live-Deploy.
 
-1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
-- Start freigegeben ("ja los"). Dann auf seine Anweisung ("ja okay, push") habe ich 1.4.0 nach origin/preview gepusht (81eb864 bis b95703c). Marco hat danach auf der NAS in /volume1/docker/torjaeger-preview das Deploy der Vorschau gemacht und mit 1.4.0 getestet (nach seiner Aussage, Ergebnis unten bei den Rückmeldungen). Kein Merge, kein Branch-Wechsel, keine Anweisung zu main oder Live.
-- 1.4.1 (bda67cf) habe ich auf Marcos Anweisung ("ja push") nach origin/preview gepusht. Marco hat die Vorschau auf der NAS deployed ("deploy ist durch"), getestet und abgenommen ("Wesentlich besser. Passt jetzt so für mich.").
-- Marco hat danach angewiesen, preview auf die Hauptversion (main) zu bringen. Ich habe preview nach main gemergt und main gepusht (Stand siehe 2 und 7). Marco hat danach selbst auf der NAS das Live-Deploy ausgeführt ("deploy und live fertig hier"). Ich habe es nicht ausgeführt und nicht nachgeprüft. Marco hat Emils migrierten Stand danach auf dem iPad geprüft: alles passt ("geprüft passt alles").
-- Ausdrücklich NOCH NICHT ausgeführt: Push von preview, Vorschau-Deploy auf der NAS, Abnahme auf dem iPad (auch die von 1.2.1 und 1.3.0), Kontrolle von Emils migriertem Stand, Prüfung von docs/Inhalte-Englisch-Sachkunde.md durch Marco. main und Live sind unberührt (Live läuft weiter 1.2.1).
-- Ich habe die Seite bewusst nicht im Browser oder in der Vorschau geöffnet und keine Screenshots gemacht (Wunsch von Marco, er prüft visuell selbst). Die neuen Ansichten sind nur per Test geprüft: HTML-Ausgabe und eine Ende-zu-Ende-Prüfung der echten app.js mit Fake-DOM. Das Aussehen (CSS, Emoji-Darstellung auf iOS, Kompassrose) ist nicht mit dem Auge gesehen.
+## Stand je Umgebung
+- Anker-Abweichung bei der Annahme (mit Marco geklärt): `main` stand nicht auf `adb3c07`, sondern auf `b19e72d`. 1.4.1 war inzwischen abgenommen, nach `main` gemerged und live deployt (Commits `fe7f31b`, `94294c0`, `b19e72d`). `.handover/next.md` war bereits committet (nicht `??`).
+- Vor dieser Arbeit: `main`, `preview`, `origin/main`, `origin/preview` alle `b19e72d`. Live läuft 1.4.1.
+- Jetzt: `preview` hat einen neuen lokalen Commit mit 1.5.0. `main` und `origin/*` unverändert.
+- Vorschau auf der NAS: Stand unbekannt (Marco hat die Frage nicht beantwortet). Bitte bei Marco erfragen.
 
-2. STAND JE UMGEBUNG
-- Anker am Start stimmten alle: preview 81eb864, origin/preview 81eb864, main adb3c07, Arbeitsbaum nur M .handover/current.md.
-- preview (lokal): Commit mit Version 1.4.0 (siehe Anker unten) auf 81eb864. origin/preview steht noch auf 81eb864 (nicht gepusht).
-- Nach dem Merge: main und origin/main zeigen auf denselben Commit wie preview (Fast-Forward, siehe 7). Die Vorschau läuft 1.4.1 (abgenommen). Live läuft laut Marco jetzt 1.4.1 (main fe7f31b, bei Redaktion dieser Datei kam danach nur noch dieser Nachtrag dazu).
-- Version 1.4.0 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, version in package.json). Neue Dateien in FILES von sw.js: content-en.js, content-su.js, inputs.js, speech.js, tasks.js (Test prüft es).
-- Zu 81eb864: CHANGELOG (Abschnitt 1.3.0, Absatz "Nachbesserung") und SPEC (Avatar, Baukasten, Migration) enthalten die Nachbesserung bereits. Es war nichts nachzutragen, ich habe es im CHANGELOG 1.4.0 nur erwähnt. return.md hatte sie nicht erwähnt, das ist mit dieser Datei erledigt (Bäckchen, Zöpfe, Haarkappe, Halbzopf, Cap, Kleidungs-Vorschau, weniger Scrollen, Emil nachbaubar).
+## Was gebaut ist
+- **Bilder:** Originale nach `assets-src/` (emil-avatar.jpg, trainer-team.jpg). Aufbereitet mit `tools/prepare-figures.mjs` (nur Node, Regeln in `tools/figures.config.mjs`, Bibliothek `tools/fig-lib.mjs`, PNG-Leser `tools/png.mjs`, `tools/jpg2png.ps1` für die JPG-Umwandlung unter Windows). Ergebnis in `app/img/`: Emil vorn und hinten, Trainer und Trainerin vorn, je Grundbild plus Umfärb-Ebene, zusammen etwa 0,9 MB. Die Trainer-Rückansichten sind aufbereitbar (`use:false`), aber nicht ausgeliefert. Markenlogos auf Brust und Stutzen sind übermalt.
+- **App:** `figures.js` (Umfärben, Zwischenspeicher, Rückenfeld, Schriftkontrast), `figdata.js` (erzeugt), `avatardraw.js` (SVG mit eingebettetem Bild, Torszene mit Rückansicht und kleinem Satz nach vorn), `avatarui.js` ("Mein Spieler" auf einer Seite, Trainerfarben), `avatar.js` (Vorlagen, Paletten, 10 Vereinsfarben-Vorschläge, Prüfung). Alter Zeichencode und Baukasten entfernt.
+- **Vereinsname** auf Kachel, in der Kabine (Zeile unter dem Titel) und auf der Anzeigetafel (Kopfzeile im Spiel, Heim im Ergebnis).
+- **Datenmodell:** Schemaversion Konto 6, global 4. Migration 5 nach 6 übernimmt Trikot, Streifen (`c2`), Hose, Stutzen, Nummer, Name, Mannschaft, alte Felder bleiben. Global 3 nach 4: Jacke wird Polo. Fixtures `state-v5.json`, `global-v3.json` im Format 1.4.1.
+- **Doku:** README (Abschnitt "Figuren-Vorlagen"), SPEC.md, CHANGELOG.md (1.5.0), CLAUDE.md aktualisiert. Version 1.5.0 an allen vier Stellen, neue Dateien in `FILES` von `sw.js`.
+- **Tests:** neu `test/v15.test.mjs`. `test/v13.test.mjs` (Zeichenstil, Baukasten) gelöscht, die Migrations- und Abgleichtests sind in v15 angepasst übernommen. Weitere Tests an das neue Modell angepasst (avatar, schema2, e2e, v12, v14, admin, adminview).
 
-3. WAS UMGESETZT IST (Auftragspunkte)
-- Neue Aufgabenarten für alle Fächer (inputs.js, tasks.js, check.js): Zuordnen (match), Bild wählen (pic, auch als Kompassrose zum Antippen), Sortieren (sort), Reihenfolge (order). Nur Antippen. Zuordnen: Paare bekommen dieselbe Farbe, nochmal antippen löst das Paar, Fertig wertet aus, Tor nur wenn alle Paare stimmen, falsche Paare werden danach gezeigt. Statistik je Begriff. Probe bei Zuordnen und Sortieren: "Schau dir jedes Paar noch einmal an". Beim Ändern im Päckchen ist die Antwort vorbelegt.
-- Englisch (Kreisliga): 10 Themen, 10 bis 14 Wörter je Thema (content-en.js), drei Stufen (Bild wählen, Zuordnen englisch zu deutsch, Bild zur Schreibweise mit zwei falschen Schreibweisen, die keine Wörter der Liste sind). Farben als Farbkästen, Zahlen als große Ziffern, sonst Emoji.
-- Sachkunde (Kreisliga): 7 Themen, je 5 bis 7 Aufgabenvorlagen (content-su.js), zufällige Auswahl von Paaren, Karten und Schritten je Aufgabe.
-- Vorlesen (speech.js): 🔊 nur nach Antippen, en-GB bevorzugt, sonst en-US, sonst jede englische Stimme. Hör-Aufgabe (20 Prozent der Englisch-Aufgaben). Ohne englische Stimme sind Taste und Hör-Aufgaben weg. Stimmen, die das iPad verspätet lädt, lösen über voiceschanged ein Neuzeichnen aus.
-- Kreisliga-Karte: Tasten Englisch und Sachkunde mit Mix und Themenblöcken (Päckchen mit 4 Aufgaben, Kontroll-Pfiff, Probe). Mix-Spiel nur Mathe und Deutsch. Trainingscamp und Bezirksliga ohne die neuen Fächer. Häkchen, Punkte, Sticker zählen normal, Aufstieg nur Mathe und Deutsch.
-- Themensteuerung (Eltern-Bereich, Reiter Einstellungen): je Konto und Thema aller Ligen und Fächer aktuell, wiederholen, aus. Wiederholen: Gewicht mal 0,35. Aus: nicht im Mix, nicht in Listen, Chips, Trainerbank. Ausgeschaltete Mathe/Deutsch-Themen blockieren den Aufstieg nicht.
-- Eltern-Lernstand: auch Englisch (mit Stufe) und Sachkunde, Markierung (aus), (wiederholen), Liste der schwächsten Begriffe.
-- Datenmodell: Schemaversion 5 (Konto), global 3. Migration 4 nach 5 ergänzt settings.topicMode ({}). Neue Felder: stats.<Thema>.lv, stats.<Thema>.terms (je Gerät, Schlüssel "a:Begriff" und "c:Begriff"), last[].lv, Spielarten eng und su im Verlauf. Merge: Einstellungen neuester gewinnt, lv höherer Wert, terms je Gerät Maximum, angezeigt die Summe.
-- docs/Inhalte-Englisch-Sachkunde.md: vollständig, erzeugt mit node tools/inhalte-liste.mjs aus den Datendateien, unsichere Stellen markiert ("unsicher").
-- SPEC.md, CHANGELOG.md (1.4.0), README.md, CLAUDE.md (Schemaversion 5) aktualisiert.
+## Entscheidungen und Abweichungen
+- Ausgangspunkt `b19e72d` statt `adb3c07` (siehe oben).
+- Kein Python auf dem Rechner: Aufbereitung mit Node und .NET statt Pillow.
+- Bilder in Originalauflösung (kein Verkleinern), damit das Brustbild auf dem iPad scharf bleibt.
+- Kleine Nummer auf der Brust umgesetzt (sitzt dort, wo das Logo übermalt wurde).
+- Vereinsname auf der Anzeigetafel ersetzt dort den Kindernamen (Kopfzeile und Heim). Der Name des Kindes steht weiter in der Begrüßung.
+- Trainer: nur Name und Farben von Polo, Hose, Stutzen (Jacke, Bart, Brille und Weiteres entfallen).
+- Schuhe nicht umfärbbar. Kein Browser-Test von mir (Marco prüft visuell selbst).
+- Dockerfile unverändert: `assets-src/` kommt nicht ins Image.
 
-3a. RÜCKMELDUNGEN VON MARCO ZU 1.4.0 (Vorschau) UND UMSETZUNG IN 1.4.1
-- Kontroll-Pfiff bei Englisch Farben zeigt nicht mehr, welche Farbe gesucht war: jetzt Bild der Frage (Farbkasten, auch Stufe 3), Hörtaste bei Hör-Aufgaben, eigene Antwort als Bild.
-- Farben kamen mehrfach hintereinander: Prüfroutine gegen doppelte Fragen in Spiel (G.seen, bis 40 Versuche) und Päckchen, Kennung je Wort (keyOf, sig "w|Wort"). Test im E2E: ein ganzes Englisch-Spiel ohne doppeltes Wort.
-- Zuordnen Getreide: Weizen und Brötchen bekamen roten Rahmen, sah falsch aus: Paarfarben jetzt Blau, Lila, Türkis, Bernstein, Magenta (Test: nie rot oder grün).
-- Stoff noch nicht gehabt (Beispiel Sonnenstand): Thema Himmelsrichtungen und Karte trägt "late": kommt mit Faktor 0,4 seltener, Hinweis "Raten ist okay", falsche Antwort zählt nicht (soft). Andere Themen oder einzelne Aufgaben lassen sich im Code mit late markieren. Eine Steuerung im Eltern-Bereich dafür gibt es noch nicht (dort gilt weiter aktuell, wiederholen, aus). Marco soll sagen, welche Themen noch hinein sollen.
-- Trainerteam: klein oben rechts in der Kopfzeile der Fragenkachel, groß erst bei Angebot, Hilfe, Antwort; Hilfe-Taste klein.
-- Graue Themenkästen in der Kreisliga-Karte: entfernt (auch in aufgeklappten anderen Ligen).
-- Fächer mit Symbolen (Taschenrechner, Buch, Sprechblase, Keimling, Würfel für Mix) statt + Aa En Sk.
-- Trainerbank: immer eingeklappt, bleibt nur offen, solange man sie selbst aufgeklappt hat, beim Zurückkehren aus einem Spiel wieder zu.
-- Tests 1.4.1: test/v141.test.mjs (6 Tests), E2E erweitert. 166 Tests grün, mehrere Gesamtläufe stabil. Version 1.4.1 an allen vier Stellen, icons.js in FILES. Nicht am Gerät gesehen.
+## Restposten
+- **Echter Blocker:** keiner.
+- **Bewusst offen:** Sichtprüfung durch Marco auf dem iPad (Freistellung, Kanten, Farbsäume, Brustbild-Ausschnitt, Schrift im Rückenfeld, Satz in der Torszene, Logo wirklich weg); Abnahme 1.2.1 bis 1.4.1 auf dem iPad; Prüfung `docs/Inhalte-Englisch-Sachkunde.md`; Hyper Backup; weitere Kind-Vorlagen (Nichte); Schusspose.
+- **Kosmetisch:** an den Konturen kann ein feiner Farbsaum in der alten Farbe (Blau) bleiben; Sticker-Motive einfach; Tailscale auf der NAS 1.58.2.
 
-4. ENTSCHEIDUNGEN, ABWEICHUNGEN
-- Stufenschwelle Englisch: 8 von 10 richtig in der aktuellen Stufe (wie MASTER_K von MASTER_N). Stufe steigt pro Thema, sinkt nie (Merge nimmt den höheren Wert). Das Häkchen je Englisch-Thema verlangt Stufe 3 und "sicher".
-- Stufe steht als stats.<Thema>.lv, nicht in progress. Dadurch keine eigene Merge-Regel außer Maximum.
-- Themensteuerung liegt in settings.topicMode (ein Schlüssel je Thema, fehlt = aktuell). Sie gehört damit zu den Einstellungen und wird als Ganzes vom neueren Stand gewonnen, nicht je Thema. Bei zwei Geräten, die gleichzeitig verschiedene Themen umstellen, gewinnt das spätere. Das ist dieselbe Regel wie für Tipp-Zeit und Co.
-- Päckchengröße Englisch und Sachkunde: 4 (Zuordnen und Sortieren dauern länger). Paare je Zuordnen 3 bis 5 (Englisch 4 bis 5), Karten je Sortieren 4 bis 8 (Sachkunde 5 bis 8, je nach Vorlage), Körbe 2 oder 3.
-- Alle Ausgaben, die nach "Ligen" fragen (topicsOf, safeCount, mastered), bleiben bei Mathe und Deutsch. Neu: allTopicsOf (alle Themen), gateTopics (Aufstieg, ohne "aus"), poolOf (Mix = nur Mathe und Deutsch).
-- Sind alle Mathe/Deutsch-Themen einer Liga "aus", gilt die Liga NICHT als durchgespielt (mastered verlangt mindestens ein aktives Thema), sonst gäbe es einen Aufstieg ohne Leistung. Marco bitte bestätigen.
-- Bilder unsicher (Marco prüft, siehe Liste): Familie (Mutter, Vater, Schwester, Bruder als Frau, Mann, Mädchen, Junge), friend, home, arm, Jahreszeiten und Wetter (spring Tulpe, summer Strand, autumn Laub, winter Schneemann, hot, cold, storm), teacher, game, painting, music. Kein Emoji über Unicode 13 (Test mit Bereichsliste der Versionen 14 und 15).
-- Wo ein Emoji nicht eindeutig ist, steht es nicht in der Liste (zum Beispiel kein eigenes Bild für head, man, woman, hair).
-- Kartenzeichen in Sachkunde (Kirche, Bahnhof, Schule, Krankenhaus, Schwimmbad, Stopp, Kinder, Ampel, Fahrrad) sind Emoji, keine echten Karten- oder Verkehrszeichen. Kartenfarben (Blau, Grün, Braun, Gelb) sind vereinfacht. Beides in der Liste als unsicher markiert. Igel/Reh/Fuchs/Hase als Lebensraum sind vereinfacht.
-- Fehler im Test aufgedeckt und behoben: ein Farbkasten "#222222" wurde als Ziffer gelesen (Schwarz). Ein Tipp hatte die Lösung genannt (Sonne geht im Osten auf). Tipps prüft jetzt ein Test für alle neuen Aufgabenarten gegen alle Lösungsteile.
-- Verworfen: Drag-and-drop (Auftrag), echte Verkehrszeichen-Grafiken (Emoji laut Auftrag), Englisch im Gesamt-Mix (Auftrag).
+## Anker
+- Branch `preview`, Basis `b19e72d`, darauf der Commit "1.5.0: feste Bild-Vorlagen statt Avatar-Baukasten" plus dieser Rückübergabe-Commit.
+- Arbeitsbaum sauber nach dem Commit (`.work/` ist ignoriert).
 
-5. RESTPOSTEN
-- Echter Blocker: keiner.
-- Bewusst offen: Avatare auf Vorlagen (pausiert); iPad-Abnahme 1.2.1, 1.3.0, 1.4.0; Emojis und Layout der neuen Ansichten auf dem iPad sehen; Prüfung der Inhalte durch Marco und eine englischkundige Person (Konzept Abschnitt 11: natürliches, altersgerechtes Englisch, hier nur Einzelwörter); Hyper Backup; Testrunden in Emils Konto; Zwischenspeichern laufender Päckchen; Push und Deploy der Vorschau.
-- Kosmetisch: Sticker-Motive einfach; Tailscale auf der NAS 1.58.2. Neu: Tippflächen der neuen Aufgabenarten und die Kompassrose sind nur per CSS geplant, nicht am Gerät geprüft. Englisch hat keine Mehrwort-Begriffe und keine Sprechen-Aufgaben (Konzept 7.1 E3-SP). Hör-Aufgabe nur als Bildauswahl.
-
-6. TESTS
-- node --test: 160 Tests grün (vorher 135). Neu: test/v14.test.mjs (24 Tests: Migration 4 nach 5 mit Fixture test/fixtures/state-v4.json, Inhalte und Eindeutigkeit der Emoji, Partner und Schreibweisen, alle Themen und Stufen mit je 120 bis 400 Stichproben, Zuordnen richtig und falsch und Paar lösen, Sortieren, Reihenfolge, Bild wählen, Kompassrose, Vorlesen mit und ohne Stimme, Themensteuerung, Aufstieg ohne Englisch und Sachkunde, Stufenwechsel, Begriffsstatistik, Merge, Ansichten, Eltern-Bereich, Dateien) und test/v14e2e.test.mjs (echte app.js mit Fake-DOM gegen echten Server: Kreisliga freigeben, Englisch ohne Stimme, Stimme kommt später, 🔊 antippen, Päckchen mit allen vier neuen Aufgabenarten, Probe, Antwort ändern, Kontroll-Bonus, Eltern-Themensteuerung und Abgleich mit dem Server). Bestehende Tests nur auf Schema 5 angepasst (Erwartungswerte 4 nach 5, settings mit topicMode).
-- Zwei Zeitprobleme in den Tests gefunden und behoben: (1) v14e2e erzwang eine Zuordnung, die mit Stimme in 1 von 5 Fällen eine Hör-Aufgabe wurde (Test, nicht App); (2) der alte e2e.test.mjs wartete nicht auf das Spielende beim Server und scheiterte unter Last im parallelen Lauf (Wartestelle jetzt mit Abfrage). Danach 10 Gesamtläufe hintereinander grün (160 von 160).
-
-7. ANKER
-- Branch: preview. Commit: siehe git log -1 (1.4.1; davor b95703c = 1.4.0 mit Testkorrekturen, a9f8e50 = 1.4.0). origin/preview und origin/main siehe Chat (beide auf 1.4.1 nach Merge und Push). Arbeitsbaum: sauber nach dem Commit. origin/preview: 81eb864 (nicht gepusht). main: adb3c07.
-
-8. NÄCHSTE SCHRITTE FÜR MARCO
-1. (erledigt von Marco) Live-Deploy auf der NAS.
-2. (erledigt von Marco) Emils Stand auf dem iPad kontrolliert, alles unverändert.
-3. Die Liste docs/Inhalte-Englisch-Sachkunde.md lesen (mit "unsicher" markierte Stellen) und Korrekturen zurückgeben. Entscheiden, welche weiteren Sachkunde-Themen als "Stoff noch nicht gehabt" (late) markiert werden sollen.
-4. Entscheiden: bei "alle Mathe/Deutsch-Themen aus" kein Aufstieg von selbst (so gebaut); ob Englisch und Sachkunde später in Trainingscamp, Bezirksliga, Mix und Probe-Liga einfließen.
-```
+## Nächste Schritte für Marco
+1. Push der Vorschau:
+   `git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview`
+2. Auf der NAS die Vorschau aktualisieren (wie bei 1.4.0 und 1.4.1, `deploy.sh` im Vorschau-Klon).
+3. Auf dem iPad prüfen:
+   - Kabine, "Wer spielt?" und Sprechblasen zeigen das Brustbild.
+   - "Mein Spieler": Farben, Vereinsfarben, Nummer, Name, Mannschaft, Vorne und Hinten.
+   - Torszene: Rückansicht mit Name und Nummer, Satz nach vorn.
+   - Eltern-Bereich, Einstellungen: Trainerfarben und Namen.
+   - Emils migrierter Stand: Farben, Nummer, Name, Mannschaft unverändert.
+4. Nach Abnahme: Merge nach `main` und Live-Deploy nur auf Marcos Anweisung.
