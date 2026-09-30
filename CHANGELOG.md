@@ -14,6 +14,13 @@ Der gezeichnete Avatar-Baukasten (1.3.0) ist ersetzt durch **feste Bild-Vorlagen
 - **Vorlagen-Auswahl vorbereitet:** `KID_TEMPLATES` in `avatar.js`, vorerst nur „Emil“. Weitere Vorlagen kommen als Bilddatei plus Eintrag dazu, die Auswahl erscheint von selbst.
 - **Werkzeug** `tools/prepare-figures.mjs` (mit `figures.config.mjs`, `fig-lib.mjs`, `png.mjs`, `jpg2png.ps1`) bereitet Bilder auf, nur Node. Ablauf im README, Abschnitt „Figuren-Vorlagen“.
 
+### Nachbesserung nach Marcos erster Sicht (gleiche Version 1.5.0, Vorschau)
+- **Emil größer und lesbarer:** Vorschau 300 statt 230, Torszene 190 statt 150 Bildpunkte. Rückennummer rutscht höher und wird größer, der eigene Name ist größer. Die Nummer auf der Brust ist deutlich größer.
+- **Mannschaftsname auf dem Trikot:** klein und gebogen oben auf dem Rücken, über dem eigenen Namen.
+- **Trainer im Eltern-Bereich:** neben dem Brustbild jetzt die ganze Figur, damit man die Kleidung sieht.
+- **Start immer auf „Wer spielt?“** mit den Bildern der Konten.
+- **PIN des Kindes** (freiwillig, 4 Ziffern): Kachel zeigt „(PIN)“ und fragt sie ab. Gesetzt in „Mein Spieler“, für Eltern sichtbar, änderbar und entfernbar im Eltern-Bereich (`profile.pin`, der neuere Stand gewinnt, kein Schemawechsel).
+
 ### Datenmodell (Schemaversion 6, global 4)
 - `profile.avatar`: `v` 4, `tpl`, `kit {trikot, streifen, hose, stutzen}`, `number`, `shirtName`, `team`, `t`. Migration 5 nach 6: Trikotfarbe, Streifenfarbe (`c2`), Hose, Stutzen, Nummer, Name und Mannschaft werden übernommen. Alle alten Felder (Frisur, Gesicht, `shirt`, `c1`, ...) bleiben im Stand erhalten, werden aber nicht mehr benutzt. Ein Stand ohne `kit` wird beim Lesen aus den alten Feldern gedeutet.
 - Global: `trainer.look` und `trainer2.look` haben `polo`, `hose`, `stutzen`. Die frühere Jacke wird zur Polo-Farbe, nie geänderte Trainer bekommen die neue Vorgabe (Migration 3 nach 4).

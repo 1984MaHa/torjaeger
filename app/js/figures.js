@@ -31,23 +31,31 @@ export function tintLayer(layer,w,h,colors){
   return out;
 }
 
-// ---------- Rücken: Name gebogen über der Nummer, im Rückenfeld ----------
+// ---------- Rücken: Mannschaft, Name gebogen über der Nummer, im Rückenfeld ----------
 const FONT="Lilita One, Arial Rounded MT Bold, Arial, sans-serif";
 export const FONT_FAMILY=FONT;
-const NUMW=.66,CAP=.75;
-// field = {x0,x1,y0,y1} in Bildpunkten der Figur. Alles bleibt im Feld, der Name wird bei langen Namen kleiner, die Nummer bei zwei Ziffern.
+const NUMW=.66,CAP=.75,LW=.6;
+// Buchstaben auf einem flachen Bogen (Mitte oben, die Ränder etwas tiefer). top = obere Kante der Schrift.
+function arc(text,fs,R,cx,top){
+  const cw=fs*LW,letters=[...text].map((ch,i,a)=>{const dx=(i-(a.length-1)/2)*cw,phi=dx/R;
+    return{ch,x:+(cx+R*Math.sin(phi)).toFixed(1),y:+(top+fs*.9+R*(1-Math.cos(phi))).toFixed(1),rot:+(phi*180/Math.PI).toFixed(1)};});
+  const phiMax=text?((text.length-1)/2*cw)/R:0,drop=text?R*(1-Math.cos(phiMax)):0;
+  return{letters,bottom:text?+(top+fs*.9+drop+fs*.2).toFixed(1):top,width:+(text.length*cw).toFixed(1)};
+}
+// field = {x0,x1,y0,y1} in Bildpunkten der Figur. Oben die Mannschaft (klein), darunter der eigene Name, darunter die Nummer, so groß wie der Platz erlaubt.
+// Alles bleibt im Feld: lange Namen werden kleiner, zweistellige Nummern auch, ohne Namen wird die Nummer größer.
 export function backLayout(look,field){
-  const name=String(look.shirtName||""),n=String(look.number||""),W=field.x1-field.x0,H=field.y1-field.y0,cx=(field.x0+field.x1)/2;
-  const pad=W*.04,Wi=W-2*pad;
-  const nameFs=name?+Math.max(W*.07,Math.min(W*.22,Wi/(name.length*.6))).toFixed(1):0,cw=nameFs*.6,R=W*1.1;
-  const phiMax=name?((name.length-1)/2*cw)/R:0,drop=name?R*(1-Math.cos(phiMax)):0;
-  const letters=[...name].map((ch,i,a)=>{const dx=(i-(a.length-1)/2)*cw,phi=dx/R;
-    return{ch,x:+(cx+R*Math.sin(phi)).toFixed(1),y:+(field.y0+nameFs*.9+R*(1-Math.cos(phi))).toFixed(1),rot:+(phi*180/Math.PI).toFixed(1)};});
-  const nameBottom=name?field.y0+nameFs*.9+drop+nameFs*.2:field.y0;
-  const base=field.y1-H*.03,avail=base-nameBottom-(name?H*.04:0);
-  const numFs=+Math.max(8,Math.min(Wi/(Math.max(1,n.length)*NUMW),avail/CAP,H*.52)).toFixed(1);
+  const team=String(look.team||""),name=String(look.shirtName||""),n=String(look.number||"");
+  const W=field.x1-field.x0,H=field.y1-field.y0,cx=(field.x0+field.x1)/2,Wi=W*.92;
+  const teamFs=team?+Math.max(W*.055,Math.min(W*.1,Wi/(team.length*LW))).toFixed(1):0;
+  const T=arc(team,teamFs,W*1.4,cx,field.y0);
+  const nameFs=name?+Math.max(W*.08,Math.min(W*.26,Wi/(name.length*LW))).toFixed(1):0;
+  const N=arc(name,nameFs,W*1.1,cx,T.bottom+(team&&name?H*.01:0));
+  const base=field.y1,avail=base-N.bottom-(name||team?H*.02:0);
+  const numFs=+Math.max(8,Math.min(Wi/(Math.max(1,n.length)*NUMW),avail/CAP,H*.6)).toFixed(1);
   return{
-    name:{text:name,size:nameFs,letters,top:+(field.y0+nameFs*.9-nameFs*CAP).toFixed(1),bottom:+nameBottom.toFixed(1),width:+(name.length*cw).toFixed(1)},
+    team:{text:team,size:teamFs,letters:T.letters,bottom:T.bottom,width:T.width},
+    name:{text:name,size:nameFs,letters:N.letters,top:+(T.bottom).toFixed(1),bottom:N.bottom,width:N.width},
     num:{text:n,x:cx,y:+base.toFixed(1),size:numFs,width:+(n.length*numFs*NUMW).toFixed(1),top:+(base-numFs*CAP).toFixed(1)}
   };
 }

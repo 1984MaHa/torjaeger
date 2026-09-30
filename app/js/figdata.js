@@ -26,10 +26,16 @@ export const FIGDATA={
    "field": null,
    "chest": {
     "cx": 131,
-    "y": 461,
-    "size": 54,
-    "width": 70
-   }
+    "y": 473,
+    "size": 88,
+    "width": 104
+   },
+   "logo": [
+    96,
+    417,
+    166,
+    469
+   ]
   },
   "emil-back": {
    "w": 381,
@@ -48,12 +54,13 @@ export const FIGDATA={
    ],
    "bust": null,
    "field": {
-    "x0": 112,
-    "x1": 272,
-    "y0": 385,
-    "y1": 700
+    "x0": 108,
+    "x1": 276,
+    "y0": 372,
+    "y1": 655
    },
-   "chest": null
+   "chest": null,
+   "logo": null
   },
   "trainerin-front": {
    "w": 192,
@@ -75,7 +82,8 @@ export const FIGDATA={
     216
    ],
    "field": null,
-   "chest": null
+   "chest": null,
+   "logo": null
   },
   "trainer-front": {
    "w": 208,
@@ -97,7 +105,8 @@ export const FIGDATA={
     232
    ],
    "field": null,
-   "chest": null
+   "chest": null,
+   "logo": null
   }
  }
 };

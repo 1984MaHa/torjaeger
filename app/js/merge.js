@@ -80,6 +80,7 @@ export function mergeProfile(local,remote){
   out.profile=clone((local.profile.t||0)>=(remote.profile.t||0)?local.profile:remote.profile);
   out.profile.avatar=clone(newerBy(local.profile.avatar,remote.profile.avatar));
   out.profile.avatarAsked=!!(local.profile.avatarAsked||remote.profile.avatarAsked);
+  const kp=newerBy(local.profile.pin,remote.profile.pin);if(kp)out.profile.pin=clone(kp);else delete out.profile.pin; // PIN des Kindes: der neuere Stand gewinnt
 
   const lp=local.progress,rp=remote.progress;
   const lg={};

@@ -9,12 +9,13 @@ import {fileURLToPath} from "node:url";
 import {readPNG} from "../tools/png.mjs";
 import {migrateProfile,migrateGlobal,newProfile,newGlobal,total,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,UnsupportedSchema} from "../app/js/model.js";
 import {mergeProfile,mergeGlobal} from "../app/js/merge.js";
-import {applyAvatar,applyTrainer,applyReset} from "../app/js/rules.js";
+import {applyAvatar,applyTrainer,applyReset,applyProfilePin,validKidPin} from "../app/js/rules.js";
 import {KIT_COLORS,KIT_KEYS,KIT_PRESETS,KID_TEMPLATES,POLO_COLORS,COLOR_NAMES,cleanLook,cleanTrainer,defaultLook,defaultTrainer,defaultTrainer2,upgradeOldHair,lookOf,withKit,withPreset,presetIndex} from "../app/js/avatar.js";
 import {FIGDATA} from "../app/js/figdata.js";
 import {tintLayer,backLayout,textOn,contrast,shadeChannel,hexToRgb,figureURL,loadFigures,setFigureEnv,storeSize,basePath,FIG_IDS} from "../app/js/figures.js";
 import {avatarSVG,trainerSVG,sceneSVG,figureParts} from "../app/js/avatardraw.js";
 import {avatarBuilderHTML,trainerPanelHTML} from "../app/js/avatarui.js";
+import {kidPinRow as adminKidPin} from "../app/js/admin.js";
 import {homeHTML,accountsHTML,playHTML,resultHTML} from "../app/js/views.js";
 
 const ROOT=fileURLToPath(new URL("..",import.meta.url));
@@ -137,9 +138,9 @@ test("Figuren-Bilder: Dateien, Maße, Liste des Service Workers, kein Markenlogo
 });
 
 test("Markenlogo auf der Brust ist übermalt: an der Stelle liegt Trikotfläche, kein helles Logo im Grundbild",()=>{
-  const info=FIGDATA.figures["emil-front"],b=png("fig-emil-front.png"),l=png("fig-emil-front-layer.png"),tr=info.regions.indexOf("trikot")+1,C=info.chest;
+  const info=FIGDATA.figures["emil-front"],b=png("fig-emil-front.png"),l=png("fig-emil-front-layer.png"),tr=info.regions.indexOf("trikot")+1,[lx0,ly0,lx1,ly1]=info.logo;
   let light=0,covered=0,n=0;
-  for(let y=Math.round(C.y-42);y<Math.round(C.y+6);y++)for(let x=Math.round(C.cx-36);x<Math.round(C.cx+36);x++){
+  for(let y=ly0;y<ly1;y++)for(let x=lx0;x<lx1;x++){
     const o=(y*b.w+x)*4,lum=.299*b.data[o]+.587*b.data[o+1]+.114*b.data[o+2];
     n++;if(b.data[o+3]>60&&lum>170)light++;
     if(l.data[o+3]===255&&l.data[o+1]===tr&&l.data[o+2]>=250&&Math.abs(l.data[o]-128)<=1)covered++;
@@ -213,15 +214,18 @@ test("Bilder laden, färben und zwischenspeichern: gleiche Farben gleiche Adress
 // ---------- Name und Nummer ----------
 test("Rückenfeld: Name gebogen über der Nummer, beides im Feld, lange Namen und zweistellige Nummern werden kleiner, nie über die Hose",()=>{
   const f=FIGDATA.figures["emil-back"].field,W=f.x1-f.x0;
-  const lay=(name,num)=>backLayout({shirtName:name,number:num},f);
+  const lay=(name,num,team="")=>backLayout({shirtName:name,number:num,team},f);
   const inField=B=>{
-    for(const L of B.name.letters){assert.ok(L.x>=f.x0&&L.x<=f.x1&&L.y>=f.y0&&L.y<=f.y1,"Buchstabe im Feld "+L.ch+" "+L.x+","+L.y);}
+    for(const L of [...B.team.letters,...B.name.letters]){assert.ok(L.x>=f.x0&&L.x<=f.x1&&L.y>=f.y0&&L.y<=f.y1,"Buchstabe im Feld "+L.ch+" "+L.x+","+L.y);}
     if(B.name.letters.length){const first=B.name.letters[0],last=B.name.letters.at(-1);assert.ok(first.x-B.name.size*.3>=f.x0&&last.x+B.name.size*.3<=f.x1,"Name nicht breiter als das Feld");}
     assert.ok(B.num.y<=f.y1&&B.num.top>=f.y0&&B.num.x-B.num.width/2>=f.x0-1&&B.num.x+B.num.width/2<=f.x1+1,"Nummer im Feld "+JSON.stringify(B.num));
     if(B.name.text)assert.ok(B.num.top>=B.name.bottom,"Nummer beginnt unter dem Namen");
+    if(B.team.text&&B.name.text)assert.ok(B.name.top>=B.team.bottom-0.1,"Name beginnt unter der Mannschaft");
   };
   const cases=[["EMIL","10"],["WOLFGANGXY","88"],["A","7"],["","5"],["WOLFGANG","100"],["MARIE LUISE","99"],["IIIIIIIIII","1"],["WWWWWWWWWW","99"]];
-  for(const[n,x]of cases)inField(lay(n,x));
+  for(const[n,x]of cases)for(const t of ["","Die Wirbel","Die ganz schnellen Blitze"])inField(lay(n,x,t));
+  assert.ok(lay("EMIL","7","Die Wirbel").team.size<lay("EMIL","7","Die Wirbel").name.size,"Mannschaft kleiner als der Name");
+  assert.ok(lay("EMIL","7","").num.size>=lay("EMIL","7","Die Wirbel").num.size);
   assert.ok(lay("WOLFGANGXY","88").name.size<lay("EMIL","88").name.size,"lange Namen werden kleiner");
   assert.ok(lay("EMIL","88").num.size<lay("EMIL","8").num.size,"zweistellige Nummern werden kleiner");
   assert.ok(lay("","8").num.size>=lay("EMIL","8").num.size,"ohne Namen darf die Nummer groß sein");
@@ -242,7 +246,7 @@ test("Schriftfarbe auf dem Trikot: hell oder dunkel, immer guter Kontrast (für 
 });
 
 // ---------- Zeichnung ----------
-test("Spieler: Ganzfigur vorn und hinten, Brustbild aus dem Vorderbild, Name und Nummer hinten, kleine Nummer vorn",()=>{
+test("Spieler: Ganzfigur vorn und hinten, Brustbild aus dem Vorderbild, Mannschaft, Name und Nummer hinten, Nummer vorn",()=>{
   const look=cleanLook({kit:KIT_PRESETS[1].kit,shirtName:"Emil",number:"7",team:"Rote Blitze"});
   const front=avatarSVG(look,{px:200}),back=avatarSVG(look,{px:200,view:"back"}),bust=avatarSVG(look,{crop:"bust",px:90});
   for(const [s,w] of [[front,"vorn"],[back,"hinten"],[bust,"Brustbild"]]){clean(s,w);assert.ok(s.includes("<image href="),w);}
@@ -250,7 +254,8 @@ test("Spieler: Ganzfigur vorn und hinten, Brustbild aus dem Vorderbild, Name und
   assert.ok(!front.includes("rueckenfeld")&&front.includes('data-k="chest"'),"vorn nur die kleine Brustnummer");
   assert.ok(bust.includes("clipPath")&&bust.includes("<circle")&&!bust.includes("data-k="),"Brustbild: rund, ohne Beschriftung");
   const bi=FIGDATA.figures["emil-front"].bust;assert.ok(bust.includes(`viewBox="${bi[0]} ${bi[1]} ${bi[2]-bi[0]} ${bi[3]-bi[1]}"`),"Fenster aus dem Vorderbild");
-  assert.ok(!back.includes("Rote Blitze")&&!front.includes("Rote Blitze"),"der Verein steht nicht auf dem Trikot");
+  assert.ok([..."ROTE BLITZE"].filter(c=>c!==" ").length>0&&(back.match(/data-k="team"/g)||[]).length==="Rote Blitze".length,"die Mannschaft steht oben auf dem Rücken");
+  assert.ok(!front.includes('data-k="team"'),"vorn steht sie nicht");
   assert.ok(figureParts(look,"back").id==="emil-back"&&figureParts(look,"front").id==="emil-front");
   // Brustbild ist ein Ausschnitt der Vorderansicht: gleiche Bildquelle
   assert.equal(front.match(/href="([^"]*)"/)[1],bust.match(/href="([^"]*)"/)[1]);
@@ -316,4 +321,38 @@ test("Neue Dateien stehen im Service Worker, der Baukasten-Code ist entfernt, RE
   for(const w of ["Figuren-Vorlagen","prepare-figures","figures.config","assets-src","jpg2png"])assert.ok(readme.includes(w),w);
   for(const f of ["tools/prepare-figures.mjs","tools/figures.config.mjs","tools/fig-lib.mjs","tools/png.mjs","tools/jpg2png.ps1"])assert.ok(fs.existsSync(path.join(ROOT,f)),f);
   const dockerignore=fs.readFileSync(path.join(ROOT,"Dockerfile"),"utf8");assert.ok(!dockerignore.includes("assets-src"),"Quellbilder gehören nicht ins Image");
+});
+
+// ---------- PIN des Kindes und Start ----------
+test("PIN des Kindes: 4 Ziffern, freiwillig, Eltern sehen sie, der neuere Stand gewinnt, Zurücksetzen behält sie",()=>{
+  const a=migrateProfile(fx("state-v5.json")),b=clone(a);
+  assert.equal(validKidPin("1234"),true);for(const v of ["123","12345","abcd","12 4",1234,null])assert.equal(validKidPin(v),false,String(v));
+  assert.equal(applyProfilePin(a,dev("A",1790100000000),"12a4"),false);assert.ok(!a.profile.pin);
+  assert.equal(applyProfilePin(a,dev("A",1790100000000),"4711"),true);assert.deepEqual(a.profile.pin,{code:"4711",t:1790100000000});
+  assert.equal(mergeProfile(a,b).profile.pin.code,"4711","PIN bleibt, wenn nur ein Stand sie hat");
+  applyProfilePin(b,dev("B",1790200000000),"");assert.equal(mergeProfile(a,b).profile.pin.code,"","Entfernen ist neuer und gewinnt");
+  assert.deepEqual(mergeProfile(a,b).profile.pin,mergeProfile(b,a).profile.pin);
+  assert.equal(applyReset(clone(a),dev("d",9)).profile.pin.code,"4711");
+  assert.equal(migrateProfile(clone(a)).profile.pin.code,"4711");
+});
+
+test("Wer spielt?: Konto mit PIN ist markiert und fragt die PIN, Mein Spieler und Eltern-Bereich zeigen sie",()=>{
+  const env={hasPin:true,persistent:true,syncText:"",updateReady:false,version:"1.5.0"};
+  const acc=[{id:"k-a",name:"Emil",avatar:null,locked:true},{id:"k-b",name:"Mia",avatar:null,locked:false}];
+  let h=accountsHTML(acc,{newAcct:false,acctMsg:"",adminAsk:false},env);
+  assert.ok(h.includes("Emil (PIN)")&&!h.includes("Mia (PIN)")&&!h.includes('id="kidPin"'));
+  h=accountsHTML(acc,{newAcct:false,acctMsg:"",adminAsk:false,pinAsk:{id:"k-a",msg:"Die PIN stimmt nicht."}},env);
+  assert.ok(h.includes('id="kidPin"')&&h.includes('id="kidPinOk"')&&h.includes("PIN für Emil")&&h.includes("Die PIN stimmt nicht."));
+  const b=avatarBuilderHTML({look:defaultLook("Emil"),pin:"4711",first:false,view:"front"});
+  assert.ok(b.includes('id="avPin"')&&b.includes('value="4711"')&&b.includes("Meine PIN"));
+  const s=newProfile({id:"k-abc12345",name:"Emil",deviceId:"d"});
+  assert.ok(adminKidPin(s).includes("keine")&&adminKidPin(s).includes("data-akpin="));
+  applyProfilePin(s,dev("d",5),"4711");const p=adminKidPin(s);
+  assert.ok(p.includes("<b>4711</b>")&&p.includes("data-akpindel=")&&p.includes("Ändern"));
+});
+
+test("Start: die App zeigt immer zuerst Wer spielt?, auch mit nur einem Konto (kein Sprung in die Kabine)",()=>{
+  const app=fs.readFileSync(path.join(ROOT,"app/js/app.js"),"utf8");
+  assert.ok(!/if\(found\)\{cur=/.test(app),"kein automatisches Öffnen des letzten Kontos");
+  assert.ok(app.includes("useAccount(b.dataset.acct)")&&app.includes("kidPinOk"));
 });

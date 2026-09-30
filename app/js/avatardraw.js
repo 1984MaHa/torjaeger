@@ -21,7 +21,7 @@ export function figureParts(look,view="front"){
   let g=`<image href="${figureURL(id,l.kit)}" width="${info.w}" height="${info.h}"/>`;
   if(view==="back"&&info.field){
     const B=backLayout(l,info.field);
-    g+=`<g data-part="rueckenfeld">`+B.name.letters.map(L=>`<text x="${L.x}" y="${L.y}" text-anchor="middle" font-family="${FONT}" font-size="${B.name.size}" fill="${fg}" transform="rotate(${L.rot} ${L.x} ${L.y})">${esc(L.ch)}</text>`).join("")
+    g+=`<g data-part="rueckenfeld">`+B.team.letters.map(L=>`<text data-k="team" x="${L.x}" y="${L.y}" text-anchor="middle" font-family="${FONT}" font-size="${B.team.size}" fill="${fg}" fill-opacity=".9" transform="rotate(${L.rot} ${L.x} ${L.y})">${esc(L.ch)}</text>`).join("")+B.name.letters.map(L=>`<text x="${L.x}" y="${L.y}" text-anchor="middle" font-family="${FONT}" font-size="${B.name.size}" fill="${fg}" transform="rotate(${L.rot} ${L.x} ${L.y})">${esc(L.ch)}</text>`).join("")
       +`<text data-k="num" x="${B.num.x}" y="${B.num.y}" text-anchor="middle" font-family="${FONT}" font-size="${B.num.size}" fill="${fg}">${esc(B.num.text)}</text></g>`;
   }
   if(view==="front"&&info.chest){
@@ -57,6 +57,12 @@ export function trainerSVG(look,{px=72,label,which=1}={}){
   return bustSVG(id,inner,info,TRAINER_BG[which===2?2:1],px,label||(which===2?"Trainerin":"Trainer"));
 }
 
+// Trainer oder Trainerin als ganze Figur (für die Einstellung im Eltern-Bereich, damit man die Kleidung sieht)
+export function trainerFullSVG(look,{px=260,label,which=1}={}){
+  const l=cleanTrainerLook(look,which),id=TRAINER_FIG[which===2?2:1],info=figInfo(id);
+  return `<svg class="avsvg" viewBox="0 0 ${info.w} ${info.h}" width="${Math.round(px*info.w/info.h)}" height="${px}" role="img" aria-label="${esc(label||(which===2?"Trainerin ganz":"Trainer ganz"))}"><image href="${figureURL(id,{polo:l.polo,hose:l.hose,stutzen:l.stutzen})}" width="${info.w}" height="${info.h}"/></svg>`;
+}
+
 // ---------- Torszene ----------
 // Der Spieler steht mit dem Rücken zur Kamera (Rückansicht der Vorlage, Name und Nummer im Rückenfeld) und macht beim Schuss einen kleinen Satz nach vorn.
 // Ausgang: goal (Tor), post (Pfosten), bar (Latte), wide (knapp vorbei).
@@ -80,7 +86,7 @@ export function shotPath(kind,side){
 }
 // Der Spieler von hinten (Rückansicht der Vorlage), Füße am unteren Rand der Szene, Mitte vor dem Tor
 function playerG(l){
-  const p=figureParts(l,"back"),s=150/p.info.h;
+  const p=figureParts(l,"back"),s=190/p.info.h;
   return `<g transform="translate(${(170-p.info.w*s/2).toFixed(1)} ${(231-p.info.h*s).toFixed(1)}) scale(${s.toFixed(4)})">${p.g}</g>`;
 }
 const CROWD=["#e5484d","#ffc83d","#f4f4f4","#2f6fde","#34a853","#ff8a00"];

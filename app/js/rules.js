@@ -174,6 +174,13 @@ export function applyAvatar(s,ctx,look){
   s.profile.avatar=Object.assign(cleanLook(look),{t:ctx.now});
   s.profile.avatarAsked=true;touch(s,ctx);
 }
+// PIN des Kindes (4 Ziffern, freiwillig, leer = keine). Steht im Klartext, damit Eltern sie im Eltern-Bereich sehen, wenn sie vergessen wurde.
+export const validKidPin=v=>typeof v==="string"&&/^\d{4}$/.test(v);
+export function applyProfilePin(s,ctx,code){
+  const c=code===""||code===null||code===undefined?"":String(code);
+  if(c!==""&&!validKidPin(c))return false;
+  s.profile.pin={code:c,t:ctx.now};touch(s,ctx);return true;
+}
 export function applyAvatarAsked(s,ctx){if(!s.profile.avatarAsked){s.profile.avatarAsked=true;touch(s,ctx);}}
 // Trainer (global, gilt für alle Konten). g ist der globale Stand.
 // which: 1 = Trainer, 2 = Trainerin
@@ -205,5 +212,6 @@ export function applyReset(s,ctx){
   fresh.meta.resetAt=ctx.now;fresh.meta.createdAt=s.meta.createdAt;fresh.meta.rev=s.meta.rev;
   fresh.settings=s.settings;
   fresh.profile.avatar=s.profile.avatar||null;fresh.profile.avatarAsked=!!s.profile.avatarAsked; // Aussehen bleibt
+  if(s.profile.pin)fresh.profile.pin=s.profile.pin; // PIN des Kindes bleibt
   return fresh;
 }

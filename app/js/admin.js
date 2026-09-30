@@ -42,8 +42,14 @@ function accountCard(A,a){
   const ask=A.confirm===`reset:${a.id}`?`<div class="confirm"><p>Den Spielstand von <b>${name}</b> wirklich leeren? Punkte, Sticker, Ligen und Verlauf sind dann weg. Aussehen, Name und Einstellungen bleiben. Der Server legt vorher eine Sicherung an.</p><div class="row"><button class="btn warn" data-ado>Ja, zurücksetzen</button><button class="btn ghost sm" data-acancel>Abbrechen</button></div></div>`
     :A.confirm===`delete:${a.id}`?`<div class="confirm"><p>Das Konto <b>${name}</b> wirklich löschen? Es wird in den Papierkorb verschoben und ist auf allen Geräten weg. Zurückholen geht im Reiter „Sicherungen und System“.</p><div class="row"><button class="btn warn" data-ado>Ja, löschen</button><button class="btn ghost sm" data-acancel>Abbrechen</button></div></div>`:"";
   return `<section class="panel acard"><div class="lg-head"><div class="acct-id"><span class="av">${avatarSVG(lookOf(s.profile),{crop:"bust",px:48,label:"Spieler "+a.name})}</span><span><b>${name}</b><span class="k">${total(s,"points")} Punkte · ${total(s,"rounds")} Spiele · ${stickerCount(s)} Sticker</span></span></div>${rename}</div>
+    ${kidPinRow(s,a.id)}
     <div class="parent">${ligaRows(s,a.id)}</div>
     <div class="row"><button class="btn warn" data-aask="reset:${id}">Zurücksetzen</button><button class="btn warn" data-aask="delete:${id}">Löschen</button></div>${ask}</section>`;
+}
+// PIN des Kindes: Eltern sehen sie und können sie ändern oder entfernen
+export function kidPinRow(s,id){
+  const code=(s.profile.pin&&s.profile.pin.code)||"";
+  return `<div class="pin"><span class="k">PIN des Kindes: <b>${code?esc(code):"keine"}</b></span><input id="kpin-${id}" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="neue PIN" aria-label="Neue PIN des Kindes" style="letter-spacing:0;width:110px"><button class="btn sm" data-akpin="${id}">${code?"Ändern":"Setzen"}</button>${code?`<button class="btn ghost sm" data-akpindel="${id}">Entfernen</button>`:""}</div>`;
 }
 function accountsTab(A){
   const cards=A.accounts.map(a=>accountCard(A,a)).join("");

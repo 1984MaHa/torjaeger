@@ -134,7 +134,7 @@ for(const src of CONFIG.sources){
     if(fig.use){
       writePNG(path.join(OUT,"fig-"+fig.id+".png"),r.base);
       writePNG(path.join(OUT,"fig-"+fig.id+"-layer.png"),r.layer);
-      manifest.figures[fig.id]={w:r.W,h:r.H,regions:r.regions.map(x=>x.id),labels:r.regions.map(x=>x.label),bust:fig.bust||null,field:fig.field||null,chest:fig.chest?{cx:fig.chest.cx-r.box[0],y:fig.chest.y-r.box[1],size:fig.chest.size,width:fig.chest.width}:null};
+      manifest.figures[fig.id]={w:r.W,h:r.H,regions:r.regions.map(x=>x.id),labels:r.regions.map(x=>x.label),bust:fig.bust||null,field:fig.field||null,chest:fig.chest?{cx:fig.chest.cx-r.box[0],y:fig.chest.y-r.box[1],size:fig.chest.size,width:fig.chest.width}:null,logo:fig.logo?[fig.logo[0]-r.box[0],fig.logo[1]-r.box[1],fig.logo[2]-r.box[0],fig.logo[3]-r.box[1]]:null};
     }
     if(debug)writeDebug(fig,r);
     console.log(" ",fig.id,r.W+"x"+r.H,r.regions.map(x=>x.id+":"+x.area).join(" "),fig.use?("Grundbild "+kb(path.join(OUT,"fig-"+fig.id+".png"))+" KB, Ebene "+kb(path.join(OUT,"fig-"+fig.id+"-layer.png"))+" KB"):"");

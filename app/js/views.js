@@ -122,7 +122,8 @@ export function homeHTML(s,UI,env){
 
 export function accountsHTML(accounts,UI,env){
   const list=accounts.map(a=>{const look=lookOf({name:a.name,avatar:a.avatar});
-    return `<button class="mode acct" data-acct="${esc(a.id)}"><span class="av">${avatarSVG(look,{crop:"bust",px:72,label:"Spieler "+(a.name||"")})}</span><span><b>${esc(a.name)}</b><span class="team">${esc(look.team)}</span></span></button>`;}).join("");
+    return `<button class="mode acct" data-acct="${esc(a.id)}"${a.locked?` aria-label="${esc(a.name)}, mit PIN"`:""}><span class="av">${avatarSVG(look,{crop:"bust",px:72,label:"Spieler "+(a.name||"")})}</span><span><b>${esc(a.name)}${a.locked?" (PIN)":""}</b><span class="team">${esc(look.team)}</span></span></button>`;}).join("");
+  const ask=UI.pinAsk?(()=>{const p=accounts.find(x=>x.id===UI.pinAsk.id)||{};return `<section class="panel"><h3>PIN für ${esc(p.name||"")}</h3><p class="note">Dieses Konto hat eine PIN. Gib sie ein, dann geht es los.</p><div class="pin"><input id="kidPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN" placeholder="PIN"><button class="btn sm" id="kidPinOk">Los</button><button class="btn ghost sm" id="kidPinCancel">Zurück</button></div>${UI.pinAsk.msg?`<p class="note">${esc(UI.pinAsk.msg)}</p>`:""}</section>`;})():"";
   const form=UI.newAcct?`<section class="panel"><h3>Neues Konto</h3>
     <p class="note">${env.hasPin?"Die Eltern-PIN wird gebraucht, um ein Konto anzulegen.":"Legt zuerst eine Eltern-PIN fest (4 Ziffern). Sie gilt für alle Konten und alle Geräte."}</p>
     <div class="pin" style="margin:8px 0"><input id="acctName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name" style="letter-spacing:0;width:190px"></div>
@@ -130,7 +131,7 @@ export function accountsHTML(accounts,UI,env){
     ${UI.acctMsg?`<p class="note">${UI.acctMsg}</p>`:""}</section>`
     :`<div class="row"><button class="btn" id="acctNew">Neues Konto</button>${env.hasPin?`<button class="btn ghost" id="adminOpen">Eltern</button>`:""}</div>${UI.adminAsk?adminAskHTML(UI.adminMsg):""}`;
   return `<div><h1 class="title">Torjäger-Liga</h1><p class="lead">${accounts.length?"Wer spielt?":"Willkommen! Legt das erste Konto an."}</p></div>
-  ${accounts.length?`<div class="modes">${list}</div>`:""}${!UI.newAcct&&UI.acctMsg?`<p class="lead">${UI.acctMsg}</p>`:""}${form}
+  ${accounts.length?`<div class="modes">${list}</div>`:""}${ask}${!UI.newAcct&&UI.acctMsg?`<p class="lead">${UI.acctMsg}</p>`:""}${form}
   ${env.persistent?"":`<p class="lead small">Achtung: Dieser Browser kann nichts dauerhaft speichern.</p>`}`;
 }
 

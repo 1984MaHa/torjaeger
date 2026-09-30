@@ -19,7 +19,7 @@ const DBG=[[0,{}],
   [2,{trikot:[250,250,250],streifen:[30,30,120],hose:[30,30,120],stutzen:[250,250,250]}]];
 
 function emil(view,o){
-  return{id:"emil-"+view,use:true,view,debugColors:DBG,holes:o.holes,bust:o.bust,field:o.field,chest:o.chest,
+  return{id:"emil-"+view,use:true,view,debugColors:DBG,holes:o.holes,bust:o.bust,field:o.field,chest:o.chest,logo:o.logo,
     regions:[
       {id:"streifen",label:"Streifen",mask:ctx=>{ // weiße Streifen an Schultern und Ärmeln (ohne das Logo)
         const m=L.box(ctx.f,L.maskOf(ctx.f,whitish),o.stripeBox);
@@ -50,9 +50,9 @@ export default{sources:[
   {key:"emil",jpg:"assets-src/emil-avatar.jpg",ink:[43,31,30],bgLum:255,
     bgTest:(r,g,b)=>r>=236&&g>=236&&b>=232&&Math.max(r,g,b)-Math.min(r,g,b)<16,
     figures:[
-      emil("front",{bust:[-20,-6,402,416],chest:{cx:173,y:500,size:54,width:70},holes:[[352,708]],stripeBox:[0,360,460,640],shirtBox:[0,355,460,800],logoBox:[138,456,208,508],shortsSeed:[230,830],shortsBox:[90,750,400,930],
+      emil("front",{bust:[-20,-6,402,416],chest:{cx:173,y:512,size:88,width:104},logo:[138,456,208,508],holes:[[352,708]],stripeBox:[0,360,460,640],shirtBox:[0,355,460,800],logoBox:[138,456,208,508],shortsSeed:[230,830],shortsBox:[90,750,400,930],
         sockSeeds:[[165,1040],[305,1040]],sockBox:[100,950,400,1130],sockFlat:[[133,1004,184,1042],[286,1006,337,1042]]}),
-      emil("back",{field:{x0:112,x1:272,y0:385,y1:700},holes:[[561,722],[801,719]],stripeBox:[456,370,896,640],shirtBox:[456,360,896,800],shortsSeed:[600,840],shortsBox:[540,760,850,930],
+      emil("back",{field:{x0:108,x1:276,y0:372,y1:655},holes:[[561,722],[801,719]],stripeBox:[456,370,896,640],shirtBox:[456,360,896,800],shortsSeed:[600,840],shortsBox:[540,760,850,930],
         sockSeeds:[[610,1050],[750,1050]],sockBox:[540,950,850,1140]})
     ]},
   {key:"team",jpg:"assets-src/trainer-team.jpg",ink:[44,33,32],bgLum:229,

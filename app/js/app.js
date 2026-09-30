@@ -5,7 +5,7 @@ import {packOf,gradePack,isRight,termResults,keyOf} from "./check.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore} from "./store.js";
 import {createSync} from "./sync.js";
@@ -56,8 +56,7 @@ async function loadAll(){
   const cfg=await store.get("config");
   applyConfig(cfg);
   const curId=await store.get("current");
-  const found=accounts.find(a=>a.id===curId)||(accounts.length===1?accounts[0]:null);
-  if(found){cur={rec:found.rec};view="home";}
+  // Der Start zeigt immer zuerst „Wer spielt?“ (mit den Bildern der Konten). Ein Konto mit PIN fragt sie beim Antippen.
 }
 const persist=()=>store.put("profile:"+cur.rec.id,cur.rec);
 // Änderung auf einem Konto (Standard: dem aktuellen) lokal speichern, dann Abgleich anstoßen.
@@ -67,13 +66,16 @@ function commitOn(rec,fn){
   return r;
 }
 const commit=fn=>commitOn(cur.rec,fn);
-async function useAccount(id){
+async function useAccount(id,unlocked=false){
   const a=accounts.find(x=>x.id===id);if(!a)return;
   if(!a.rec.state){ // Konto von einem anderen Gerät: Stand erst vom Server holen
     await sync.syncProfile(a.rec);
     if(!a.rec.state){UI.acctMsg="Dieses Konto wird vom Server geladen. Bitte kurz warten und noch einmal tippen.";render();return;}
     a.name=a.rec.state.profile.name;
   }
+  const kp=a.rec.state.profile.pin;
+  if(!unlocked&&kp&&kp.code){UI.pinAsk={id,msg:""};render();const i=document.getElementById("kidPin");if(i)i.focus();return;}
+  UI.pinAsk=null;
   cur={rec:a.rec};await store.put("current",id);
   view="home";UI.parent=false;UI.pinMsg="";UI.celebrate="";
   if(!maybeOfferAvatar())render();
@@ -86,7 +88,7 @@ function maybeOfferAvatar(){
 }
 function openAvatar(first){
   const s=S();
-  UI.av={first,view:"front",name:s.profile.name,look:cleanLook(lookOf(s.profile))};
+  UI.av={first,view:"front",name:s.profile.name,pin:(s.profile.pin&&s.profile.pin.code)||"",msg:"",look:cleanLook(lookOf(s.profile))};
   view="avatar";render();window.scrollTo(0,0);
 }
 
@@ -327,7 +329,7 @@ function finish(){
 function env(){return{hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
-  root.innerHTML=bandHTML(UI.preview)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null})),UI,env())
+  root.innerHTML=bandHTML(UI.preview)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
     :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):resultHTML(S(),G,UI));
   bind();
 }
@@ -373,7 +375,7 @@ async function createAccount(){
   }else await setGlobalPin(await makePin(pin));
   const id=await makeAccount(name);
   UI.newAcct=false;UI.acctMsg="";
-  await useAccount(id);
+  await useAccount(id,true);
 }
 async function makeAccount(name){
   const id="k-"+randomId("",8),now=Date.now();
@@ -455,7 +457,7 @@ async function adminChangePin(){
 }
 // ================= Mein Spieler =================
 function bindAvatar($){
-  const grab=()=>{const n=$("avShirtName"),t=$("avTeam");if(n)UI.av.look.shirtName=n.value;if(t)UI.av.look.team=t.value;};
+  const grab=()=>{const n=$("avShirtName"),t=$("avTeam"),p=$("avPin");if(n)UI.av.look.shirtName=n.value;if(t)UI.av.look.team=t.value;if(p)UI.av.pin=p.value.replace(/\D/g,"").slice(0,4);};
   const set=look=>{grab();UI.av.look=cleanLook(look);render();};
   document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{grab();const [k,...r]=b.dataset.av.split(":");UI.av.look=withKit(UI.av.look,k,r.join(":"));render();});
   document.querySelectorAll("[data-avpreset]").forEach(b=>b.onclick=()=>{grab();UI.av.look=withPreset(UI.av.look,Number(b.dataset.avpreset));render();});
@@ -463,7 +465,10 @@ function bindAvatar($){
   document.querySelectorAll("[data-avnum]").forEach(b=>b.onclick=()=>set({...UI.av.look,number:String((Number(UI.av.look.number)+Number(b.dataset.avnum)+100)%100)}));
   document.querySelectorAll("[data-avview]").forEach(b=>b.onclick=()=>{grab();UI.av.view=b.dataset.avview;render();});
   const leave=()=>{UI.av=null;view="home";render();window.scrollTo(0,0);};
-  if($("avSave"))$("avSave").onclick=()=>{grab();const look=cleanLook(UI.av.look);commit((s,c)=>applyAvatar(s,c,look));leave();};
+  if($("avSave"))$("avSave").onclick=()=>{grab();
+    if(UI.av.pin!==""&&!validKidPin(UI.av.pin)){UI.av.msg="Die PIN braucht genau 4 Ziffern. Lass das Feld leer, wenn du keine PIN möchtest.";render();return;}
+    const look=cleanLook(UI.av.look),pin=UI.av.pin,had=(S().profile.pin&&S().profile.pin.code)||"";
+    commit((s,c)=>{applyAvatar(s,c,look);if(pin!==had)applyProfilePin(s,c,pin);});leave();};
   if($("avSkip"))$("avSkip").onclick=()=>{commit((s,c)=>applyAvatarAsked(s,c));leave();};
   if($("avCancel"))$("avCancel").onclick=leave;
 }
@@ -493,6 +498,12 @@ function bindAdmin($){
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const [t,m]=b.dataset.atopic.split(":");commitOn(a.rec,(s,c)=>applyTopicMode(s,c,t,m));render();});
   document.querySelectorAll("[data-apin]").forEach(b=>b.onclick=adminChangePin);
+  // PIN eines Kindes: Eltern sehen sie, setzen sie neu oder entfernen sie
+  document.querySelectorAll("[data-akpin]").forEach(b=>b.onclick=()=>{const rec=adminRec(b.dataset.akpin),v=$("kpin-"+b.dataset.akpin).value.trim();
+    if(!rec||!validKidPin(v)){adminSay("err","Bitte genau 4 Ziffern eingeben.");render();return;}
+    commitOn(rec,(s,c)=>applyProfilePin(s,c,v));adminSay("ok","PIN gespeichert.");render();});
+  document.querySelectorAll("[data-akpindel]").forEach(b=>b.onclick=()=>{const rec=adminRec(b.dataset.akpindel);if(!rec)return;
+    commitOn(rec,(s,c)=>applyProfilePin(s,c,""));adminSay("ok","PIN entfernt.");render();});
   // Trainer (gilt für alle Konten)
   const key=w=>w===2?"tr2":"tr1";
   const grabTr=()=>{for(const w of [1,2]){const i=$("trName"+w);if(i&&A[key(w)])A[key(w)].name=i.value;}};
@@ -556,6 +567,9 @@ function bind(){
   if(view==="admin"&&UI.admin)bindAdmin($);
   // Konten
   document.querySelectorAll("[data-acct]").forEach(b=>b.onclick=()=>useAccount(b.dataset.acct));
+  if($("kidPinOk"))$("kidPinOk").onclick=()=>{const a=accounts.find(x=>x.id===UI.pinAsk.id),code=a&&a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code;
+    if($("kidPin").value.trim()===code)useAccount(UI.pinAsk.id,true);else{UI.pinAsk.msg="Die PIN stimmt nicht.";render();const i=$("kidPin");if(i)i.focus();}};
+  if($("kidPinCancel"))$("kidPinCancel").onclick=()=>{UI.pinAsk=null;render();};
   if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";render();};
   if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";render();};
   if($("acctCreate"))$("acctCreate").onclick=createAccount;

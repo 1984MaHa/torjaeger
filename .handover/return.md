@@ -1,18 +1,28 @@
 # Rückübergabe claude-code an cowork, 2026-09-30
 
 **Auftrag:** Version 1.5.0, feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
-**Stand:** gebaut und lokal getestet (`node --test`: 167 von 167 grün). Committet auf `preview`, **nicht gepusht, nicht nach main gemerged, nicht deployed**.
+**Stand:** gebaut, lokal getestet (`node --test`: 170 von 170 grün), Vorschau auf der NAS läuft mit 1.5.0. Danach Nachbesserung nach Marcos erster Sicht (siehe unten), noch nicht gepusht. Nicht nach main gemerged, nicht live.
 
 ## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat
 - Angewiesen: "ja so starten", also 1.5.0 auf `preview` von `b19e72d` aus bauen (nicht von `adb3c07`).
-- Nichts selbst ausgeführt gemeldet: kein Push, kein Merge, kein Branch-Wechsel, keine Befehle auf der NAS, keine Tests auf iPad oder iPhone.
-- **Noch nicht ausgeführt:** Push von `preview`, `deploy.sh` für die Vorschau auf der NAS, Sichtprüfung auf dem iPad, Merge nach `main`, Live-Deploy.
+- Angewiesen: "push preview". Ausgeführt von mir: Push `b19e72d..71f44c0`.
+- Ausgeführt von Marco: `deploy.sh` im Vorschau-Klon auf der NAS. `/api/health` meldet `"preview":"VORSCHAU"`, `serverVersion` 1.5.0 (18:05 UTC).
+- Marco hat die Vorschau auf dem iPad angesehen (Screenshots Rückenansicht und Trainerin) und Wünsche gemeldet (unten). Welcher Stand vorher in der Vorschau lief, weiß Marco nicht.
+- **Noch nicht ausgeführt:** Push und NAS-Update der Nachbesserung, erneute Sichtprüfung, Merge nach `main`, Live-Deploy.
 
 ## Stand je Umgebung
 - Anker-Abweichung bei der Annahme (mit Marco geklärt): `main` stand nicht auf `adb3c07`, sondern auf `b19e72d`. 1.4.1 war inzwischen abgenommen, nach `main` gemerged und live deployt (Commits `fe7f31b`, `94294c0`, `b19e72d`). `.handover/next.md` war bereits committet (nicht `??`).
 - Vor dieser Arbeit: `main`, `preview`, `origin/main`, `origin/preview` alle `b19e72d`. Live läuft 1.4.1.
 - Jetzt: `preview` hat einen neuen lokalen Commit mit 1.5.0. `main` und `origin/*` unverändert.
 - Vorschau auf der NAS: Stand unbekannt (Marco hat die Frage nicht beantwortet). Bitte bei Marco erfragen.
+
+## Rückmeldungen von Marco und Umsetzung (Nachbesserung, gleiche Version 1.5.0)
+- Emil größer und besser lesbar: Vorschau 300 statt 230, Torszene 190 statt 150 Punkte hoch.
+- Rückennummer höher und größer, eigener Name größer, Nummer auf der Brust deutlich größer (88 statt 54).
+- Mannschaftsname aufs Trikot: klein und gebogen oben auf dem Rücken (Annahme: Rücken, nicht Brust, weil vorn die Nummer steht). Das ändert die frühere Entscheidung, den Vereinsnamen nicht aufs Trikot zu setzen.
+- Trainer im Eltern-Bereich: neben dem Brustbild jetzt die ganze Figur.
+- Start zeigt immer zuerst "Wer spielt?" mit den Bildern (auch bei nur einem Konto).
+- **PIN des Kindes** (neu, nicht im Auftrag): freiwillig, 4 Ziffern, `profile.pin = {code, t}`, Klartext. Kachel zeigt "(PIN)" und fragt beim Antippen. Kind setzt sie in "Mein Spieler", Eltern sehen, ändern und entfernen sie im Eltern-Bereich bei jedem Konto. Zusammenführen: neuerer Stand gewinnt, Zurücksetzen behält sie. Kein Schemawechsel (Feld optional). Sicherheit bewusst schwach: Komfort, kein Schutz vor Eltern.
 
 ## Was gebaut ist
 - **Bilder:** Originale nach `assets-src/` (emil-avatar.jpg, trainer-team.jpg). Aufbereitet mit `tools/prepare-figures.mjs` (nur Node, Regeln in `tools/figures.config.mjs`, Bibliothek `tools/fig-lib.mjs`, PNG-Leser `tools/png.mjs`, `tools/jpg2png.ps1` für die JPG-Umwandlung unter Windows). Ergebnis in `app/img/`: Emil vorn und hinten, Trainer und Trainerin vorn, je Grundbild plus Umfärb-Ebene, zusammen etwa 0,9 MB. Die Trainer-Rückansichten sind aufbereitbar (`use:false`), aber nicht ausgeliefert. Markenlogos auf Brust und Stutzen sind übermalt.
@@ -38,13 +48,13 @@
 - **Kosmetisch:** an den Konturen kann ein feiner Farbsaum in der alten Farbe (Blau) bleiben; Sticker-Motive einfach; Tailscale auf der NAS 1.58.2.
 
 ## Anker
-- Branch `preview`, Basis `b19e72d`, darauf der Commit "1.5.0: feste Bild-Vorlagen statt Avatar-Baukasten" plus dieser Rückübergabe-Commit.
+- Branch `preview`. Auf origin: `71f44c0`. Lokal darüber ein Commit "1.5.0 Nachbesserung ..." (noch nicht gepusht).
 - Arbeitsbaum sauber nach dem Commit (`.work/` ist ignoriert).
 
 ## Nächste Schritte für Marco
-1. Push der Vorschau:
+1. Push der Nachbesserung:
    `git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview`
-2. Auf der NAS die Vorschau aktualisieren (wie bei 1.4.0 und 1.4.1, `deploy.sh` im Vorschau-Klon).
+2. Auf der NAS: `cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh`, danach `wget -qO- http://127.0.0.1:8081/api/health`.
 3. Auf dem iPad prüfen:
    - Kabine, "Wer spielt?" und Sprechblasen zeigen das Brustbild.
    - "Mein Spieler": Farben, Vereinsfarben, Nummer, Name, Mannschaft, Vorne und Hinten.
