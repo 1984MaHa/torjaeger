@@ -10,14 +10,14 @@ Rückübergabe claude-code nach cowork, 2026-09-30.
 Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und committed, nicht gepusht, nicht deployed.
 
 1. WAS MARCO IN DIESER SITZUNG SELBST AUSGEFÜHRT HAT
-- Nichts. Marco hat nur den Auftrag gestartet und "ja weiter" gesagt. Kein Push, kein Merge, kein Branch-Wechsel, nichts auf der NAS (kein Klon-Update, kein deploy.sh, kein tailscale serve), kein Test auf iPad oder iPhone, kein Vorschau-Deploy.
-- Ausdrücklich NOCH NICHT ausgeführt: git push origin preview, Vorschau-Deploy auf der NAS, visuelle Abnahme der neuen Ansichten, Abnahme auf iPad/iPhone. Claude hat die Seite bewusst nicht im Browser geöffnet (Marco prüft visuell selbst), geprüft ist nur per Tests.
+- Marco hat nach der Fertigstellung selbst ausgeführt: (a) git push origin preview (Ergebnis: origin/preview steht auf 1d57caf, geprüft per git fetch), (b) SSH auf die NAS und Vorschau-Deploy (sudo sh deploy.sh im Ordner torjaeger-preview). Ergebnis: /api/health der Vorschau meldet {"ok":true,"preview":"VORSCHAU","serverVersion":"1.2.0"}. Sonst nichts: kein Merge, kein Branch-Wechsel, kein Live-Deploy.
+- Ausdrücklich NOCH NICHT ausgeführt: Merge nach main, Live-Deploy, visuelle Abnahme der neuen Ansichten und Test auf iPad/iPhone (Marco prüft die Vorschau als Nächstes). Claude hat die Seite bewusst nicht im Browser geöffnet, geprüft ist nur per Tests.
 
 2. STAND JE UMGEBUNG
 - Anker am Start stimmten: preview baab42f, main 882d8e1, Arbeitsbaum nur M .handover/current.md.
 - preview (lokal): 8473864 "Version 1.2.0: aktuelle Liga, Trainingscamp, Spielauswahl, 24 Sticker, Kontroll-Pfiff" (Elternteil baab42f). Darauf folgt ein zweiter Commit mit dieser Rückübergabe (.handover/return.md).
-- origin/preview: noch baab42f (nicht gepusht). origin/main und main: 882d8e1 (Live 1.1.5, unberührt).
-- Live läuft 1.1.5. Die Vorschau auf der NAS läuft noch den alten Stand (Version der Vorschau vor diesem Auftrag nicht von hier prüfbar).
+- origin/preview: 1d57caf (von Marco gepusht). origin/main und main: 882d8e1 (Live 1.1.5, unberührt).
+- Live läuft 1.1.5. Die Vorschau auf der NAS läuft 1.2.0 (Server-Version laut Health-Antwort, App-Version 1.2.0 nach "Jetzt laden" auf dem Gerät).
 - Version 1.2.0 steht an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION in server/server.js, package.json). Neue Dateien app/js/check.js und app/js/stickers.js stehen in FILES von sw.js.
 
 3. WAS UMGESETZT IST (Auftragspunkte)
@@ -60,7 +60,7 @@ Projekt: Torjäger-Liga. Auftrag 1.2.0 auf Branch preview ist umgesetzt und comm
 - Arbeitsbaum: sauber nach dem Rückübergabe-Commit.
 
 9. NÄCHSTE SCHRITTE FÜR MARCO (einzeln, unverschachtelt)
-1. Code ansehen oder gleich pushen, damit die NAS ihn holen kann:
+1. ERLEDIGT (Marco): Push und Vorschau-Deploy, siehe Abschnitt 1. Die folgenden Befehle 1 bis 3 nur bei einem weiteren Stand wiederholen:
    git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
 2. Branch der Vorschau auf der NAS prüfen (nur prüfen):
    cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh --check
