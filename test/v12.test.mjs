@@ -335,3 +335,16 @@ test("Abgleich: die gewählte aktuelle Liga und die Kontroll-Zähler kommen auf 
     assert.equal(r.status,409);assert.equal(r.json.reason,"schema_too_old");
   }finally{await S.close();}
 });
+
+// ---------- Eindeutige Fragen ----------
+test("Doppelte Mitlaute: die falsche Schreibweise ist nie ein echtes Wort (zum Beispiel Schal und Schall)",()=>{
+  const echte=new Set(["Schall","Schal","Wal","Kam","Bet","Stadt","Statt","Ruhm","Rum"]); // echte Wörter, die nie als falsche Schreibweise auftauchen dürfen
+  for(let i=0;i<2000;i++){
+    const T=GEN.d3_doppel(),falsch=T.choices.find(c=>c!==T.a);
+    assert.ok(!echte.has(falsch),"beide Wörter richtig geschrieben: "+T.choices);
+  }
+});
+test("Perfekt: bei Bewegungsverben ist keine falsche Antwort ein anerkanntes Perfekt",()=>{
+  const anerkannt=new Set(["ich habe gelaufen","ich habe gefahren","ich habe geschwommen","ich habe gesprungen"]);
+  for(let i=0;i<1500;i++){const T=GEN.d4_perfekt();for(const c of T.choices)if(c!==T.a)assert.ok(!anerkannt.has(c),"auch richtig: "+c);}
+});

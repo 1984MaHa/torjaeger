@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.2.1
+- Behoben: Bei „Doppelte Mitlaute“ standen „Schal“ und „Schall“ zur Wahl. Beide sind richtig geschrieben und meinen Verschiedenes, die Frage war nicht eindeutig. Das Paar ist ersetzt (Kette oder Kete). Ein Test sorgt dafür, dass bei dieser Aufgabe nie zwei echte Wörter zur Wahl stehen.
+- Behoben: Beim Perfekt galten „ich habe gelaufen“, „ich habe gefahren“, „ich habe geschwommen“ und „ich habe gesprungen“ als falsch, sind aber je nach Gegend oder Bedeutung auch richtig. Bei diesen vier Verben stehen jetzt nur eindeutig falsche Formen zur Wahl (zum Beispiel „ich habe gelauft“).
+- Version 1.2.1.
+
 ## 1.2.0 (Vorschau: aktuelle Liga, Trainingscamp, Spielauswahl, Sticker, Kontroll-Pfiff)
 Schemaversion 3. Ein Stand im Format 1.1.5 wird beim ersten Start ohne Verlust migriert.
 

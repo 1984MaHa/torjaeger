@@ -1,6 +1,6 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga). Aktuelle Version 1.2.0. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga). Aktuelle Version 1.2.1. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
