@@ -1,5 +1,28 @@
 # Änderungen
 
+## 1.3.0 (Vorschau: neue Avatare)
+Schemaversion 4 (Konto) und 3 (global). Ein Stand im Format 1.2.1 wird beim ersten Start ohne Verlust migriert.
+
+### Neu
+- **Neuer flacher Zeichenstil:** keine Konturlinien, große weiche Farbflächen, großer runder Kopf, Punkt-Augen mit Lichtpunkt, Bogen-Brauen, Strich-Nase, rosa Bäckchen, Lächel-Linie oder offenes Lachen. Keine Lippen, keine Fläche oder Kontur um Mund und Kinn: nichts sieht mehr nach Bart aus (Schatten nur am Hals).
+- **Ganzkörperfigur als Hauptfigur** mit kindgerechten Proportionen, Trikot (Kragen, Muster, kleine Nummer), Hose, Stutzen und Schuhen, vorn und hinten, in der Torszene mit Schusspose. Das **Brustbild** auf Kachel, Trainerbank und Sprechblasen ist ein Ausschnitt derselben Figur im runden Pastellkreis (Hintergrund wählbar oder aus der Vereinsfarbe).
+- **Baukasten als geführter Ablauf in 6 Schritten:** 1 Junge oder Mädchen, 2 Kopfform und Hautton, 3 Frisur und Haarfarbe, 4 Gesicht, 5 Kleidung und Zubehör fürs Porträt, 6 Trikot und Verein. Große Vorschau mit Umschalter vorne und hinten (Kopf vergrößert bei den Gesichtsschritten), Zurück, Weiter, Würfel, Fertig. Jeder Schritt ist später einzeln wieder aufrufbar. Junge oder Mädchen ist nur eine Vorauswahl und schränkt nichts ein.
+- **19 Frisuren** für alle (neu frei wählbar auch Bob, Halblang, Lang, Halbzopf, Pony für Jungen und Wuschel, Igel und Co. für Mädchen), Brauenfarbe wie die Haare oder eigene, vier Münder (Lächeln, Breites Lachen, Ernst, Überrascht), Bäckchen an oder aus, Porträt-Kleidung (Trikot, T-Shirt, Sportjacke), Kopfbedeckung **Hut** neu (neben Cap, Cap verkehrt, Mütze, Stirnband, Bandana).
+- **Trainerteam im selben Stil** und mit demselben Baukasten im Eltern-Bereich (Schritte 2 bis 5), dazu Extras nur für Erwachsene: Bart (Vollbart, Kinnbart, Schnurrbart, Dreitagebart, Bartfarbe), Brille, Kopfbedeckung, Pfeife oder Klemmbrett.
+
+### Behoben
+- **Kopfbedeckungen verdecken nie mehr Augen oder Brauen:** alle Formen enden über der Brauenlinie (Test für jede Kopfform und jede Kopfbedeckung).
+- **Rückansicht:** jede Frisur hat eine eigene Hinterkopf-Zeichnung (kein Gesicht, keine Vorderfrisur), Ohren seitlich sichtbar, Kopfbedeckungen mit eigener Rückansicht.
+- **Trikotrücken:** Name leicht gebogen über der Nummer, beides im Rückenfeld, lange Namen und zweistellige Zahlen werden automatisch skaliert und ragen nie über die Hose.
+
+### Datenmodell (Schemaversion 4, global 3)
+- `profile.avatar` neu: `hair` ist ein Schlüssel (vorher Zahl je Junge oder Mädchen), dazu `browColor`, `cheeks`, `outfit`, `outfitColor`, `bg`, `mouth` 0 bis 3, `hat` 0 bis 6. Trainerteam: `look` mit `v` 3 (Frisur als Schlüssel, `beard` 0 bis 4 mit `beardColor`, `hat`, `gear`, `mouth`, `glasses` 0 bis 2 und weitere Gesichtsfelder).
+- Migration 3 nach 4 und global 2 nach 3 ohne Verlust (nächstliegende Werte, Zeitstempel bleiben). Tests mit Fixtures im Format 1.2.1 (`state-v3.json`, `global-v2.json`). Zusammenführen: Aussehen neuester gewinnt.
+
+### Technik
+- Keine neuen Dateien in `app/`. `avatar.js`, `avatardraw.js` und `avatarui.js` sind neu geschrieben. Neue Tests in `test/v13.test.mjs`, die Avatar-Tests der alten Zeichnung sind ersetzt.
+- Version 1.3.0 an allen vier Stellen (`version.js`, `sw.js`, `server.js`, `package.json`).
+
 ## 1.2.1
 - Behoben: Bei „Doppelte Mitlaute“ standen „Schal“ und „Schall“ zur Wahl. Beide sind richtig geschrieben und meinen Verschiedenes, die Frage war nicht eindeutig. Das Paar ist ersetzt (Kette oder Kete). Ein Test sorgt dafür, dass bei dieser Aufgabe nie zwei echte Wörter zur Wahl stehen.
 - Behoben: Beim Perfekt galten „ich habe gelaufen“, „ich habe gefahren“, „ich habe geschwommen“ und „ich habe gesprungen“ als falsch, sind aber je nach Gegend oder Bedeutung auch richtig. Bei diesen vier Verben stehen jetzt nur eindeutig falsche Formen zur Wahl (zum Beispiel „ich habe gelauft“).

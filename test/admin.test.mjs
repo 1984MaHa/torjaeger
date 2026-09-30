@@ -160,7 +160,7 @@ test("Zurücksetzen: Server sichert vorher, leert den Stand, Aussehen und Einste
   const after=readJson(pfile(id));
   assert.equal(total(after.state,"points"),0);assert.equal(after.state.history.length,0);assert.ok(after.state.meta.resetAt>0);
   assert.equal(after.rev,before.rev+1);assert.equal(after.state.meta.rev,after.rev);
-  assert.equal(after.state.profile.name,"Lea");assert.equal(after.state.profile.avatar.hair,3);assert.equal(after.state.settings.perRound,10);
+  assert.equal(after.state.profile.name,"Lea");assert.equal(after.state.profile.avatar.hair,"locken");assert.equal(after.state.settings.perRound,10);
   assert.equal(after.name,"Lea");
   const saved=readJson(path.join(S.dataDir,"backups","manual",r.json.safety));
   assert.deepEqual(saved,before);                                          // Sicherung vor dem Zurücksetzen ist der alte Stand
@@ -239,5 +239,5 @@ test("Geräteliste: Server führt Kennung, Art und zuletzt gesehen, Name änderb
 
 test("/api/config nennt Server- und Schemaversion",async()=>{
   const c=(await api(S.base,"GET","/api/config")).json;
-  assert.equal(c.schemaVersion,3);assert.equal(c.globalSchemaVersion,2);assert.match(c.serverVersion,/^\d+\.\d+\.\d+$/);
+  assert.equal(c.schemaVersion,4);assert.equal(c.globalSchemaVersion,3);assert.match(c.serverVersion,/^\d+\.\d+\.\d+$/);
 });

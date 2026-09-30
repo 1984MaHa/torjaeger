@@ -22,16 +22,17 @@ const env={hasPin:true,syncText:"noch nie",updateReady:false,persistent:true,ver
 const UI0=()=>({parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",sync:"",fach:null,lgOpen:{}});
 
 // ---------- Migration 2 nach 3 ----------
-test("Schema ist 3 und die Migration 2 nach 3 lässt den Stand im Format 1.1.5 vollständig erhalten",()=>{
-  assert.equal(SCHEMA_VERSION,3);
+test("Schema ist 4 und die Migration 2 nach 4 lässt den Stand im Format 1.1.5 vollständig erhalten",()=>{
+  assert.equal(SCHEMA_VERSION,4);
   const old=v2(),before=JSON.stringify(old),s=migrateProfile(old);
   assert.equal(JSON.stringify(old),before,"Eingabe bleibt unverändert");
   assert.equal(old.meta.schemaVersion,2);
-  assert.equal(s.meta.schemaVersion,3);
+  assert.equal(s.meta.schemaVersion,4);
   assert.deepEqual(s.progress.cur,{li:null,t:0});
   // nichts verloren
   assert.deepEqual(s.progress.dev,old.progress.dev);assert.deepEqual(s.progress.days,old.progress.days);assert.deepEqual(s.progress.lg,old.progress.lg);assert.equal(s.progress.sel,old.progress.sel);
-  assert.deepEqual(s.history,old.history);assert.deepEqual(s.settings,old.settings);assert.deepEqual(s.profile,old.profile);
+  assert.deepEqual(s.history,old.history);assert.deepEqual(s.settings,old.settings);
+  assert.deepEqual({...s.profile,avatar:0},{...old.profile,avatar:0});assert.equal(s.profile.avatar.t,old.profile.avatar.t,"Zeitstempel des Aussehens bleibt");
   assert.deepEqual(s.stats,old.stats);
   assert.equal(total(s,"points"),total(old,"points"));
   assert.equal(s.meta.rev,21);assert.deepEqual(s.zusatz,{unbekannt:"muss erhalten bleiben"});
@@ -42,7 +43,7 @@ test("Schema ist 3 und die Migration 2 nach 3 lässt den Stand im Format 1.1.5 v
   assert.deepEqual(migrateProfile(s),s);
   // ein Stand im Format 1.0.0 geht in einem Zug bis 3
   const v1=JSON.parse(fs.readFileSync(new URL("./fixtures/state-v1.json",import.meta.url),"utf8"));
-  const s1=migrateProfile(v1);assert.equal(s1.meta.schemaVersion,3);assert.deepEqual(s1.progress.cur,{li:null,t:0});
+  const s1=migrateProfile(v1);assert.equal(s1.meta.schemaVersion,4);assert.deepEqual(s1.progress.cur,{li:null,t:0});
 });
 test("Ein migrierter Stand behält die Liga-Vorgabe (höchste freie), Emils Sticker bleiben",()=>{
   const s=migrateProfile(v2());
@@ -313,7 +314,7 @@ test("Abgleich: die gewählte aktuelle Liga und die Kontroll-Zähler kommen auf 
     const recA={id,state:migrateProfile(old),baseRev:null,dirty:true,lastSync:null};
     assert.equal((await A.sync.syncProfile(recA)).ok,true);
     let server=(await api(S.base,"GET",`/api/profiles/${id}/state`)).json;
-    assert.equal(server.state.meta.schemaVersion,3);assert.equal(server.schemaVersion,3);
+    assert.equal(server.state.meta.schemaVersion,4);assert.equal(server.schemaVersion,4);
     assert.equal(total(server.state,"points"),total(v2(),"points"),"kein Punkt geht bei der Migration verloren");
     const recB={id,name:"Emil",state:null,baseRev:null,dirty:false,lastSync:null};
     await B.sync.syncProfile(recB);assert.equal(currentLeague(recB.state),1);

@@ -5,14 +5,14 @@ import fs from "node:fs";
 import {migrateProfile,migrateGlobal,newProfile,newGlobal,total,answersOf,helpOf,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION} from "../app/js/model.js";
 import {mergeProfile,mergeGlobal} from "../app/js/merge.js";
 import {applyAnswer,applyHelp,applyAvatar,applyRename,applySettings,applyRoundEnd,applyTrainer,applyReset,settingsOf,canTrial,roundLen,trialLen,winNeed,leagueState,budgetOf} from "../app/js/rules.js";
-import {cleanLook,defaultTrainer,defaultTrainer2,TEMPLATES,HAIR_STYLES} from "../app/js/avatar.js";
+import {cleanLook,defaultTrainer,defaultTrainer2,TEMPLATES,HAIRS} from "../app/js/avatar.js";
 import {todayKey} from "../app/js/util.js";
 
 const v1=()=>JSON.parse(fs.readFileSync(new URL("./fixtures/state-v1.json",import.meta.url),"utf8"));
 const clone=o=>JSON.parse(JSON.stringify(o));
 const dev=(id,t)=>({deviceId:id,now:t});
 
-test("Schema ist 3 (Konto) und 2 (global)",()=>{assert.equal(SCHEMA_VERSION,3);assert.equal(GLOBAL_SCHEMA_VERSION,2);});
+test("Schema ist 4 (Konto) und 3 (global)",()=>{assert.equal(SCHEMA_VERSION,4);assert.equal(GLOBAL_SCHEMA_VERSION,3);});
 
 test("Migration 1 nach 2: Stand im Format 1.0.0 bleibt vollständig erhalten",()=>{
   const old=v1(),s=migrateProfile(old);
@@ -51,7 +51,7 @@ test("Migration: schon vorhandene neue Felder werden nicht überschrieben",()=>{
 
 test("Globale Migration: Trainer bekommt Vorgabe, PIN bleibt",()=>{
   const g=migrateGlobal({schemaVersion:1,pin:{algo:"sha256-salt",salt:"s",hash:"h",t:5},updatedAt:9,extra:1});
-  assert.equal(g.schemaVersion,2);assert.equal(g.pin.hash,"h");assert.equal(g.extra,1);
+  assert.equal(g.schemaVersion,3);assert.equal(g.pin.hash,"h");assert.equal(g.extra,1);
   assert.equal(g.trainer.name,"Trainer");assert.equal(g.trainer.t,0);assert.equal(g.trainer2.name,"Trainerin");
   assert.deepEqual(newGlobal().trainer,defaultTrainer());assert.deepEqual(newGlobal().trainer2,defaultTrainer2());
   // ein nie geänderter Trainer aus der ersten Vorschau (t 0, alter Name) bekommt die neue Vorgabe, ein geänderter bleibt
@@ -101,12 +101,12 @@ test("Merge: Aussehen neuester gewinnt, in beide Richtungen gleich",()=>{
   applyAvatar(a,dev("A",1790200000000),{hair:2,shirt:"#2f6fde"});
   applyAvatar(b,dev("B",1790300000000),{hair:5,shirt:"#e5484d"});
   const ab=mergeProfile(a,b),ba=mergeProfile(b,a);
-  assert.equal(ab.profile.avatar.hair,5);assert.equal(ab.profile.avatar.shirt,"#e5484d");
+  assert.equal(ab.profile.avatar.hair,"stoppel");assert.equal(ab.profile.avatar.shirt,"#e5484d");
   assert.deepEqual(ab.profile.avatar,ba.profile.avatar);
   // einer ohne Avatar: der mit Avatar bleibt, auch wenn der andere sonst neuer ist
   const c=migrateProfile(v1());c.meta.updatedAt=1790900000000;c.profile.t=1790900000000;
-  const ac=mergeProfile(c,a);assert.equal(ac.profile.avatar.hair,2);assert.equal(ac.profile.avatarAsked,true);
-  assert.equal(mergeProfile(a,c).profile.avatar.hair,2);
+  const ac=mergeProfile(c,a);assert.equal(ac.profile.avatar.hair,"igel");assert.equal(ac.profile.avatarAsked,true);
+  assert.equal(mergeProfile(a,c).profile.avatar.hair,"igel");
   // Gleichstand bei t: reihenfolgeunabhängig
   const d=clone(a),e=clone(a);d.profile.avatar={...d.profile.avatar,hair:1};e.profile.avatar={...e.profile.avatar,hair:3};
   assert.deepEqual(mergeProfile(d,e).profile.avatar,mergeProfile(e,d).profile.avatar);
@@ -117,7 +117,7 @@ test("Merge: Name und Aussehen ändern sich unabhängig voneinander",()=>{
   applyRename(a,dev("A",1790400000000),"Emil M.");
   applyAvatar(b,dev("B",1790300000000),{hair:4});
   const m=mergeProfile(a,b);
-  assert.equal(m.profile.name,"Emil M.");assert.equal(m.profile.avatar.hair,4);
+  assert.equal(m.profile.name,"Emil M.");assert.equal(m.profile.avatar.hair,"tolle");
 });
 
 test("Merge: Tipp-Zähler je Gerät summieren, nichts doppelt",()=>{
@@ -159,11 +159,11 @@ test("Merge global: Trainer neuester gewinnt, PIN und Trainer getrennt",()=>{
 test("Zurücksetzen behält Aussehen und Einstellungen",()=>{
   const s=migrateProfile(v1());applyAvatar(s,dev("d",5),{hair:3});applySettings(s,dev("d",6),{perRound:10});
   const r=applyReset(s,dev("d",7));
-  assert.equal(total(r,"points"),0);assert.equal(r.profile.avatar.hair,3);assert.equal(r.settings.perRound,10);assert.equal(r.meta.resetAt,7);
+  assert.equal(total(r,"points"),0);assert.equal(r.profile.avatar.hair,"locken");assert.equal(r.settings.perRound,10);assert.equal(r.meta.resetAt,7);
 });
 
 test("Avatar-Prüfung: ungültige Werte werden ersetzt, mindestens 6 Frisuren",()=>{
-  assert.ok(HAIR_STYLES.j.length>=6&&HAIR_STYLES.m.length>=6);assert.ok(TEMPLATES.length>=6);
+  assert.ok(HAIRS.length>=12);assert.ok(TEMPLATES.length>=6);
   const l=cleanLook({hair:99,hairColor:"rot",skin:"#FFE0C7",shirt:"javascript:1",number:"1234",shirtName:"<b>emil</b>",team:"x".repeat(50),c1:null});
   assert.equal(l.hair,TEMPLATES[0].look.hair);assert.equal(l.hairColor,TEMPLATES[0].look.hairColor);assert.equal(l.skin,"#ffe0c7");
   assert.equal(l.shirt,TEMPLATES[0].look.shirt);assert.equal(l.number,"12");assert.ok(!/[<>]/.test(l.shirtName));assert.ok(l.team.length<=20);

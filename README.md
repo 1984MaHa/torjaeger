@@ -1,6 +1,6 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga). Aktuelle Version 1.2.1. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga). Aktuelle Version 1.3.0. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
@@ -9,7 +9,7 @@ Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (In
   - `index.html`, `manifest.webmanifest`, `sw.js` (Service Worker), `css/`, `fonts/` (Andika, Lilita One, OFL), `icons/`
   - `js/` Module: `app.js` (Steuerung), `views.js` (Darstellung), `rules.js` (Spielregeln), `generators.js` (Aufgaben), `model.js` (Datenmodell, Migration), `merge.js` (Zusammenführen), `sync.js` (Abgleich), `store.js` (IndexedDB), `pin.js`, `content.js`, `svg.js`, `audio.js`, `util.js`, `version.js`, `check.js` (Päckchen, Kontroll-Pfiff, Probe), `stickers.js` (24 Sticker mit Jubelruf)
   - Eltern-Bereich: `admin.js` (Ansichten), `adminapi.js` (Aufrufe an den Server)
-  - Avatar und Trainer: `avatar.js` (Daten, Paletten, Vorlagen), `avatardraw.js` (Figuren und Torszene als SVG), `avatarui.js` (Baukasten), `coach.js` (Trainer-Hilfe)
+  - Avatar und Trainer: `avatar.js` (Daten, Paletten, Vorlagen), `avatardraw.js` (Figuren und Torszene als SVG), `avatarui.js` (Baukasten in 6 Schritten), `coach.js` (Trainer-Hilfe)
 - `server/server.js` liefert die App aus und speichert die Stände (Node 20, keine Zusatzpakete), `server/admin.js` die Admin-Aktionen der Eltern (PIN-Prüfung, Papierkorb, Zurücksetzen, Wiederherstellen, Geräteliste)
 - `test/` Tests mit `node --test`, `test/fixtures/` Stände für die Migrationen (Prototyp-Format, Format 1.0.0 und 1.1.5)
 - `tools/` einmalige Hilfsskripte (Icons erzeugen, Schriften laden)
@@ -150,8 +150,8 @@ Beim Auslieferen einer neuen App-Version die Version in **beiden** Dateien erhö
 
 ## Eltern-Bereich, Avatar, Trainer
 - **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).
-- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten, zuerst mit der Wahl Junge oder Mädchen (überspringbar). Später über „Mein Spieler“ in der Kabine. Der Avatar steht auf der Kachel und schießt die Tore.
-- **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Name und Aussehen beider im Eltern-Bereich unter Einstellungen. Die Tipp-Zeit je Konto ebenda. Richtige Antworten zeigen kurz ein Overlay und gehen von allein weiter.
+- **Avatar:** Beim ersten Öffnen eines Kontos ohne Avatar erscheint der Baukasten (überspringbar). Er führt in 6 Schritten: 1 Junge oder Mädchen (nur ein Vorschlag, nichts ist eingeschränkt), 2 Kopfform und Hautton, 3 Frisur und Haarfarbe, 4 Gesicht, 5 Kleidung und Zubehör fürs Porträt, 6 Trikot und Verein. Jeder Schritt zeigt die Ganzkörperfigur (vorne oder hinten) und hat Zurück, Weiter, Würfel und Fertig. Später über „Mein Spieler“ in der Kabine, jeder Schritt lässt sich einzeln antippen. Die Figur steht als Brustbild auf der Kachel und schießt als Ganzkörperfigur die Tore (Name und Nummer auf dem Rücken).
+- **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Name und Aussehen beider im Eltern-Bereich unter Einstellungen, mit demselben Baukasten (Schritte 2 bis 5, dazu Bart, Brille, Kopfbedeckung, Pfeife oder Klemmbrett nur für die Erwachsenen). Die Tipp-Zeit je Konto ebenda. Richtige Antworten zeigen kurz ein Overlay und gehen von allein weiter.
 
 ## Abnahme Version 1.1.0 (in der Vorschau)
 1. `node --test` grün.

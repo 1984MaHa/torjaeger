@@ -63,22 +63,34 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await clickId("acctNew");byId("acctName").value="Emil";byId("acctPin").value="1234";
     await clickId("acctCreate");
     await until(()=>has("Dein Spieler"),"Baukasten beim ersten Öffnen");
-    assert.ok(has("Junge")&&has("Mädchen")&&has('id="avSkip"')&&!has("data-avhair"),"erst die Auswahl");
+    // Schritt 1: Junge oder Mädchen ist nur eine Vorauswahl
+    assert.ok(has("Schritt 1 von 6")&&has("Junge")&&has("Mädchen")&&has('id="avSkip"')&&has('id="avNext"')&&!has('id="avDice"'),"erst die Auswahl");
     assert.equal(els.filter(e=>"avbody" in e.dataset).length,2);
+    assert.equal(els.filter(e=>"avstep" in e.dataset).length,6,"alle sechs Schritte sind wieder aufrufbar");
     await clickData("avbody","m");
-    assert.ok((html.match(/data-avhair=/g)||[]).length>=6&&has("Pferdeschwanz")&&!has("Wuschel"),"Frisuren für Mädchen");
     assert.equal((html.match(/data-avtpl=/g)||[]).length,5);
     await clickData("avtpl","5");                                    // Vorlage Wald (Mädchen)
+    // Schritt 3: alle Frisuren sind für jedes Kind wählbar, Mädchenfrisuren stehen nur zuerst
+    await clickId("avNext");await clickId("avNext");
+    assert.ok(has("Schritt 3 von 6")&&has('id="avBack"')&&has('id="avDice"'));
+    assert.ok((html.match(/data-av="hair:/g)||[]).length>=15&&has("Pferdeschwanz")&&has("Wuschel")&&has("Ohne Haare"),"alle Frisuren");
+    assert.ok(html.indexOf('data-av="hair:pferdeschwanz"')<html.indexOf('data-av="hair:wuschel"'),"Mädchenfrisuren zuerst");
+    await clickData("av","hair:bob");
+    await clickId("avDice");                                         // Würfel ändert nur Frisur und Haarfarbe
+    assert.ok(has("Schritt 3 von 6"));
+    await clickData("av","hair:lang");await clickData("av","browColor:#2f6fde");
+    await clickId("avBack");await clickData("av","face:3");await clickData("av","skin:#c68642");await clickData("av","build:2");
+    await clickData("avstep","4");assert.ok(has("Schritt 4 von 6")&&has("Breites Lachen")&&has("Überrascht")&&!has("Bart"),"kein Bart bei Kindern");
+    await clickData("av","eyeShape:0");await clickData("av","eyes:#6a95c4");await clickData("av","mouth:1");await clickData("av","nose:2");await clickData("av","brows:2");await clickData("av","freckles:1");await clickData("av","cheeks:0");
+    await clickId("avNext");assert.ok(has("Schritt 5 von 6"));
+    await clickData("av","outfit:2");await clickData("av","outfitColor:#34a853");await clickData("av","glasses:2");
+    await clickData("av","hat:1");assert.ok(has('data-av="hatColor:'));await clickData("av","hatColor:#2f6fde");await clickData("av","bg:#ffd9e0");
+    await clickId("avNext");assert.ok(has("Schritt 6 von 6")&&!has('id="avNext"'));
+    await clickData("av","pattern:1");await clickData("av","socks:#22252b");await clickData("av","collar:1");
     byId("avShirtName").value="Emil";byId("avTeam").value="Die Wirbel";
-    await clickData("avhair","4");                                   // Bob, liest dabei die Eingaben
+    await clickData("av","shirt:#2f6fde");                           // liest dabei die Eingaben
     await clickData("avnum","1");
-    assert.ok(has("Die Wirbel")&&has('class="numv"'));
-    await clickData("avbody","j");                                   // Wechsel zu Junge: Farben und Namen bleiben, Frisurenliste ist neu
-    assert.ok(has("Wuschel")&&!has("Pferdeschwanz")&&has("Die Wirbel"));
-    await clickData("avbody","m");await clickData("avhair","2");
-    await clickData("avhat","1");assert.ok(has("data-avhatc"));await clickData("avhatc","#2f6fde");      // Cap in Blau
-    await clickData("avpattern","1");await clickData("aveyes","#6a95c4");await clickData("avsocks","#22252b");await clickData("avmouth","1");await clickData("avcollar","1");
-    await clickData("avface","3");await clickData("aveyeshape","0");await clickData("avbrows","2");await clickData("avnose","2");await clickData("avfreckles","1");await clickData("avglasses","2");await clickData("avbuild","2");
+    await clickData("avview","back");assert.ok(has("Die Wirbel")&&has('class="numv"')&&has("data-hb="),"Rückansicht mit Hinterkopf");
     await clickId("avSave");
     await until(()=>has("Hallo Emil"),"Kabine nach Speichern");
     assert.ok(has('id="avEdit"')&&has("avsvg"));
@@ -127,8 +139,8 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.meta.schemaVersion,3);
-    assert.equal(st.profile.avatar.body,"m");assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.avatar.hat,1);assert.equal(st.profile.avatar.pattern,1);assert.equal(st.profile.avatar.eyes,"#6a95c4");assert.equal(st.profile.avatar.socks,"#22252b");assert.equal(st.profile.avatar.mouth,1);assert.equal(st.profile.avatar.collar,1);assert.deepEqual([st.profile.avatar.face,st.profile.avatar.eyeShape,st.profile.avatar.brows,st.profile.avatar.nose,st.profile.avatar.freckles,st.profile.avatar.glasses,st.profile.avatar.build],[3,0,2,2,1,2,2]);assert.equal(st.profile.avatar.hatColor,"#2f6fde");assert.equal(st.profile.avatar.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);
+    assert.equal(st.meta.schemaVersion,4);
+    const av=st.profile.avatar;assert.equal(av.v,3);assert.equal(av.body,"m");assert.equal(av.hair,"lang");assert.equal(av.browColor,"#2f6fde");assert.equal(av.hat,1);assert.equal(av.pattern,1);assert.equal(av.eyes,"#6a95c4");assert.equal(av.socks,"#22252b");assert.equal(av.mouth,1);assert.equal(av.collar,1);assert.deepEqual([av.face,av.eyeShape,av.brows,av.nose,av.freckles,av.glasses,av.build,av.cheeks,av.outfit],[3,0,2,2,1,2,2,0,2]);assert.equal(av.hatColor,"#2f6fde");assert.equal(av.outfitColor,"#34a853");assert.equal(av.bg,"#ffd9e0");assert.equal(av.shirt,"#2f6fde");assert.equal(av.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);assert.ok(!("beard" in av),"kein Bart-Merkmal");
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
     assert.ok(helped.reduce((n,h)=>n+h.t1,0)>=3&&helped.reduce((n,h)=>n+h.t2,0)>=1&&helped.reduce((n,h)=>n+h.n,0)>=1,"Hilfe wurde gezählt: "+JSON.stringify(helped));
@@ -188,9 +200,11 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await clickData("aset","perRound:6");await clickData("aset","hintAfter:0");
     assert.ok(has('aria-pressed="true"'));
     assert.ok(has('id="trName1"')&&has('id="trName2"')&&has("Trainerin"));
-    byId("trName1").value="Coach Marco";await clickData("atr","1:jacket:#2f6fde");
+    byId("trName1").value="Coach Marco";
+    await clickData("atrstep","1:4");assert.ok(has("Vollbart")&&has("Dreitagebart"),"Bart im Trainerteam");await clickData("atr","1:beard:1");await clickData("atrdice","1:4");await clickData("atr","1:beard:2");
+    await clickData("atrstep","1:5");assert.ok(has("Klemmbrett")&&has("Pfeife"));await clickData("atr","1:jacket:#2f6fde");await clickData("atr","1:gear:2");
     assert.ok(has("Coach Marco"));
-    await clickData("atr","2:earrings:0");await clickData("atrsave","1",200);
+    await clickData("atrstep","2:5");await clickData("atr","2:earrings:0");await clickData("atrsave","1",200);
     assert.ok(has("Der Trainer ist gespeichert"));
     await clickData("atrsave","2",200);
     assert.ok(has("Die Trainerin ist gespeichert"));
@@ -198,8 +212,8 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     st=(await get(`/api/profiles/${id}/state`)).state;
     assert.equal(st.settings.perRound,6);assert.equal(st.settings.hintAfter,0);
     const g=(await get("/api/settings")).settings;
-    assert.equal(g.trainer.name,"Coach Marco");assert.equal(g.trainer.look.jacket,"#2f6fde");assert.equal(g.trainer.look.glasses,1);
-    assert.equal(g.trainer2.name,"Trainerin");assert.equal(g.trainer2.look.earrings,0);assert.equal(g.schemaVersion,2);
+    assert.equal(g.trainer.name,"Coach Marco");assert.equal(g.trainer.look.jacket,"#2f6fde");assert.equal(g.trainer.look.glasses,2);assert.equal(g.trainer.look.beard,2);assert.equal(g.trainer.look.gear,2);assert.equal(g.trainer.look.v,3);
+    assert.equal(g.trainer2.name,"Trainerin");assert.equal(g.trainer2.look.earrings,0);assert.equal(g.schemaVersion,3);
     // PIN ändern
     byId("aOldPin").value="1234";byId("aNewPin").value="4321";await clickData("apin",undefined,200);
     await until(()=>has("Die neue PIN gilt"),"PIN geändert");
@@ -208,7 +222,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     // Sicherungen und System
     await clickData("atab","system");
     await until(()=>has("Tagessicherungen")&&has("Dieses Gerät"),"Listen vom Server");
-    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 2, App 2"));
+    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 4, App 4")&&has("Server 3, App 3"));
     // Konten: umbenennen, zurücksetzen, löschen
     await clickData("atab","accounts");
     await clickData("arename",id);byId("renameIn").value="Emil M.";await clickData("arenameok",id);
@@ -217,7 +231,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     await clickData("ado",undefined);await sleep(300);
     assert.ok(has("zurückgesetzt"));
     st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.history.length,0);assert.equal(st.profile.avatar.hair,2);assert.equal(st.profile.name,"Emil M.");
+    assert.equal(st.history.length,0);assert.equal(st.profile.avatar.hair,"lang");assert.equal(st.profile.name,"Emil M.");
     await clickData("aask","delete:"+id);await clickData("ado",undefined);await sleep(300);
     assert.ok(has("Papierkorb"));assert.ok(!has('data-arename="'+id+'"'));
     assert.equal((await api(BASE,"GET",`/api/profiles/${id}/state`)).status,410);

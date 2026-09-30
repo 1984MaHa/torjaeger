@@ -1,2 +1,2 @@
 // App-Version. Bei jeder Auslieferung erhöhen, gleichzeitig mit VERSION in sw.js (ein Test prüft, dass beide gleich sind).
-export const APP_VERSION="1.2.1";
+export const APP_VERSION="1.3.0";

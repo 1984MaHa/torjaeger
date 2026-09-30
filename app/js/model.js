@@ -1,6 +1,6 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 3):
+// Konto (profile-Stand, schemaVersion 4):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
 //   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
@@ -10,16 +10,18 @@
 // Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
 // Schemaversion 2 (bis App 1.1.5) hatte weder progress.cur noch stats.ctl noch topic und pk im Verlauf.
+// Schemaversion 3 (App 1.2.x) hatte das alte Aussehen (Frisur als Zahl je Junge/Mädchen, Trainer mit v 2). Ab 4 (App 1.3.0): Frisur als Schlüssel,
+// neue Felder browColor, cheeks, outfit, outfitColor, bg; Trainer mit v 3 (Bart in Formen, Kopfbedeckung, Merkmal). Global: Schemaversion 3.
 //
 // Zähler stehen je Gerät getrennt. Jedes Gerät schreibt nur seinen eigenen Zähler, die
 // Anzeige ist die Summe. So geht beim Zusammenführen nichts verloren und doppeltes
 // Zusammenführen zählt nichts doppelt.
 import {PROBE} from "./content.js";
 import {clone} from "./util.js";
-import {defaultTrainer,defaultTrainer2} from "./avatar.js";
+import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer} from "./avatar.js";
 
-export const SCHEMA_VERSION=3;        // Konto-Stand
-export const GLOBAL_SCHEMA_VERSION=2; // globale Einstellungen
+export const SCHEMA_VERSION=4;        // Konto-Stand
+export const GLOBAL_SCHEMA_VERSION=3; // globale Einstellungen
 
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
 
@@ -64,6 +66,13 @@ const PROFILE_MIGRATIONS=[
     s.progress=Object.assign({cur:{li:null,t:0}},s.progress);
     s.meta.schemaVersion=3;
     return s;
+  }},
+  // 3 -> 4 (App 1.3.0): neues Aussehen. Der alte Avatar wird in die neuen Merkmale überführt (nächstliegende Werte), sein Zeitstempel t bleibt.
+  {from:3,to:4,run:s=>{
+    const av=s.profile&&s.profile.avatar;
+    if(av&&typeof av==="object")s.profile.avatar=Object.assign(cleanLook(av),{t:Number.isFinite(av.t)?av.t:0});
+    s.meta.schemaVersion=4;
+    return s;
   }}
 ];
 export function migrateProfile(state,opts={}){
@@ -86,6 +95,8 @@ export function migrateGlobal(g){
   // 1 -> 2: Trainer und Trainerin. Ein nie geänderter Eintrag (t 0) bekommt immer die aktuelle Vorgabe.
   if(!g.trainer||typeof g.trainer!=="object"||g.trainer.t===0)g.trainer=defaultTrainer();
   if(!g.trainer2||typeof g.trainer2!=="object"||g.trainer2.t===0)g.trainer2=defaultTrainer2();
+  // 2 -> 3 (App 1.3.0): Trainer im neuen Aufbau (Frisur als Schlüssel, Bart in Formen). Name und Zeitstempel bleiben.
+  if(v<3){g.trainer=cleanTrainer(g.trainer,1);g.trainer2=cleanTrainer(g.trainer2,2);}
   return g;
 }
 
