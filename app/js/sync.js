@@ -9,8 +9,9 @@
 //   offline  Server nicht erreichbar (kein Fehler, wird später nachgeholt)
 //   reload   App ist veraltet (Server oder Stand hat neuere Schemaversion), App muss neu geladen werden
 //   busy     zu viele Konflikte hintereinander
+//   invalid  der lokale Stand ist unvollständig (fehlt eine Pflichtstruktur): er wird nie gesendet, der Server hätte ihn auch abgelehnt
 //   deleted  das Konto wurde von den Eltern gelöscht (liegt im Papierkorb des Servers), das Gerät entfernt es lokal
-import {migrateProfile,migrateGlobal,UnsupportedSchema} from "./model.js";
+import {migrateProfile,migrateGlobal,UnsupportedSchema,checkProfileState,checkGlobalState} from "./model.js";
 import {mergeProfile,mergeGlobal} from "./merge.js";
 import {canon} from "./util.js";
 
@@ -88,6 +89,7 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
         await store.put("profile:"+rec.id,rec);
         if(!rec.dirty){rec.lastSync=now();await store.put("profile:"+rec.id,rec);return{ok:true,pushed:false};}
         const payload=JSON.parse(JSON.stringify(rec.state));
+        if(checkProfileState(payload))return{ok:false,reason:"invalid"};
         const p=await call("PUT",`/api/profiles/${rec.id}/state`,{baseRev:rec.baseRev,device:deviceId,state:payload});
         if(p.status===200){
           rec.baseRev=p.json.rev;rec.state.meta.rev=p.json.rev;rec.lastSync=now();
@@ -120,10 +122,13 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
           }
           // Wurde ein älterer Stand migriert, muss die neue Form auch zurück auf den Server (schützt vor älteren Apps).
           if(remote.schemaVersion!==rs.schemaVersion)rec.dirty=true;
+          // Die Eltern-PIN bestimmt der Server (Änderung nur über /api/admin/pin mit alter PIN): hat er eine, gilt sie hier.
+          if(rs.pin&&canon(rec.state.pin)!==canon(rs.pin)){rec.state.pin=JSON.parse(JSON.stringify(rs.pin));if(canon(rec.state)===canon(rs))rec.dirty=false;}
         }else{rec.baseRev=0;rec.dirty=true;}
         await store.put("global",rec);
         if(!rec.dirty){rec.lastSync=now();await store.put("global",rec);return{ok:true,pushed:false};}
         const sent=canon(rec.state),payload=JSON.parse(JSON.stringify(rec.state));
+        if(checkGlobalState(payload))return{ok:false,reason:"invalid"};
         const p=await call("PUT","/api/settings",{baseRev:rec.baseRev,device:deviceId,settings:payload});
         if(p.status===200){
           rec.baseRev=p.json.rev;rec.lastSync=now();rec.dirty=canon(rec.state)!==sent;

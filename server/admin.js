@@ -44,12 +44,20 @@ function createAdmin(env) {
     if (rec.algo === "legacy-djb2") return sameText(djb2(pin), rec.hash);
     return sameText(sha256(rec.salt + ":" + pin), rec.hash);
   }
+  // Der Alt-Hash des Prototyps wird beim ersten richtigen Eingeben auf dem Server aufgewertet (die App darf die PIN nicht mehr über den normalen Abgleich ändern).
+  function upgradeLegacyPin(pin) {
+    const cur = readJson(SETTINGS);
+    if (!cur || !cur.settings || !cur.settings.pin || cur.settings.pin.algo !== "legacy-djb2") return;
+    const ts = Date.now(), salt = crypto.randomBytes(8).toString("hex");
+    const settings = Object.assign({}, cur.settings, { pin: { algo: "sha256-salt", salt, hash: sha256(salt + ":" + pin), t: ts }, updatedAt: ts });
+    writeJson(SETTINGS, { rev: cur.rev + 1, savedAt: new Date(ts).toISOString(), device: "admin", schemaVersion: settings.schemaVersion || cur.schemaVersion, settings }, "settings");
+  }
   // true = weiter, sonst wurde schon geantwortet
   function auth(res, body) {
     const t = Date.now();
     if (t < lockedUntil) { send(res, 429, { error: "too_many", retryAfter: Math.ceil((lockedUntil - t) / 1000) }); return false; }
     if (!pinRecord()) { send(res, 403, { error: "no_pin" }); return false; }
-    if (pinOk(body.pin)) { fails = 0; return true; }
+    if (pinOk(body.pin)) { fails = 0; upgradeLegacyPin(body.pin); return true; }
     if (++fails >= FAIL_LIMIT) { lockedUntil = t + LOCK_MS; fails = 0; }
     send(res, 403, { error: "bad_pin" });
     return false;

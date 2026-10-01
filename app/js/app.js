@@ -1,13 +1,13 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
 import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng} from "./content.js";
 import {GEN} from "./generators.js";
-import {packOf,gradePack,isRight,termResults,keyOf} from "./check.js";
+import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
-import {openStore} from "./store.js";
+import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
 import {createAdminApi,adminError} from "./adminapi.js";
 import {adminHTML} from "./admin.js";
@@ -17,7 +17,7 @@ import {cleanLook,cleanTrainer,lookOf,withKit,withPreset,defaultTrainer,defaultT
 import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
-import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML} from "./views.js";
+import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML} from "./views.js";
 import {APP_VERSION} from "./version.js";
 
 const root=document.getElementById("app");
@@ -26,13 +26,14 @@ let globalRec;                 // {state:{pin,...}, baseRev, dirty, lastSync}
 let accounts=[];               // [{id,name}]
 let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null;
-const UI={fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
+const UI={saveFail:false,savedPack:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
 const S=()=>cur.rec.state;
 
 // ================= Speicher =================
 async function loadAll(){
-  store=await openStore();
+  // Schreibfehler werden wiederholt; klappt es dauerhaft nicht, zeigt die App einen deutlichen Hinweis (UI.saveFail).
+  store=withRetry(await openStore(),{onState:ok=>{UI.saveFail=!ok;const typing=document.activeElement&&document.activeElement.tagName==="INPUT";if(!UI.fatal&&!typing)render();}});
   deviceId=await store.get("device");
   if(!deviceId){deviceId=randomId("g-",10);await store.put("device",deviceId);}
   sync=createSync({store,deviceId});
@@ -80,9 +81,34 @@ async function useAccount(id,unlocked=false){
   if(!unlocked&&kp&&kp.code){UI.pinAsk={id,msg:""};render();const i=document.getElementById("kidPin");if(i)i.focus();return;}
   UI.pinAsk=null;
   cur={rec:a.rec};await store.put("current",id);
+  await loadSavedPack();
   view="home";UI.parent=false;UI.pinMsg="";UI.celebrate="";
   if(!maybeOfferAvatar())render();
   scheduleSync(0);
+}
+// ----- Päckchen sichern und fortsetzen (nur auf diesem Gerät, nicht im Spielstand) -----
+const packKey=id=>"pack:"+id;
+// Gesichertes Päckchen des aktuellen Kontos laden. Was nicht mehr spielbar ist (Thema aus, Liga gesperrt, kaputt), wird verworfen.
+async function loadSavedPack(){
+  UI.savedPack=null;if(!cur)return;
+  let snap=null;try{snap=await store.get(packKey(cur.rec.id));}catch(e){}
+  if(!snap)return;
+  if(packResumable(snap)&&allTopicsOf(snap.li).includes(snap.topic)&&topicOn(S(),snap.topic)&&playable(S(),snap.li))UI.savedPack=snap;
+  else await store.del(packKey(cur.rec.id));
+}
+function savePack(){
+  if(!cur||!G||!G.pack)return;
+  const snap=packSnapshot(G);
+  if(snap){UI.savedPack=snap;store.put(packKey(cur.rec.id),snap);}
+  else if(G.phase==="eval"){UI.savedPack=null;store.del(packKey(cur.rec.id));}
+}
+function dropPack(){UI.savedPack=null;if(cur)store.del(packKey(cur.rec.id));}
+function resumePack(){
+  const snap=UI.savedPack;if(!snap||!packResumable(snap)){dropPack();render();return;}
+  G=Object.assign(packResume(snap),{rival:pick(RIVALS),t0:Date.now()});
+  setTask(G.tasks[G.phase==="solve"?G.i:0]);
+  view="play";UI.fach=null;render();window.scrollTo(0,0);
+  if(G.phase==="solve")armIdle();
 }
 // Ein Konto ohne Avatar bekommt beim ersten Öffnen den Baukasten angeboten (überspringbar, wird nur einmal angeboten).
 function maybeOfferAvatar(){
@@ -132,7 +158,7 @@ async function syncOnce(){
     results.push(r);if(a.rec.state)a.name=a.rec.state.profile.name;
   }
   const bad=results.find(r=>!r.ok);
-  UI.sync=!bad?"":bad.reason==="offline"?"offline":bad.reason==="reload"?"reload":"busy";
+  UI.sync=!bad?"":bad.reason==="offline"?"offline":bad.reason==="reload"?"reload":bad.reason==="invalid"?"invalid":"busy";
   if(UI.sync==="reload")updateApp(true);
   const changed=(cur&&canon(S())!==before)||canon(globalRec.state)!==beforeG;
   const typing=document.activeElement&&document.activeElement.tagName==="INPUT";
@@ -143,7 +169,7 @@ const accountsSig=()=>accounts.map(a=>a.id+":"+(a.rec.state?a.rec.state.meta.upd
 // Konto lokal entfernen (nach Löschen im Eltern-Bereich, auch auf anderen Geräten).
 async function removeAccountLocal(id){
   accounts=accounts.filter(a=>a.id!==id);
-  await store.del("profile:"+id);
+  await store.del("profile:"+id);await store.del(packKey(id));
   if(cur&&cur.rec.id===id){cur=null;G=null;await store.del("current");if(view!=="admin")view="accounts";}
 }
 function syncText(){
@@ -152,10 +178,12 @@ function syncText(){
   const dirty=cur&&cur.rec.dirty;
   if(UI.sync==="offline")return `${when}. Der Server ist gerade nicht erreichbar. Der Stand liegt sicher auf diesem Gerät und wird später nachgeholt.`;
   if(UI.sync==="reload")return `${when}. Die App ist veraltet und wird neu geladen.`;
+  if(UI.sync==="invalid")return `${when}. Der Stand auf diesem Gerät ist unvollständig und wird nicht gesendet. Bitte die App schließen und neu öffnen. Bleibt es so, bitte melden.`;
   return when+(dirty?" (Änderungen werden gleich gesendet)":"");
 }
 window.addEventListener("online",()=>scheduleSync(300));
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")scheduleSync(300);});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")scheduleSync(300);else if(view==="play")savePack();});
+window.addEventListener("pagehide",()=>{if(view==="play")savePack();});
 setInterval(()=>{if(document.visibilityState==="visible")syncNow();},60000);
 
 // ================= Service Worker und Updates =================
@@ -203,7 +231,7 @@ function startRound(li,mode,trial,topic){
   armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
 function setTask(T){
-  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;
+  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;
   G.pairs=T.type==="match"?T.left.map(()=>-1):null;G.msel=-1;G.sortA=T.type==="sort"?T.cards.map(()=>-1):null;G.ssel=-1;G.ord=[];
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
   armIdle();
@@ -273,14 +301,14 @@ function next(){
 // ----- Päckchen: Schreiben, Kontroll-Pfiff, Auswertung -----
 function packAnswer(val){
   clearTimeout(idleT);
-  if(G.phase==="edit"){G.finals[G.ei]=val;G.phase="check";render();window.scrollTo(0,0);return;}
+  if(G.phase==="edit"){G.finals[G.ei]=val;G.phase="check";savePack();render();window.scrollTo(0,0);return;}
   if(G.phase!=="solve")return;
   const i=G.i;G.ans[i]=val;G.finals[i]=val;G.helps[i]=G.helpLevel;
   tone([440],.06,S().settings.sound);
-  if(i+1>=G.len){G.phase="check";render();window.scrollTo(0,0);return;}
-  G.i++;setTask(G.tasks[G.i]);render();window.scrollTo(0,0);
+  if(i+1>=G.len){G.phase="check";savePack();render();window.scrollTo(0,0);return;}
+  G.i++;savePack();setTask(G.tasks[G.i]);render();window.scrollTo(0,0);
 }
-function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;render();}
+function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;savePack();render();}
 function editAnswer(i){
   G.phase="edit";G.ei=i;setTask(G.tasks[i]);clearTimeout(idleT);prefill(G.tasks[i],G.finals[i]);render();window.scrollTo(0,0);
 }
@@ -294,6 +322,7 @@ function prefill(T,val){
 // Abgeben: alle Antworten zählen jetzt (Endantworten). Mit Kontrolle gibt es Bonus für selbst gefundene Fehler.
 function finishCheck(checked){
   clearTimeout(idleT);
+  dropPack(); // ab jetzt zählt alles, das gesicherte Päckchen wird nicht mehr gebraucht
   const grade=gradePack({tasks:G.tasks,answers:G.ans,finals:G.finals,checked});
   G.grade=grade;G.checked=checked;G.gains=[];let streak=0;
   G.tasks.forEach((T,i)=>{
@@ -313,7 +342,7 @@ function finishCheck(checked){
 // Auswertung: eine Torszene je Aufgabe mit der Antwort nach der Kontrolle
 function evalShow(i){
   const T=G.tasks[i],it=G.grade.items[i];
-  G.task=T;G.done=true;G.given=G.finals[i];G.ok=it.ok;G.fixedNow=it.fixed;G.gain=G.gains[i]+(it.fixed?BONUS_FIX:0);G.offer=false;
+  G.task=T;G.done=true;G.why=false;G.given=G.finals[i];G.ok=it.ok;G.fixedNow=it.fixed;G.gain=G.gains[i]+(it.fixed?BONUS_FIX:0);G.offer=false;
   G.shot=pickShot(it.ok);G.res.push(it.ok);
   G.hist.push({topic:T.topic,ok:it.ok,q:T.q.replace(/<[^>]+>/g,""),given:String(G.given),right:rightText(T)});
   tone(it.ok?[523,659,784]:[220,180],it.ok?.12:.18,S().settings.sound);
@@ -329,10 +358,10 @@ function finish(){
 }
 
 // ================= Darstellung und Ereignisse =================
-function env(){return{hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
+function env(){return{pack:UI.savedPack&&{topic:UI.savedPack.topic,done:UI.savedPack.ans.filter(a=>a!==undefined&&a!==null).length,len:UI.savedPack.tasks.length,phase:UI.savedPack.phase},hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
-  root.innerHTML=bandHTML(UI.preview)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
+  root.innerHTML=bandHTML(UI.preview)+saveWarnHTML(UI.saveFail)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
     :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):resultHTML(S(),G,UI));
   bind();
 }
@@ -369,15 +398,17 @@ async function setGlobalPin(pin){
 }
 async function createAccount(){
   const name=document.getElementById("acctName").value.trim(),pin=document.getElementById("acctPin").value.trim();
-  if(!name){UI.acctMsg="Bitte einen Namen eingeben.";render();return;}
-  if(!validPin(pin)){UI.acctMsg="Bitte genau 4 Ziffern als PIN eingeben.";render();return;}
+  // Bei einem Fehler bleibt der eingegebene Name stehen und das fehlerhafte Feld bekommt den Fokus.
+  const fail=(msg,field)=>{UI.acctName=name;UI.acctMsg=msg;render();const i=document.getElementById(field);if(i)i.focus();};
+  if(!name){fail("Bitte einen Namen eingeben.","acctName");return;}
+  if(!validPin(pin)){fail("Bitte genau 4 Ziffern als PIN eingeben.","acctPin");return;}
   if(globalRec.state.pin){
     const r=await checkPin(pin,globalRec.state.pin);
-    if(!r.ok){UI.acctMsg="Die PIN stimmt nicht.";render();return;}
+    if(!r.ok){fail("Die PIN stimmt nicht.","acctPin");return;}
     if(r.upgrade)await setGlobalPin(r.upgrade);
   }else await setGlobalPin(await makePin(pin));
   const id=await makeAccount(name);
-  UI.newAcct=false;UI.acctMsg="";
+  UI.newAcct=false;UI.acctMsg="";UI.acctName="";
   await useAccount(id,true);
 }
 async function makeAccount(name){
@@ -533,15 +564,20 @@ function bind(){
   document.querySelectorAll("[data-cur]").forEach(b=>b.onclick=()=>{const li=Number(b.dataset.cur);commit((s,c)=>applyCurrent(s,c,li));UI.fach=null;UI.lgOpen={};render();window.scrollTo(0,0);});
   document.querySelectorAll("[data-probe]").forEach(b=>b.onclick=()=>probeToggle(Number(b.dataset.probe)));
   document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editAnswer(Number(b.dataset.edit)));
+  if($("packResume"))$("packResume").onclick=resumePack;
+  if($("packDrop"))$("packDrop").onclick=()=>{const sn=UI.savedPack;dropPack();if(sn)startRound(sn.li,"topic",false,sn.topic);else render();}; // neu anfangen: dasselbe Thema, frisches Päckchen
   if($("ctlDone"))$("ctlDone").onclick=()=>finishCheck(true);
   if($("ctlSkip"))$("ctlSkip").onclick=()=>finishCheck(false);
   if($("editBack"))$("editBack").onclick=()=>{G.phase="check";render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
   document.querySelectorAll("[data-bank]").forEach(d=>{d.ontoggle=()=>{UI.bankOpen=!!d.open;};}); // Trainerbank merkt sich nur, solange man sie selbst aufgeklappt hat
-  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
+  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")savePack();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
+  // „Warum stimmt das?“: hält das automatische Weiter an und zeigt die Erklärung, bis das Kind „Weiter“ tippt
+  if($("why"))$("why").onclick=e=>{e.stopPropagation();clearTimeout(autoT);G.why=true;render();};
+  if($("ovlNext"))$("ovlNext").onclick=next;
   if($("coachHelp"))$("coachHelp").onclick=helpStep;
   if($("coachYes"))$("coachYes").onclick=helpStep;
   if($("coachNo"))$("coachNo").onclick=()=>{G.offer=false;render();};
@@ -574,8 +610,8 @@ function bind(){
     if($("kidPin").value.trim()===code){const keep=$("kidPinKeep")&&$("kidPinKeep").checked,id=UI.pinAsk.id;
       (keep?store.put("pinok:"+id,{day:todayKey(),code}):store.del?store.del("pinok:"+id):Promise.resolve()).then(()=>useAccount(id,true));}else{UI.pinAsk.msg="Die PIN stimmt nicht.";render();const i=$("kidPin");if(i)i.focus();}};
   if($("kidPinCancel"))$("kidPinCancel").onclick=()=>{UI.pinAsk=null;render();};
-  if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";render();};
-  if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";render();};
+  if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";UI.acctName="";render();};
+  if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";UI.acctName="";render();};
   if($("acctCreate"))$("acctCreate").onclick=createAccount;
   if($("switch"))$("switch").onclick=()=>{view="accounts";UI.parent=false;UI.newAcct=false;UI.adminAsk=false;render();};
   if($("upd"))$("upd").onclick=()=>updateApp(false);

@@ -1,6 +1,6 @@
 # Torjäger-Liga
 
-Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.5.2. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
+Lernspiel für Emil (Mathe und Deutsch als Fußballspiele, Klasse 2 bis 4: Trainingscamp, Kreisliga, Bezirksliga; in der Kreisliga zusätzlich Englisch und Sachkunde). Aktuelle Version 1.5.3. Home-Bildschirm-Web-App für iPad und iPhone, offline spielbar, gleicht sich automatisch mit dem Server auf der Synology **energizer** ab. Erreichbar nur über Tailscale per HTTPS.
 
 Plan und Entscheidungen: Vault, `Projects/Torjaeger/specs/Torjaeger-Plan.md` (Index `Projects/Torjaeger/Torjaeger.md`). Beschreibung des gebauten Stands: [SPEC.md](SPEC.md). Änderungen: [CHANGELOG.md](CHANGELOG.md). Repo: https://github.com/1984MaHa/torjaeger
 
@@ -165,6 +165,9 @@ Die Figuren sind Bilder von Marco (Emil vorn und hinten, Trainerteam). Sie liege
 
 ## Eltern-Bereich, Avatar, Trainer
 - **Eltern:** auf „Wer spielt?“ die Taste „Eltern“, PIN eingeben. Konten, Lernstand, Einstellungen, Sicherungen und System. Der Server prüft die PIN bei Löschen, Wiederherstellen, Zurücksetzen und PIN ändern selbst (falsche PIN: nichts passiert, nach 5 Fehlversuchen eine Minute Pause).
+- **PIN der Eltern (ab 1.5.3):** Sie ändert sich nur noch im Eltern-Bereich (Einstellungen, „Eltern-PIN ändern“, alte PIN nötig). Der normale Abgleich kann sie nicht mehr ersetzen, der Server behält eine einmal gesetzte PIN. Die neue PIN kommt danach auf allen Geräten an.
+- **Päckchen weiterspielen (ab 1.5.3):** Wer mitten im Päckchen „Kabine“ antippt oder die App schließt, findet beim nächsten Öffnen in der Kabine „Päckchen weiterspielen?“ (Weiterspielen oder Neu anfangen). Das Päckchen liegt nur auf diesem Gerät. Punkte zählen wie bisher erst bei der Abgabe.
+- **Speicherprobleme (ab 1.5.3):** Klappt das Speichern auf dem Gerät nicht, versucht die App es immer wieder und zeigt oben einen roten Hinweis („Das Speichern klappt gerade nicht“). Dann die App nicht schließen und die Eltern holen.
 - **Mein Spieler:** Beim ersten Öffnen eines Kontos ohne eigenen Spieler erscheint die Seite „Dein Spieler“ (überspringbar), später in der Kabine die Taste „Mein Spieler“. Die Figur ist eine feste Vorlage (vorerst „Emil“). Einstellbar sind Vereinsfarben (Vorschläge) oder die Farben von Trikot, Streifen, Hose und Stutzen, die Rückennummer, der eigene Name auf dem Rücken und der Name der Mannschaft (steht in „Wer spielt?“, in der Kabine und auf der Anzeigetafel).
 - **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Im Eltern-Bereich unter Einstellungen ändert man Name und Kleidungsfarben beider (Polo, Hose, Stutzen). Vorgaben „Trainer“ und „Trainerin“.
 

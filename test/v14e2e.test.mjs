@@ -72,7 +72,7 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     await until(()=>has('data-open="1"'),"Eltern-Bereich in der Trainerbank");
     await clickData("open","1");
     await until(()=>has('data-fach="1:eng"'),"Kreisliga zeigt Englisch");
-    assert.ok(has('data-fach="1:su"')&&has('data-fach="1:math"')&&has('data-fach="1:deu"')&&has("Mix-Spiel"));
+    assert.ok(has('data-fach="1:su"')&&has('data-fach="1:math"')&&has('data-fach="1:deu"')&&has("Mix: Mathe &amp; Deutsch"));
 
     // ----- Englisch ohne Stimme: keine 🔊-Taste, keine Hör-Aufgabe -----
     await clickData("fach","1:eng");

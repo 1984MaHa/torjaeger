@@ -19,6 +19,9 @@ import {topicSafe,topicDone,topicOn,activeTopics,gateTopics,fachProgress,safeCou
 // Band oben in der Vorschau (label kommt vom Server, leer bei Live).
 export function bandHTML(label){return label?`<div class="preview-band" role="status">${esc(label)}</div>`:"";}
 
+// Hinweis, wenn das lokale Speichern nicht klappt (kindgerecht, aber an die Eltern gerichtet). Nie still verlieren.
+export function saveWarnHTML(fail){return fail?`<div class="savewarn" role="alert"><b>Huch! Das Speichern klappt gerade nicht.</b> Bitte hol Mama oder Papa und mach die App noch nicht zu. Dein Spiel läuft weiter. Die App versucht es immer wieder.</div>`:"";}
+
 export {rightText,stickerHTML};
 
 export function boardHTML(s){
@@ -55,7 +58,7 @@ function modeBtns(s,li,UI,small){
   const panel=open&&open.startsWith(li+":")?fachPanel(s,li,open.split(":")[1]):"";
   const L=LIGEN[li];
   return `<div class="modes ${small?"sm":""}">${fb("math","Mathe",ICONS.math,"var(--sky)")}${fb("deu","Deutsch",ICONS.deu,"var(--miss)")}${L.eng?fb("eng","Englisch",ICONS.eng,"#d9480f"):""}${L.su?fb("su","Sachkunde",ICONS.su,"#0f8b6d"):""}
-    <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">${ICONS.mix}</span><span><b>Mix-Spiel</b></span></button></div>${panel}`;
+    <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">${ICONS.mix}</span><span><b>Mix: Mathe &amp; Deutsch</b></span></button></div>${panel}`;
 }
 
 // Eigener Fortschritt in Englisch und Sachkunde (zählt nicht für den Aufstieg).
@@ -106,14 +109,15 @@ export function homeHTML(s,UI,env){
       col=!l.length?"#c9d3cb":topicDone(s,t)?"var(--goal)":p>=60?"var(--gold)":"var(--miss)";
     return `<div class="stat"><span>${TOPICS[t]}${stufe(s,t)}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
-  return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+`
+  const packBanner=env.pack?`<section class="panel packresume" role="status"><h3>Päckchen weiterspielen?</h3><p class="note">Du hast ein Päckchen angefangen: <b>${TOPICS[env.pack.topic]}</b>${env.pack.phase==="check"?" (alle Aufgaben sind eingetragen, es fehlt nur noch der Kontroll-Pfiff)":` (${env.pack.done} von ${env.pack.len} Aufgaben sind eingetragen)`}.</p><div class="row"><button class="btn" id="packResume">Weiterspielen</button><button class="btn ghost" id="packDrop">Neu anfangen</button></div></section>`:"";
+  return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+packBanner+`
   <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="teamline">${esc(teamOf(s))}</p><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
   <div class="leagues">${currentCard(s,UI,currentLeague(s))}<h2 class="gl2">Andere Ligen</h2>${LIGEN.map((_,i)=>i).filter(i=>i!==currentLeague(s)).map(i=>miniRow(s,UI,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
   <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
   <section class="panel"><details data-bank ${UI.bankOpen||UI.parent||UI.pinMsg?"open":""}><summary>Trainerbank (für Mama und Papa)</summary>
-    <p class="small">Zahlen zeigen, wie viele der letzten ${MASTER_N} Aufgaben je Thema richtig waren. Ein Thema ist sicher ab ${MASTER_K} von ${MASTER_N}. Schwache Themen kommen öfter dran.</p>${stats}
+    <p class="small">Zahlen zeigen, wie viele der letzten ${MASTER_N} Aufgaben je Thema richtig waren. Als zuletzt sicher geübt gilt ein Thema ab ${MASTER_K} von ${MASTER_N}. Schwache Themen kommen öfter dran.</p>${stats}
     <p class="small"><b>Zuletzt abgeglichen:</b> ${env.syncText}</p>
     ${env.persistent?"":`<p class="small">Achtung: Dieser Browser kann nichts dauerhaft speichern. Der Stand bleibt nur, bis die Seite geschlossen wird.</p>`}
     <p class="small">Version ${esc(env.version)}</p>${parentHTML(s,UI,env.hasPin)}
@@ -126,7 +130,7 @@ export function accountsHTML(accounts,UI,env){
   const ask=UI.pinAsk?(()=>{const p=accounts.find(x=>x.id===UI.pinAsk.id)||{};return `<section class="panel"><h3>PIN für ${esc(p.name||"")}</h3><p class="note">Dieses Konto hat eine PIN. Gib sie ein, dann geht es los.</p><div class="pin"><input id="kidPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN" placeholder="PIN"><button class="btn sm" id="kidPinOk">Los</button><button class="btn ghost sm" id="kidPinCancel">Zurück</button></div><label class="small" style="display:block;margin-top:8px"><input type="checkbox" id="kidPinKeep" checked> Heute nicht noch einmal fragen</label>${UI.pinAsk.msg?`<p class="note">${esc(UI.pinAsk.msg)}</p>`:""}</section>`;})():"";
   const form=UI.newAcct?`<section class="panel"><h3>Neues Konto</h3>
     <p class="note">${env.hasPin?"Die Eltern-PIN wird gebraucht, um ein Konto anzulegen.":"Legt zuerst eine Eltern-PIN fest (4 Ziffern). Sie gilt für alle Konten und alle Geräte."}</p>
-    <div class="pin" style="margin:8px 0"><input id="acctName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name" style="letter-spacing:0;width:190px"></div>
+    <div class="pin" style="margin:8px 0"><input id="acctName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name" value="${esc(UI.acctName||"")}" style="letter-spacing:0;width:190px"></div>
     <div class="pin"><input id="acctPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="${env.hasPin?"Eltern-PIN":"Neue Eltern-PIN"}" placeholder="PIN"><button class="btn sm" id="acctCreate">Konto anlegen</button><button class="btn ghost sm" id="acctCancel">Abbrechen</button></div>
     ${UI.acctMsg?`<p class="note">${UI.acctMsg}</p>`:""}</section>`
     :`<div class="row"><button class="btn" id="acctNew">Neues Konto</button>${env.hasPin?`<button class="btn ghost" id="adminOpen">Eltern</button>`:""}</div>${UI.adminAsk?adminAskHTML(UI.adminMsg):""}`;
@@ -177,7 +181,8 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   let fb="",overlay="";
   if(G.done){
     const shot=G.shot||{kind:G.ok?"goal":"wide",side:1},look=lookOf(s.profile);
-    if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot)}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div></div></div>`;
+    if(G.ok&&G.why&&T.ex)overlay=`<div class="ovl why" role="status"><div class="ovlcard whycard"><div class="whyhead">Darum stimmt das</div><div class="whytxt">${T.ex}</div><button class="btn" id="ovlNext">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button></div></div>`;
+    else if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot)}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div>${T.ex?`<button class="btn sm ovlwhy" id="why">Warum stimmt das?</button>`:""}</div></div>`;
     else fb=`<div class="fb no">${sceneSVG(look,shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;
   }
   let coach=G.done||G.phase==="edit"?"":coachHTML({T,G,trainers});

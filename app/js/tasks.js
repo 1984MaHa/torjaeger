@@ -4,7 +4,7 @@
 // Antworten: match = je linkem Begriff die Nummer rechts (oder -1), pic = Nummer der Kachel, sort = je Karte die Nummer des Korbs,
 // order = Kartennummern in der Reihenfolge, wie sie angetippt wurden.
 import {R,pick,shuffle} from "./util.js";
-import {EN_TOPICS} from "./content-en.js";
+import {EN_TOPICS,CONFUSE} from "./content-en.js";
 import {SU_TOPICS} from "./content-su.js";
 import {canSpeak} from "./speech.js";
 
@@ -53,8 +53,11 @@ const ENHINT={
   3:"Schau auf das Bild und sprich das Wort in Silben. Achte auf jeden einzelnen Buchstaben."};
 const LISTEN_HINT="Tippe auf die Taste und höre noch einmal hin. Welches Bild passt zu dem Klang?";
 
+// Wörter, die nicht zusammen mit w gezeigt werden dürfen (leicht verwechselbare Bilder, siehe CONFUSE)
+const confusedWith=en=>new Set(CONFUSE.filter(g=>g.includes(en)).flat());
 function picTiles(words,w,n){
-  const others=shuffle(words.filter(x=>x!==w&&x[2]!==w[2])).slice(0,n-1);
+  const no=confusedWith(w[0]);
+  const others=shuffle(words.filter(x=>x!==w&&x[2]!==w[2]&&!no.has(x[0]))).slice(0,n-1);
   const list=shuffle([w].concat(others));
   return{tiles:list.map(x=>Object.assign(tileOf(x[2]),{name:x[0]})),a:list.indexOf(w)};
 }
@@ -146,4 +149,4 @@ export const TASKGEN={};
 for(const t of Object.keys(EN_TOPICS))TASKGEN[t]=opts=>engTask(t,opts||{});
 for(const t of Object.keys(SU_TOPICS))TASKGEN[t]=()=>suTask(t);
 // für die Tests und die Inhaltsliste
-export {compassSVG};
+export {compassSVG,confusedWith};

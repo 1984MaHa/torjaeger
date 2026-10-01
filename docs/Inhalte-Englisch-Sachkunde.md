@@ -93,8 +93,8 @@ Stufe 1: richtig ist das Bild des Wortes, falsche Auswahl sind Bilder anderer W�
 
 | Wort | Deutsch | Bild | Stufe 3: richtig | Stufe 3: falsch | Hinweis |
 |---|---|---|---|---|---|
-| mother | Mutter | 👩 | mother | mothur, mudder | **unsicher:** Frau-Symbol steht für Mutter |
-| father | Vater | 👨 | father | fahter, fathur | **unsicher:** Mann-Symbol steht für Vater |
+| mother | Mutter | 👩‍🍼 | mother | mothur, mudder | **unsicher:** Frau mit Fläschchen steht für Mutter (nie neben Oma) |
+| father | Vater | 👨‍🍼 | father | fahter, fathur | **unsicher:** Mann mit Fläschchen steht für Vater (nie neben Opa) |
 | sister | Schwester | 👧 | sister | sistar, sisster | **unsicher:** Mädchen-Symbol |
 | brother | Bruder | 👦 | brother | bruther, brothar | **unsicher:** Jungen-Symbol |
 | baby | Baby | 👶 | baby | baiby, bayby |  |
@@ -191,7 +191,7 @@ Stufe 1: richtig ist das Bild des Wortes, falsche Auswahl sind Bilder anderer W�
 | wind | Wind | 💨 | wind | wynd, wint |  |
 | storm | Gewitter | ⛈️ | storm | stoorm, starm | **unsicher:** Gewitterwolke |
 | rainbow | Regenbogen | 🌈 | rainbow | raynbow, rainbo |  |
-| spring | Frühling | 🌷 | spring | spriing, spreng | **unsicher:** Tulpe steht für Frühling |
+| spring | Frühling | 🌸 | spring | spriing, spreng | **unsicher:** Kirschblüte steht für Frühling |
 | summer | Sommer | 🏖️ | summer | sumer, summar | **unsicher:** Strand steht für Sommer |
 | autumn | Herbst | 🍂 | autumn | autum, awtumn | **unsicher:** Herbstlaub |
 | winter | Winter | ⛄ | winter | vinter, wintar | **unsicher:** Schneemann steht für Winter |

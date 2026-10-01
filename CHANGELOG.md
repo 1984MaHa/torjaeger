@@ -1,5 +1,30 @@
 # Änderungen
 
+## 1.5.3 (Vorschau: Korrekturen nach der Bewertung vom 01.10.2026)
+Leitbild: Freude am Lernen und Wiederholen, nah am Lehrplan, ohne didaktischen Umbau. Gezielte Korrekturen, der Spielfluss bleibt. Kein Schemawechsel (Konto 6, global 4), Updates setzen keinen Stand zurück. Jede Korrektur hat einen Regressionstest (neue Dateien `test/v153*.test.mjs`).
+
+### Sofort-Korrekturen (fachlich falsch oder Datenverlust)
+- **i/ie:** Die Vorlagen ergaben falsche Wörter („Lieed“, „Spieel“). Die Lücke wird jetzt aus dem Zielwort abgeleitet. „Lied“ entfällt (mit i wäre „Lid“ auch ein Wort), dafür „Fliege“. Test für alle Rechtschreib-Listen: Vorlage plus Lösung ergibt genau das Zielwort aus der Wortliste, die falsche Wahl ergibt kein richtiges Wort.
+- **Netze:** Die Erklärung sagte immer „halb voll“. Jetzt steht der echte Rest da („Im letzten Netz liegen nur 3 Bälle, das Netz ist nicht voll“). Test über 4000 Zufallsaufgaben.
+- **Gleichzeitiges Speichern:** Der Server las den Stand vor dem Einlesen der Anfrage, zwei Schreiber mit gleicher `baseRev` konnten beide gewinnen. Jetzt wird nach dem Einlesen gelesen und ohne Pause geprüft und geschrieben. Der zweite bekommt 409 und führt zusammen. Gilt für Konten und Einstellungen. Tests mit parallelen und mit gestückelten Anfragen.
+- **Mindeststruktur:** Der Server lehnt einen unvollständigen Stand mit 400 ab (`checkProfileState`, `checkGlobalState` in `model.js`, Pflichtfelder in SPEC.md). Unbekannte Zusatzfelder bleiben erlaubt. Die App sendet nie einen unvollständigen Stand (Abgleich-Grund `invalid`). Fixtures aller bisherigen Formate werden angenommen.
+- **Päckchen gehen nicht mehr verloren:** Ein laufendes Päckchen wird bei jeder Antwort, beim Antippen von „Kabine“ und beim Wechsel der App in den Hintergrund auf dem Gerät gesichert. In der Kabine steht „Päckchen weiterspielen?“ mit Weiterspielen und Neu anfangen. Keine Rückfrage vor dem Verlassen nötig. Reguläre Runden werden nicht gesichert (beantwortete Aufgaben zählen schon).
+- **Lokales Speichern:** Schreibfehler in IndexedDB werden abgefangen und wiederholt. Klappt es nicht, erscheint oben ein roter Hinweis für die Eltern, nichts geht still verloren. Test mit simuliertem Fehler.
+- **PIN-Schutz:** Die Eltern-PIN lässt sich über den normalen Abgleich nicht mehr ersetzen. Der Server behält eine gesetzte PIN, die App übernimmt immer die PIN des Servers. Ändern geht nur über „Eltern-PIN ändern“ (alte PIN nötig), die neue PIN kommt danach auf allen Geräten an. Der Alt-Hash des Prototyps wird vom Server aufgewertet. „PIN merken“ der Kinder-PIN bleibt.
+
+### Leichte Übernahmen
+- **Warum stimmt das?** Nach einer richtigen Antwort steht im Tor-Overlay eine Taste. Antippen hält das automatische Weiter an und zeigt die Erklärung bis „Weiter“. Ohne Antippen läuft es wie bisher nach 1,8 Sekunden weiter.
+- **Mix-Taste** heißt „Mix: Mathe & Deutsch“.
+- **Hilfetaste** mindestens 44 Punkte hoch, die Kopfzeile der Frage darf umbrechen.
+- **Zuordnen:** Paare tragen zusätzlich zur Farbe eine Nummer, auf beiden Seiten gleich.
+- **Kontoanlage:** Bei einem Fehler bleibt der Name stehen und das fehlerhafte Feld bekommt den Fokus.
+- **Eltern-Bereich und Trainerbank:** „zuletzt sicher geübt“ statt „sicher“. Das Häkchen für Emil bleibt.
+- **Englisch-Bilder:** Leicht verwechselbare Wörter (Mund und Zunge, Schuhe und Stiefel, Vogel und Ente, Sonne und heiß, Mutter und Oma und weitere) kommen nie zusammen in einer Bildauswahl vor (`CONFUSE`). Mutter und Vater mit Baby-Fläschchen, Frühling mit Kirschblüte statt Tulpe. `docs/Inhalte-Englisch-Sachkunde.md` neu erzeugt.
+
+### Technik
+- Version 1.5.3 an allen vier Stellen. Keine neuen Dateien in `app/`.
+- Neue Tests: 30 in `test/v153.test.mjs`, `test/v153-server.test.mjs`, `test/v153-client.test.mjs`, `test/v153-e2e.test.mjs`.
+
 ## 1.5.2 (Vorschau: Nummer höher, Trainer von hinten, PIN merken)
 Nachbesserung nach Marcos zweiter Sicht. Die Versionsnummer steigt, weil der Service Worker unter gleicher Nummer die alte Fassung im Cache behält. Keine Änderung am Datenmodell.
 - **Rückennummer** hängt jetzt direkt unter dem Namen (vorher am unteren Rand des Feldes) und ist größer, bei einer Ziffer etwa 160 Punkte hoch.

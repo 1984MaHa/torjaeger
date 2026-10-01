@@ -24,7 +24,7 @@ export const EN_TOPICS={
     ["coat","Mantel","\u{1F9E5}","cote","koat"],["scarf","Schal","\u{1F9E3}","scharf","skarf"],["gloves","Handschuhe","\u{1F9E4}","glovs","gluves"],
     ["shorts","kurze Hose","\u{1FA73}","shorz","schorts"],["glasses","Brille","\u{1F453}","glases","glasess"],["boots","Stiefel","\u{1F97E}","buuts","bootz"]]},
   en_familie:{name:"Familie",words:[
-    ["mother","Mutter","\u{1F469}","mothur","mudder"],["father","Vater","\u{1F468}","fahter","fathur"],["sister","Schwester","\u{1F467}","sistar","sisster"],
+    ["mother","Mutter","\u{1F469}‍\u{1F37C}","mothur","mudder"],["father","Vater","\u{1F468}‍\u{1F37C}","fahter","fathur"],["sister","Schwester","\u{1F467}","sistar","sisster"],
     ["brother","Bruder","\u{1F466}","bruther","brothar"],["baby","Baby","\u{1F476}","baiby","bayby"],["grandmother","Oma","\u{1F475}","grandmuther","granmother"],
     ["grandfather","Opa","\u{1F474}","grandfahter","granfather"],["family","Familie","\u{1F46A}","famly","familly"],["friend","Freund","\u{1F9D1}‍\u{1F91D}‍\u{1F9D1}","freind","frend"],
     ["home","Zuhause","\u{1F3E0}","hoem","hom"]]},
@@ -51,10 +51,19 @@ export const EN_TOPICS={
   en_wetter:{name:"Wetter und Jahreszeiten",words:[
     ["sun","Sonne","☀️","sunn","sunne"],["rain","Regen","\u{1F327}️","rayn","rane"],["snow","Schnee","❄️","snoe","snou"],["cloud","Wolke","☁️","clowd","claud"],
     ["wind","Wind","\u{1F4A8}","wynd","wint"],["storm","Gewitter","⛈️","stoorm","starm"],["rainbow","Regenbogen","\u{1F308}","raynbow","rainbo"],
-    ["spring","Frühling","\u{1F337}","spriing","spreng"],["summer","Sommer","\u{1F3D6}️","sumer","summar"],["autumn","Herbst","\u{1F342}","autum","awtumn"],
+    ["spring","Frühling","\u{1F338}","spriing","spreng"],["summer","Sommer","\u{1F3D6}️","sumer","summar"],["autumn","Herbst","\u{1F342}","autum","awtumn"],
     ["winter","Winter","⛄","vinter","wintar"],["hot","heiß","\u{1F975}","hott","hoat"],["cold","kalt","\u{1F976}","coald","kold"]]}
 };
+// Wörter, deren Bilder leicht verwechselt werden. Sie kommen nie zusammen in einer Bildauswahl vor, damit nur ein Bild passt
+// (zum Beispiel Mund und Zunge, Schuhe und Stiefel, Vogel und Ente). Gilt für Bild wählen und Hör-Aufgabe.
+export const CONFUSE=[
+  ["mouth","tongue","tooth"],["foot","leg"],["hand","arm"],
+  ["shoes","boots"],["trousers","shorts"],
+  ["mother","grandmother"],["father","grandfather"],["friend","sister","brother"],
+  ["pen","pencil"],["school","teacher"],["bird","duck"],["music","guitar"],
+  ["sun","hot","summer"],["snow","cold","winter"],["rain","storm","cloud"]
+];
 // Bilder, bei denen die Zuordnung nicht ganz eindeutig ist (Marco prüft sie).
-export const UNSURE={mother:"Frau-Symbol steht für Mutter",father:"Mann-Symbol steht für Vater",sister:"Mädchen-Symbol",brother:"Jungen-Symbol",friend:"zwei Personen halten Hände",
-  home:"Haus-Symbol steht für Zuhause",arm:"Muskelarm",spring:"Tulpe steht für Frühling",summer:"Strand steht für Sommer",autumn:"Herbstlaub",winter:"Schneemann steht für Winter",
+export const UNSURE={mother:"Frau mit Fläschchen steht für Mutter (nie neben Oma)",father:"Mann mit Fläschchen steht für Vater (nie neben Opa)",sister:"Mädchen-Symbol",brother:"Jungen-Symbol",friend:"zwei Personen halten Hände",
+  home:"Haus-Symbol steht für Zuhause",arm:"Muskelarm",spring:"Kirschblüte steht für Frühling",summer:"Strand steht für Sommer",autumn:"Herbstlaub",winter:"Schneemann steht für Winter",
   hot:"Gesicht mit Hitze",cold:"Gesicht mit Kälte",storm:"Gewitterwolke",game:"Spielcontroller",painting:"Farbpalette",music:"Note",teacher:"Person an der Tafel"};

@@ -35,3 +35,40 @@ export async function openStore(){
     return memoryStore();
   }
 }
+
+// Schreibfehler abfangen: ein Speichern wird mehrmals versucht, danach alle paar Sekunden weiter, bis es klappt.
+// Solange etwas nicht gespeichert ist, meldet onState(false) (die App zeigt einen deutlichen Hinweis), nach Erfolg onState(true).
+// put() wirft nie: Der Stand liegt im Arbeitsspeicher, ein späteres Speichern schreibt immer den neuesten Stand des Schlüssels.
+// Nur der letzte Wert je Schlüssel wird gemerkt (ein neueres put ersetzt das offene).
+export function withRetry(store,{delays=[200,800,2500],again=8000,onState=()=>{},setTimer=setTimeout}={}){
+  const pending=new Map(); // Schlüssel -> {value}
+  let timer=null,failing=false;
+  const state=ok=>{if(failing===!ok)return;failing=!ok;try{onState(ok);}catch(e){}};
+  const settle=()=>{if(!pending.size)state(true);};
+  async function tryWrite(key,slot){
+    try{await store.put(key,slot.value);if(pending.get(key)===slot)pending.delete(key);return true;}catch(e){return false;}
+  }
+  function later(){
+    if(timer||!pending.size)return;
+    timer=setTimer(async()=>{
+      timer=null;
+      for(const [key,slot] of [...pending])await tryWrite(key,slot);
+      if(pending.size)later();else settle();
+    },again);
+    if(timer&&timer.unref)timer.unref();
+  }
+  const wrapped=Object.assign(Object.create(store),{
+    async put(key,value){
+      const slot={value};pending.set(key,slot);
+      for(let i=0;;i++){
+        if(pending.get(key)!==slot)return true; // ein neueres put hat übernommen
+        if(await tryWrite(key,slot)){settle();return true;}
+        if(i>=delays.length)break;
+        await new Promise(r=>{const t=setTimer(r,delays[i]);if(t&&t.unref)t.unref();});
+      }
+      state(false);later();return false;
+    }
+  });
+  Object.defineProperty(wrapped,"pendingCount",{get:()=>pending.size});
+  return wrapped;
+}

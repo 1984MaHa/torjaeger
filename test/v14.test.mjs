@@ -405,7 +405,7 @@ test("Kreisliga zeigt Englisch und Sachkunde mit Mix und Themenblöcken; Trainin
   for(const t of SU_IDS)assert.ok(hs.includes(`data-play="1:topic:${t}"`),t);
   assert.ok(!hs.includes(`data-play="1:topic:en_tiere"`),"Englisch-Themen nicht im Sachkunde-Fach");
   // das fachübergreifende Mix-Spiel bleibt, die Fächer stehen daneben
-  assert.ok(h.includes('data-play="1:mix"')&&h.includes("Mix-Spiel"));
+  assert.ok(h.includes('data-play="1:mix"')&&h.includes("Mix: Mathe &amp; Deutsch"));
   assert.ok(h.includes("Englisch: 0 von 10 Themen sicher")&&h.includes("Sachkunde: 0 von 7 Themen sicher")&&h.includes("zählt nicht für den Aufstieg"));
   // Kopfzeile: Aufstiegs-Stand nur Mathe und Deutsch
   assert.ok(h.includes("0 von 10 Themen sicher"));
@@ -450,17 +450,17 @@ test("Eltern-Bereich: Themensteuerung je Konto (aktuell, wiederholen, aus) für 
   let t=10;for(let i=0;i<10;i++)applyAnswer(s,dev("d1",t++),{topic:"en_tiere",ok:true,gain:10,li:1,trial:false,lv:1,terms:[{id:"dog",ok:i%2===0},{id:"cat",ok:true}]});
   const st=adminHTML(aModel("stand",s));
   assert.ok(st.includes("Englisch: Tiere (Stufe 2)")&&st.includes("Begriffe (Englisch und Sachkunde)")&&st.includes("dog")&&st.includes("5/10"));
-  assert.ok(st.includes("Wortarten (Mathe und Deutsch)")||st.includes("Themen sicher (Mathe und Deutsch)"));
+  assert.ok(st.includes("Wortarten (Mathe und Deutsch)")||st.includes("Themen zuletzt sicher geübt (Mathe und Deutsch)"));
   assert.ok(st.indexOf("dog")<st.indexOf("cat"),"schwächster Begriff zuerst");
   assert.ok(st.includes("(aus)")&&st.includes("(wiederholen)"));
 });
 
 // ---------- Dateien ----------
-test("Neue Dateien stehen im Service Worker, Version 1.5.2 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
+test("Neue Dateien stehen im Service Worker, Version 1.5.3 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
   const ROOT=fileURLToPath(new URL("..",import.meta.url)),sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
   for(const f of ["content-en.js","content-su.js","speech.js","tasks.js","inputs.js","icons.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.2"/);assert.match(sw,/VERSION = "1.5.2"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.2"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.2");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.3"/);assert.match(sw,/VERSION = "1.5.3"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.3"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.3");
   const doc=fs.readFileSync(path.join(ROOT,"docs/Inhalte-Englisch-Sachkunde.md"),"utf8");
   for(const [id,t] of Object.entries(EN_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const w of t.words){assert.ok(doc.includes(`| ${w[0]} | ${w[1]} |`),w[0]);assert.ok(doc.includes(w[3])&&doc.includes(w[4]),w[0]);}}
   for(const [id,t] of Object.entries(SU_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const d of t.tasks){if(d.hint)assert.ok(doc.includes(d.hint),d.hint);if(d.unsure)assert.ok(doc.includes(d.unsure),d.unsure);

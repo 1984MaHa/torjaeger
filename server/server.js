@@ -12,7 +12,7 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 const { createAdmin } = require("./admin");
 
-const SERVER_VERSION = "1.5.2";
+const SERVER_VERSION = "1.5.3";
 const MAX_BODY = 2 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
 const ID_RE = /^[a-z0-9][a-z0-9-]{2,39}$/; // Konto-ID: streng, keine Punkte, keine Schrägstriche
@@ -95,10 +95,14 @@ function createServer(opts = {}) {
   const isVersion = v => Number.isInteger(v) && v >= 1;
   const profileSchema = state => state && state.meta && state.meta.schemaVersion;
 
-  // Gemeinsame PUT-Logik: Revisionsprüfung (409) und Schutz vor älteren Schemaversionen (409).
-  function putDoc(res, cur, body, payload, schema, save) {
+  // Gemeinsame PUT-Logik: Mindeststruktur (400), Revisionsprüfung (409) und Schutz vor älteren Schemaversionen (409).
+  // Läuft ohne await: Der aktuelle Stand wird erst gelesen, wenn die Anfrage vollständig da ist, und Prüfen und Schreiben
+  // geschehen am Stück. So kann von zwei Schreibern mit gleicher baseRev nur einer gewinnen (der andere bekommt 409).
+  function putDoc(res, cur, body, payload, schema, check, save) {
     if (!Number.isInteger(body.baseRev) || body.baseRev < 0) return send(res, 400, { error: "bad_base_rev" });
     if (!payload || typeof payload !== "object" || Array.isArray(payload) || !isVersion(schema)) return send(res, 400, { error: "bad_state" });
+    const why = check(payload);
+    if (why) return send(res, 400, { error: "bad_state", detail: why });
     if (isVersion(cur.schemaVersion) && schema < cur.schemaVersion) {
       return send(res, 409, { error: "conflict", reason: "schema_too_old", storedSchemaVersion: cur.schemaVersion });
     }
@@ -106,6 +110,10 @@ function createServer(opts = {}) {
     const next = save(cur.rev + 1);
     return send(res, 200, { rev: next.rev, savedAt: next.savedAt });
   }
+  // Handler mit async-Teil: Fehler dürfen die Anfrage nie hängen lassen.
+  const guarded = (res, fn) => async body => {
+    try { await fn(body); } catch (e) { console.error("PUT-Fehler:", e); if (!res.headersSent) send(res, 500, { error: "internal" }); }
+  };
 
   function api(req, res) {
     let url;
@@ -123,11 +131,17 @@ function createServer(opts = {}) {
     }
 
     if (p === "/api/settings") {
-      const cur = readJson(SETTINGS) || { rev: 0, schemaVersion: null, settings: null };
-      if (m === "GET") return send(res, 200, cur);
-      if (m === "PUT") return readBody(req, res, body => putDoc(res, cur, body, body.settings, body.settings && body.settings.schemaVersion, rev => {
-        const next = { rev, savedAt: new Date().toISOString(), device: String(body.device || ""), schemaVersion: body.settings.schemaVersion, settings: body.settings };
-        writeJson(SETTINGS, next, "settings"); return next;
+      const current = () => readJson(SETTINGS) || { rev: 0, schemaVersion: null, settings: null };
+      if (m === "GET") return send(res, 200, current());
+      if (m === "PUT") return readBody(req, res, guarded(res, async body => {
+        const { model } = await loadModel();
+        const cur = current(); // erst jetzt lesen, direkt vor Prüfen und Schreiben
+        return putDoc(res, cur, body, body.settings, body.settings && body.settings.schemaVersion, model.checkGlobalState, rev => {
+          // Die Eltern-PIN ändert sich nur über /api/admin/pin (alte PIN nötig). Hat der Server schon eine PIN, bleibt sie.
+          const settings = cur.settings && cur.settings.pin ? Object.assign({}, body.settings, { pin: cur.settings.pin }) : body.settings;
+          const next = { rev, savedAt: new Date().toISOString(), device: String(body.device || ""), schemaVersion: settings.schemaVersion, settings };
+          writeJson(SETTINGS, next, "settings"); return next;
+        });
       }));
       return send(res, 405, { error: "method_not_allowed" });
     }
@@ -159,14 +173,22 @@ function createServer(opts = {}) {
       let id;
       try { id = decodeURIComponent(pm[1]); } catch (e) { return send(res, 400, { error: "bad_id" }); }
       if (!ID_RE.test(id)) return send(res, 400, { error: "bad_id" });
-      const cur = readJson(profileFile(id));
-      if (!cur) return admin.isTrashed(id) ? send(res, 410, { error: "deleted" }) : send(res, 404, { error: "unknown_profile" });
-      if (m === "GET") return send(res, 200, { rev: cur.rev, savedAt: cur.savedAt, schemaVersion: cur.schemaVersion, state: cur.state });
-      if (m === "PUT") return readBody(req, res, body => putDoc(res, cur, body, body.state, profileSchema(body.state), rev => {
-        const name = body.state.profile && typeof body.state.profile.name === "string" ? body.state.profile.name.trim().slice(0, 40) : cur.name;
-        const next = { id, name: name || cur.name, rev, savedAt: new Date().toISOString(), device: String(body.device || ""), schemaVersion: body.state.meta.schemaVersion, state: body.state };
-        next.state.meta.rev = rev;
-        writeJson(profileFile(id), next, "profile-" + id); return next;
+      const gone = () => admin.isTrashed(id) ? send(res, 410, { error: "deleted" }) : send(res, 404, { error: "unknown_profile" });
+      if (m === "GET") {
+        const cur = readJson(profileFile(id));
+        if (!cur) return gone();
+        return send(res, 200, { rev: cur.rev, savedAt: cur.savedAt, schemaVersion: cur.schemaVersion, state: cur.state });
+      }
+      if (m === "PUT") return readBody(req, res, guarded(res, async body => {
+        const { model } = await loadModel();
+        const cur = readJson(profileFile(id)); // erst jetzt lesen, direkt vor Prüfen und Schreiben
+        if (!cur) return gone();
+        return putDoc(res, cur, body, body.state, profileSchema(body.state), model.checkProfileState, rev => {
+          const name = body.state.profile && typeof body.state.profile.name === "string" ? body.state.profile.name.trim().slice(0, 40) : cur.name;
+          const next = { id, name: name || cur.name, rev, savedAt: new Date().toISOString(), device: String(body.device || ""), schemaVersion: body.state.meta.schemaVersion, state: body.state };
+          next.state.meta.rev = rev;
+          writeJson(profileFile(id), next, "profile-" + id); return next;
+        });
       }));
       return send(res, 405, { error: "method_not_allowed" });
     }

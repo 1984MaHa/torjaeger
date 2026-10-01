@@ -121,6 +121,40 @@ export function migrateGlobal(g){
   return g;
 }
 
+// ---------- Mindeststruktur (Server und App prüfen vor dem Speichern bzw. Senden) ----------
+// Gibt null zurück, wenn der Stand die Pflichtfelder hat, sonst einen kurzen Grund. Unbekannte Zusatzfelder sind erlaubt.
+// Pflicht Konto: meta.schemaVersion (ganze Zahl ab 1), meta.updatedAt (Zahl), profile.id und profile.name (Text),
+// progress als Objekt mit dev (Objekt), days (Liste), lg (Objekt), stats (Objekt), history (Liste), settings (Objekt).
+const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
+export function checkProfileState(s){
+  if(!isObj(s))return"Stand ist kein Objekt";
+  if(!isObj(s.meta))return"meta fehlt";
+  if(!Number.isInteger(s.meta.schemaVersion)||s.meta.schemaVersion<1)return"meta.schemaVersion fehlt";
+  if(typeof s.meta.updatedAt!=="number"||!Number.isFinite(s.meta.updatedAt))return"meta.updatedAt fehlt";
+  if(!isObj(s.profile))return"profile fehlt";
+  if(typeof s.profile.id!=="string"||!s.profile.id)return"profile.id fehlt";
+  if(typeof s.profile.name!=="string")return"profile.name fehlt";
+  if(!isObj(s.progress))return"progress fehlt";
+  if(!isObj(s.progress.dev))return"progress.dev fehlt";
+  if(!Array.isArray(s.progress.days))return"progress.days fehlt";
+  if(!isObj(s.progress.lg))return"progress.lg fehlt";
+  if(!isObj(s.stats))return"stats fehlt";
+  if(!Array.isArray(s.history))return"history fehlt";
+  if(!isObj(s.settings))return"settings fehlt";
+  return null;
+}
+// Pflicht global: schemaVersion (ganze Zahl ab 1), pin leer oder mit Hash (und Salz, außer beim Alt-Hash), trainer und trainer2 (falls vorhanden) als Objekte.
+export function checkGlobalState(g){
+  if(!isObj(g))return"Einstellungen sind kein Objekt";
+  if(!Number.isInteger(g.schemaVersion)||g.schemaVersion<1)return"schemaVersion fehlt";
+  if(g.pin!==undefined&&g.pin!==null){
+    if(!isObj(g.pin)||typeof g.pin.hash!=="string"||!g.pin.hash)return"pin ist unvollständig";
+    if(g.pin.algo!=="legacy-djb2"&&(typeof g.pin.salt!=="string"||!g.pin.salt))return"pin ist unvollständig";
+  }
+  for(const k of ["trainer","trainer2"])if(g[k]!==undefined&&!isObj(g[k]))return k+" ist kein Objekt";
+  return null;
+}
+
 // Prototypformat (Version 0, localStorage-Schlüssel "torjaeger"):
 //   {points,rounds,wins,stickers,stats:{topic:{a,c,last:[0|1]}},days:[],history:[{d,liga,mode,trial,c,n,pts}],
 //    sound,pin:"h…",lg:{L2:{budget,open,trial},L3:{…}},sel}

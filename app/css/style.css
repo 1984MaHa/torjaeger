@@ -347,3 +347,21 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .preset.on,.tpl.on{border-color:var(--gold);background:#fff7d6}
 .pq{display:flex;gap:3px}.pq i{display:block;width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 2px #b9c7bd}
 .teamline{margin:0 0 4px;font-family:var(--display);font-size:1.15rem;color:var(--gold)}
+
+/* ---- Version 1.5.3: Korrekturen nach der Bewertung ---- */
+/* Hilfetaste mindestens 44 Punkte hoch, die Kopfzeile der Frage darf umbrechen */
+.helpbtn{min-height:44px;min-width:44px}
+.helpbtn.sm{min-height:44px;font-size:.9rem;padding:8px 12px}
+.cardtop{flex-wrap:wrap}
+.cardtop .tag{flex:1 1 12rem;min-width:0;overflow-wrap:anywhere}
+.coach.mini{flex-wrap:wrap}
+/* Hinweis bei Speicherproblemen und gesichertes Päckchen */
+.savewarn{position:sticky;top:0;z-index:200;background:#b3261e;color:#fff;border-radius:0 0 14px 14px;padding:12px 16px;font-size:1.05rem;line-height:1.35;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.packresume{border:3px solid var(--gold)}
+/* Warum stimmt das? (optional nach einer richtigen Antwort) */
+.ovlwhy{min-height:48px;margin-top:4px;font-size:1.05rem}
+.whycard{background:#fff;color:var(--ink);border-radius:22px;padding:18px 18px 16px;gap:12px;text-align:left}
+.whycard .whyhead{font-family:var(--display);font-size:1.5rem;color:var(--goal);text-align:center}
+.whycard .whytxt{font-size:1.2rem;line-height:1.4}
+/* Zuordnen: Nummer am Paar, damit es nicht nur an der Farbe hängt */
+.pnum{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:1.6em;height:1.6em;border-radius:50%;background:var(--pc,#555);color:#fff;font-family:var(--display);font-size:1rem;line-height:1}

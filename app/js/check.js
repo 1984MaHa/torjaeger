@@ -136,3 +136,30 @@ export function givenText(T,val){
   if(T.type==="tap")return T.words[val]!==undefined?T.words[val]:"-";
   return String(val);
 }
+
+// ---------- Päckchen sichern und fortsetzen (1.5.3) ----------
+// Ein laufendes Päckchen (Schreiben oder Kontroll-Pfiff) wird auf dem Gerät gesichert, wenn man die Kabine antippt, die App in den
+// Hintergrund geht oder eine Antwort eingetragen wird. Beim nächsten Öffnen kann das Kind weiterspielen oder neu anfangen.
+// Das Päckchen gehört nur zu diesem Gerät und steht nicht im Spielstand (kein Schemawechsel). Punkte zählen erst bei der Abgabe, wie bisher.
+// Ohne eingetragene Antwort gibt es nichts zu sichern (null).
+export function packSnapshot(G,now=Date.now()){
+  if(!G||!G.pack||!Array.isArray(G.tasks)||G.phase==="eval")return null;
+  if(!G.ans||!G.ans.some(a=>a!==undefined&&a!==null))return null;
+  return JSON.parse(JSON.stringify({v:1,t:now,li:G.li,topic:G.topic,phase:G.phase==="solve"?"solve":"check",tasks:G.tasks,i:G.i,ans:G.ans,finals:G.finals,helps:G.helps||[],probeOpen:G.probeOpen||{},probed:G.probed||{}}));
+}
+// Kann dieses gesicherte Päckchen noch gespielt werden? Prüft Form und Inhalt (kaputte oder fremde Sicherungen werden verworfen).
+export function packResumable(snap){
+  if(!snap||typeof snap!=="object"||snap.v!==1)return false;
+  if(typeof snap.topic!=="string"||!Number.isInteger(snap.li)||!Array.isArray(snap.tasks)||snap.tasks.length<1)return false;
+  if(!snap.tasks.every(T=>T&&typeof T==="object"&&typeof T.type==="string"&&typeof T.q==="string"))return false;
+  if(!Array.isArray(snap.ans)||!Array.isArray(snap.finals))return false;
+  if(snap.phase==="solve"&&!(Number.isInteger(snap.i)&&snap.i>=0&&snap.i<snap.tasks.length))return false;
+  if(snap.phase==="check"&&snap.tasks.some((_,k)=>snap.finals[k]===undefined||snap.finals[k]===null))return false;
+  return snap.phase==="solve"||snap.phase==="check";
+}
+// Zustand G für ein fortgesetztes Päckchen (die App ergänzt Zeitpunkt, Gegner und die aktuelle Aufgabe).
+export function packResume(snap){
+  return{li:snap.li,mode:"topic",topic:snap.topic,trial:false,pack:true,phase:snap.phase,tasks:snap.tasks,len:snap.tasks.length,
+    i:snap.phase==="solve"?snap.i:0,ans:snap.ans.slice(),finals:snap.finals.slice(),helps:(snap.helps||[]).slice(),
+    probeOpen:Object.assign({},snap.probeOpen),probed:Object.assign({},snap.probed),ei:0,res:[],hist:[],pts:0,streak:0,last:null,pool:[snap.topic]};
+}

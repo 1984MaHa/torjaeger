@@ -79,7 +79,7 @@ function standTab(A){
   const summary=`<div class="sumrow"><span class="pill">${total(s,"points")} Punkte</span><span class="pill">${total(s,"rounds")} Spiele</span><span class="pill">${total(s,"wins")} Siege</span><span class="pill">${stickerCount(s)} Sticker</span><span class="pill">${days.length} Trainingstage, ${streakDays(s)} in Folge</span></div>`;
   let helpN=0,t1=0,t2=0;
   const rows=LIGEN.map((L,i)=>{
-    const head=`<h4 class="gl">${esc(L.name)} (${esc(L.klasse)}) · ${safeCount(s,i)} von ${gateTopics(s,i).length} Themen sicher (Mathe und Deutsch)</h4>`;
+    const head=`<h4 class="gl">${esc(L.name)} (${esc(L.klasse)}) · ${safeCount(s,i)} von ${gateTopics(s,i).length} Themen zuletzt sicher geübt (Mathe und Deutsch)</h4>`;
     return head+allTopicsOf(i).map(t=>{
       const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((x,e)=>x+e.ok,0),an=answersOf(s,t),h=helpOf(s,t);
       helpN+=h.n;t1+=h.t1;t2+=h.t2;

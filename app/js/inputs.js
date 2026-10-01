@@ -12,6 +12,8 @@ export const NEW_TYPES=["match","sort","order","pic"];
 // Paarfarben: kein Rot und kein Grün, damit ein Paar nicht wie „falsch“ oder „richtig“ aussieht
 export const PAIR_COLORS=["#2f6fde","#8e44ad","#0e9aa7","#d98200","#c2338a"];
 const cell=it=>it.k==="txt"?`<span class="ctxt">${it.t}</span>`:tileHTML(it,false);
+// Nummer am Paar: Ein Paar erkennt man nicht nur an der Farbe, beide Seiten tragen dieselbe Nummer.
+const pairNo=i=>i>=0?`<b class="pnum" aria-label="Paar ${i+1}">${i+1}</b>`:"";
 const btn=(label,id,ready)=>`<button class="btn" id="${id}" ${ready?"":'disabled style="opacity:.5"'}>${label}</button>`;
 
 // Fertig-Taste: im Päckchen "Eintragen" oder "Ändern", sonst "Fertig!"
@@ -21,12 +23,12 @@ export function matchHTML(T,G){
   const given=G.done?G.given:null,pairs=given||G.pairs||T.left.map(()=>-1);
   const left=T.left.map((l,i)=>{
     const c=pairs[i]>=0?PAIR_COLORS[i%5]:"",cls=["mitem",G.msel===i?"sel":"",given?(given[i]===T.a[i]?"right":"wrong"):""].filter(Boolean).join(" ");
-    return `<div class="mrow"><button class="${cls}" data-ml="${i}" ${G.done?"disabled":""} ${c?`style="--pc:${c}"`:""} aria-pressed="${G.msel===i}">${cell(l)}</button>${l.say?speakBtn(l.say):""}</div>`;}).join("");
+    return `<div class="mrow"><button class="${cls}" data-ml="${i}" ${G.done?"disabled":""} ${c?`style="--pc:${c}"`:""} aria-pressed="${G.msel===i}">${pairNo(pairs[i]>=0?i:-1)}${cell(l)}</button>${l.say?speakBtn(l.say):""}</div>`;}).join("");
   const right=T.right.map((r,j)=>{
     const i=pairs.indexOf(j),c=i>=0?PAIR_COLORS[i%5]:"";
-    return `<div class="mrow"><button class="mitem" data-mr="${j}" ${G.done?"disabled":""} ${c?`style="--pc:${c}"`:""}>${cell(r)}</button></div>`;}).join("");
+    return `<div class="mrow"><button class="mitem" data-mr="${j}" ${G.done?"disabled":""} ${c?`style="--pc:${c}"`:""}>${pairNo(i)}${cell(r)}</button></div>`;}).join("");
   const fix=given?T.left.map((l,i)=>given[i]===T.a[i]?"":`<li>${l.k==="txt"||l.k==="emo"?l.t:"Dieser Kasten"} gehört zu: <b>${T.right[T.a[i]].t}</b></li>`).join(""):"";
-  return `<p class="note">Tippe links ein Wort, dann rechts den Partner. Beide bekommen dieselbe Farbe. Noch einmal antippen löst das Paar.</p>
+  return `<p class="note">Tippe links ein Wort, dann rechts den Partner. Beide bekommen dieselbe Farbe und dieselbe Nummer. Noch einmal antippen löst das Paar.</p>
     <div class="match"><div class="mcol">${left}</div><div class="mcol">${right}</div></div>
     ${given?(fix?`<ul class="fixlist" aria-label="Richtige Paare">${fix}</ul>`:""):btn(finLabel(G),"fin",pairs.every(x=>x>=0))}`;
 }
