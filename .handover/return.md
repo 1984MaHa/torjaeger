@@ -1,79 +1,78 @@
-# Rückübergabe claude-code an cowork, 2026-09-30
+# Rückübergabe Claude Code nach Cowork, 01.10.2026 (Version 1.5.3)
 
-> Ergänzung 01.10.2026: Neuer reiner Bewertungsauftrag abgeschlossen, keine App-Auslieferung. Maßgeblich für diese Sitzung: [Review-Rückübergabe](review-2026-10-01.md) und der dort verlinkte Brain-Bericht. Historische Bauangaben unten bleiben als Quelle erhalten; sie sind nicht durchgehend aktuelle Handlungsanweisungen. Commitanker der Bewertung: `4f872de`, App 1.5.2.
-
-**Auftrag:** Version 1.5.0 (ausgeliefert als 1.5.1, weil der Service Worker unter gleicher Versionsnummer die alte Fassung im Cache behielt), feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
-**Stand:** Version 1.5.2 gebaut, in der Vorschau abgenommen, nach `main` gemerged und von Marco live deployt. 173 von 173 Tests grün.
+Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.3 auf `preview`: sieben Sofort-Korrekturen aus der Bewertung vom 01.10.2026 plus sieben leichte Übernahmen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
 ## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat
-- Angewiesen: "ja so starten", also 1.5.0 auf `preview` von `b19e72d` aus bauen (nicht von `adb3c07`).
-- Angewiesen: "push preview". Ausgeführt von mir: Push `b19e72d..71f44c0`.
-- Ausgeführt von Marco: `deploy.sh` im Vorschau-Klon auf der NAS. `/api/health` meldet `"preview":"VORSCHAU"`, `serverVersion` 1.5.0 (18:05 UTC).
-- Marco hat die Vorschau auf dem iPad angesehen (Screenshots Rückenansicht und Trainerin) und Wünsche gemeldet (unten). Welcher Stand vorher in der Vorschau lief, weiß Marco nicht.
-- **Noch nicht ausgeführt:** Push und NAS-Update der Nachbesserung, erneute Sichtprüfung, Merge nach `main`, Live-Deploy.
+- Marco hat die Sitzung gestartet, den Anker prüfen lassen und mit „ja“ den Start der Arbeit freigegeben.
+- **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben.
 
 ## Stand je Umgebung
-- Anker-Abweichung bei der Annahme (mit Marco geklärt): `main` stand nicht auf `adb3c07`, sondern auf `b19e72d`. 1.4.1 war inzwischen abgenommen, nach `main` gemerged und live deployt (Commits `fe7f31b`, `94294c0`, `b19e72d`). `.handover/next.md` war bereits committet (nicht `??`).
-- Vor dieser Arbeit: `main`, `preview`, `origin/main`, `origin/preview` alle `b19e72d`. Live läuft 1.4.1.
-- Jetzt: `preview` hat einen neuen lokalen Commit mit 1.5.0. `main` und `origin/*` unverändert.
-- Vorschau auf der NAS: Stand unbekannt (Marco hat die Frage nicht beantwortet). Bitte bei Marco erfragen.
+- Lokal: `preview` bei dem Commit mit dieser Rückübergabe (davor `725466b` für den Code, `e60678a` für die Übernahme der Bewertung). `main` unverändert bei `4f872de` (Live, Version 1.5.2).
+- `origin/main` und `origin/preview` standen laut Anker bei `4f872de`. **Es wurde nichts gepusht**, `origin/preview` hängt also hinter dem lokalen `preview`.
+- NAS: Live läuft 1.5.2 (laut früherer Rückübergabe). Die Vorschau auf der NAS zeigt noch den alten Stand, bis Marco pusht und `deploy.sh` ausführt. Version 1.5.3 ist nirgends ausgeliefert.
 
-## Rückmeldungen von Marco und Umsetzung (Nachbesserung, gleiche Version 1.5.0)
-- Emil größer und besser lesbar: Vorschau 300 statt 230, Torszene 190 statt 150 Punkte hoch.
-- Rückennummer höher und größer, eigener Name größer, Nummer auf der Brust deutlich größer (88 statt 54).
-- Mannschaftsname aufs Trikot: klein und gebogen oben auf dem Rücken (Annahme: Rücken, nicht Brust, weil vorn die Nummer steht). Das ändert die frühere Entscheidung, den Vereinsnamen nicht aufs Trikot zu setzen.
-- Trainer im Eltern-Bereich: neben dem Brustbild jetzt die ganze Figur.
-- Start zeigt immer zuerst "Wer spielt?" mit den Bildern (auch bei nur einem Konto).
-- **PIN des Kindes** (neu, nicht im Auftrag): freiwillig, 4 Ziffern, `profile.pin = {code, t}`, Klartext. Kachel zeigt "(PIN)" und fragt beim Antippen. Kind setzt sie in "Mein Spieler", Eltern sehen, ändern und entfernen sie im Eltern-Bereich bei jedem Konto. Zusammenführen: neuerer Stand gewinnt, Zurücksetzen behält sie. Kein Schemawechsel (Feld optional). Sicherheit bewusst schwach: Komfort, kein Schutz vor Eltern.
+## Anker-Prüfung am Anfang
+Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` bei `4f872de`, Status genau die drei erwarteten Dateien, `APP_VERSION` 1.5.2. `.git/index.lock` gab es nicht mehr. Erster Commit (`e60678a`): Bewertungs-Rückübergabe und Review so wie sie waren, `next.md` nach `current.md` verschoben.
 
-## Abnahme und Merge
-- Marco hat 1.5.2 in der Vorschau abgenommen ("passt so für mich") und den Merge nach main angewiesen. Ausgeführt von mir: Fast-Forward-Merge von `preview` nach `main`, Push `main`. **Live-Deploy hat Marco danach selbst ausgeführt** (`cd /volume1/docker/torjaeger && sudo sh deploy.sh`), Marco meldet: durch und live.
-- Stand danach: `main`, `preview` und die `origin/*` auf demselben Commit. Live und Vorschau laufen mit 1.5.2.
-- Offen: Marcos Prüfung von Emils migriertem Stand auf dem iPad (nicht bestätigt). Zu prüfen (Farben, Nummer, Name, Mannschaft). Emils Nummer und Name kommen aus dem alten Avatar.
+## Umgesetzt (Teil 1, jeweils mit Regressionstest)
+1. **i/ie:** Die Lücke wird aus dem Zielwort abgeleitet (`ieGap`), „Lieed“ und Co. sind weg. „Lied“ ist raus (mit i wäre „Lid“ auch ein Wort, die Frage wäre nicht eindeutig), dafür „Fliege“. Test über alle Rechtschreib-Listen (i/ie, Verlängern, doppelt oder einfach) gegen eine eigene Liste richtiger Wörter, auch dass die falsche Wahl kein richtiges Wort ergibt. Listen sind als `SPELL_LISTS` exportiert.
+2. **Netze:** Erklärung nennt den echten Rest („Im letzten Netz liegen nur 3 Bälle“), Test über 4000 Zufallsaufgaben.
+3. **Gleichzeitiges Speichern:** `server.js` liest den Stand jetzt nach dem Einlesen der Anfrage und prüft und schreibt ohne `await` dazwischen (kein eigenes Sperr-Objekt nötig). Verlierer bekommt 409. Gilt für Konten und Einstellungen. Tests mit parallelen und mit gestückelten Anfragen (letztere schlagen auf dem alten Server nachweislich fehl). Zusätzlich: der Verlierer führt zusammen, beide Zuwächse bleiben.
+4. **Mindeststruktur:** `checkProfileState` und `checkGlobalState` in `model.js` (Pflichtfelder in SPEC.md), Server antwortet 400 `bad_state` mit `detail`. Unbekannte Zusatzfelder bleiben erlaubt. Die App prüft vor dem Senden mit derselben Funktion (Grund `invalid`, eigener Text in der Trainerbank). Fixtures Schema 1 bis 5 werden angenommen.
+5. **Päckchen sichern:** Auf dem Gerät unter `pack:<Konto>` (kein Schemawechsel, nicht im Abgleich). Gesichert bei jeder Antwort, Probe, „Kabine“ und beim Wechsel in den Hintergrund. Kabine zeigt „Päckchen weiterspielen?“ mit Weiterspielen und Neu anfangen (dasselbe Thema, frisch). Gelöscht bei Abgabe. Verworfen, wenn Thema aus oder Liga gesperrt. Reguläre Runden werden nicht gesichert (beantwortete Aufgaben zählen schon).
+6. **Lokales Speichern:** `withRetry` in `store.js`: 3 Wiederholungen, dann alle 8 Sekunden mit dem neuesten Stand; roter Hinweis oben („Das Speichern klappt gerade nicht …“), verschwindet nach Erfolg. Test mit simuliertem Fehler.
+7. **PIN-Schutz:** `PUT /api/settings` behält eine gesetzte PIN immer (auch bei `pin: null`), erste Einrichtung bleibt über den Abgleich möglich. Ändern nur über `/api/admin/pin`. Die App übernimmt in `syncGlobal` immer die PIN des Servers, damit kein Dauer-Abgleich entsteht. Alt-Hash des Prototyps wird vom Server bei der ersten richtigen Admin-Eingabe aufgewertet (`upgradeLegacyPin`). Die neue PIN kommt auf allen Geräten an (Test mit zwei Geräten). „PIN merken“ der Kinder-PIN unberührt.
 
-## Zweite Sicht von Marco (Version 1.5.2)
-- Ursache für "sieht aus wie vorher": Service-Worker-Cache. Die Nachbesserung trug dieselbe Nummer 1.5.0, `sw.js` war unverändert. Marco hat mit hartem Neuladen geholfen. Deshalb gab es 1.5.1 und jetzt 1.5.2. **Lehre: jede Auslieferung braucht eine neue Versionsnummer.**
-- Rückennummer stand zu tief: hängt jetzt direkt unter dem Namen und ist größer (Marco hat den Bereich rot eingezeichnet).
-- "EMI L": Buchstabenbreiten statt fester Breite (`charW`).
-- PIN des Kindes funktioniert (Marco bestätigt). Neu: "Heute nicht noch einmal fragen", Tag plus PIN lokal gemerkt.
-- Trainer im Eltern-Bereich: vorn und hinten ganze Figur plus Brustbild (neue Bilder `fig-trainer-back`, `fig-trainerin-back`).
-- "Namen auf der Brust": Annahme, dass die Namen der Trainer gemeint sind. Sie stehen vorn auf der Brust (links) und hinten auf dem Rücken. Beim Kind steht vorn die Nummer. Falls auch der Kindername vorn gewünscht ist, nachfragen.
-
-## Was gebaut ist
-- **Bilder:** Originale nach `assets-src/` (emil-avatar.jpg, trainer-team.jpg). Aufbereitet mit `tools/prepare-figures.mjs` (nur Node, Regeln in `tools/figures.config.mjs`, Bibliothek `tools/fig-lib.mjs`, PNG-Leser `tools/png.mjs`, `tools/jpg2png.ps1` für die JPG-Umwandlung unter Windows). Ergebnis in `app/img/`: Emil vorn und hinten, Trainer und Trainerin vorn, je Grundbild plus Umfärb-Ebene, zusammen etwa 0,9 MB. Die Trainer-Rückansichten sind aufbereitbar (`use:false`), aber nicht ausgeliefert. Markenlogos auf Brust und Stutzen sind übermalt.
-- **App:** `figures.js` (Umfärben, Zwischenspeicher, Rückenfeld, Schriftkontrast), `figdata.js` (erzeugt), `avatardraw.js` (SVG mit eingebettetem Bild, Torszene mit Rückansicht und kleinem Satz nach vorn), `avatarui.js` ("Mein Spieler" auf einer Seite, Trainerfarben), `avatar.js` (Vorlagen, Paletten, 10 Vereinsfarben-Vorschläge, Prüfung). Alter Zeichencode und Baukasten entfernt.
-- **Vereinsname** auf Kachel, in der Kabine (Zeile unter dem Titel) und auf der Anzeigetafel (Kopfzeile im Spiel, Heim im Ergebnis).
-- **Datenmodell:** Schemaversion Konto 6, global 4. Migration 5 nach 6 übernimmt Trikot, Streifen (`c2`), Hose, Stutzen, Nummer, Name, Mannschaft, alte Felder bleiben. Global 3 nach 4: Jacke wird Polo. Fixtures `state-v5.json`, `global-v3.json` im Format 1.4.1.
-- **Doku:** README (Abschnitt "Figuren-Vorlagen"), SPEC.md, CHANGELOG.md (1.5.0), CLAUDE.md aktualisiert. Version 1.5.0 an allen vier Stellen, neue Dateien in `FILES` von `sw.js`.
-- **Tests:** neu `test/v15.test.mjs`. `test/v13.test.mjs` (Zeichenstil, Baukasten) gelöscht, die Migrations- und Abgleichtests sind in v15 angepasst übernommen. Weitere Tests an das neue Modell angepasst (avatar, schema2, e2e, v12, v14, admin, adminview).
+## Umgesetzt (Teil 2)
+8. **Warum stimmt das?** Taste im Tor-Overlay (nur wenn die Aufgabe `ex` hat). Antippen hält das Auto-Weiter an und zeigt die Erklärung bis „Weiter“. Ohne Antippen läuft es unverändert nach 1,8 s weiter.
+9. Taste heißt „Mix: Mathe & Deutsch“. 10. Hilfetaste mindestens 44 px, `cardtop` und mini-Coach dürfen umbrechen. 11. Zuordnen: Nummer an beiden Partnern zusätzlich zur Farbe. 12. Kontoanlage: Name bleibt stehen, fehlerhaftes Feld bekommt den Fokus. 13. Trainerbank und Eltern-Lernstand: „zuletzt sicher geübt“; Emils Häkchen und „x von y Themen sicher“ für das Kind bleiben.
+14. **Englisch-Bilder:** `CONFUSE` in `content-en.js` (Mund/Zunge/Zahn, Fuß/Bein, Hand/Arm, Schuhe/Stiefel, Hose/kurze Hose, Mutter/Oma, Vater/Opa, Freund/Schwester/Bruder, Stift/Bleistift, Schule/Lehrer, Vogel/Ente, Musik/Gitarre, Sonne/heiß/Sommer, Schnee/kalt/Winter, Regen/Gewitter/Wolke) kommen nie zusammen in eine Bildauswahl oder Hör-Aufgabe. Neue Motive: Mutter und Vater mit Baby-Fläschchen (Unicode 13), Frühling mit Kirschblüte statt Tulpe. `docs/Inhalte-Englisch-Sachkunde.md` neu erzeugt.
 
 ## Entscheidungen und Abweichungen
-- Ausgangspunkt `b19e72d` statt `adb3c07` (siehe oben).
-- Kein Python auf dem Rechner: Aufbereitung mit Node und .NET statt Pillow.
-- Bilder in Originalauflösung (kein Verkleinern), damit das Brustbild auf dem iPad scharf bleibt.
-- Kleine Nummer auf der Brust umgesetzt (sitzt dort, wo das Logo übermalt wurde).
-- Vereinsname auf der Anzeigetafel ersetzt dort den Kindernamen (Kopfzeile und Heim). Der Name des Kindes steht weiter in der Begrüßung.
-- Trainer: nur Name und Farben von Polo, Hose, Stutzen (Jacke, Bart, Brille und Weiteres entfallen).
-- Schuhe nicht umfärbbar. Kein Browser-Test von mir (Marco prüft visuell selbst).
-- Dockerfile unverändert: `assets-src/` kommt nicht ins Image.
+- **Keine Sperre je Konto im Server:** Reicht, weil Node die Abschnitte nacheinander ausführt und zwischen Lesen und Schreiben kein `await` liegt. Technik war dem Auftrag freigestellt.
+- **Keine Rückfrage vor dem Verlassen eines Päckchens:** Durch das Sichern geht nichts verloren, die Rückfrage hätte genervt. Der Auftrag ließ beides offen.
+- **Päckchen nur auf dem Gerät, nicht im Spielstand:** vermeidet einen Schemawechsel (Auftrag: „falls ein Feld dazukommt“). Folge: Ein Päckchen lässt sich nicht auf einem anderen Gerät fortsetzen.
+- **Server ist bei der PIN maßgeblich** (Abgleich übernimmt immer dessen PIN). Das ist strenger als „neuere PIN gewinnt“ im reinen Zusammenführen (`mergeGlobal` ist unverändert, damit die bestehenden Merge-Tests gelten). Dadurch gibt es keine Dauer-Revisionen, wenn ein Gerät eine abweichende PIN hat.
+- **Alt-Hash-Aufwertung** zog vom Client zum Server um (sonst wäre sie am PIN-Schutz gescheitert).
+- **„Lied“ aus der i/ie-Liste genommen** (Lid wäre ebenfalls ein Wort). Grundregel „Fragen müssen eindeutig sein“.
+- **Nicht umgesetzt, weil nicht beauftragt:** serverseitiger Schutz der Liga-Freigaben (laut Bericht „geschützte Elternfreigaben ebenfalls serverseitig kontrollieren“). Sie liegen im Konto-Stand und gleichen sich wie dieser ab. In SPEC.md als Grenze vermerkt. Ebenso nicht: Tastatur-/Fokusbedienung, Lernstandanzeige mit Hilfe-/Erstversuchsangaben, Mini-Spiele (1.6.0).
+- Keine Vorschau im Browser geöffnet und kein Screenshot gemacht (Marco prüft visuell selbst).
+
+## Tests
+`node --test`: **203 Tests, alle grün** (173 bisherige, davon drei an neue Texte angepasst: „Mix: Mathe & Deutsch“, „zuletzt sicher geübt“, Versionsnummer; plus 30 neue in `test/v153.test.mjs`, `v153-server.test.mjs`, `v153-client.test.mjs`, `v153-e2e.test.mjs`). Die Regressionstests zum Speicherwettlauf und zur PIN schlagen gegen den alten Server fehl, wie vorgesehen. Fake-DOM-Tests ersetzen keine Prüfung auf Safari/iPad.
 
 ## Restposten
 - **Echter Blocker:** keiner.
-- **Bewusst offen:** Sichtprüfung durch Marco auf dem iPad (Freistellung, Kanten, Farbsäume, Brustbild-Ausschnitt, Schrift im Rückenfeld, Satz in der Torszene, Logo wirklich weg); Abnahme 1.2.1 bis 1.4.1 auf dem iPad; Prüfung `docs/Inhalte-Englisch-Sachkunde.md`; Hyper Backup; weitere Kind-Vorlagen (Nichte); Schusspose.
-- **Kosmetisch:** an den Konturen kann ein feiner Farbsaum in der alten Farbe (Blau) bleiben; Sticker-Motive einfach; Tailscale auf der NAS 1.58.2.
+- **Bewusst offen:** iPad-Abnahme der Vorschau, Prüfung von `docs/Inhalte-Englisch-Sachkunde.md` durch Marco (neue Motive Mutter, Vater, Frühling), Hyper Backup, Testrunden in Emils Konto, Apple-Geräteprüfung und beobachteter Nutzungstest laut Bericht. Danach Auftrag 1.6.0 (Plan Abschnitt K).
+- **Kosmetisch / zu beobachten:** Rote Speicherwarnung und „Warum stimmt das?“ nur im Fake-DOM geprüft, Optik auf dem iPad offen. Das Emoji „Frau mit Fläschchen“ braucht iOS 14 oder neuer (Unicode 13). Die Zuordnungs-Nummer nutzt die Paarfarben, bei Orange ist der weiße Ziffernkontrast knapp.
 
 ## Anker
-- Branch `preview`. Auf origin: `71f44c0`. Lokal darüber ein Commit "1.5.0 Nachbesserung ..." (noch nicht gepusht).
-- Arbeitsbaum sauber nach dem Commit (`.work/` ist ignoriert).
+- Branch `preview`, Version 1.5.3 (`version.js`, `sw.js`, `SERVER_VERSION`, `package.json`). Code-Commit `725466b`, davor `e60678a`; der Commit mit dieser Datei folgt direkt darauf. `main` bei `4f872de`.
+- Arbeitsbaum nach dem Commit sauber. Keine neuen Dateien in `app/`, `FILES` in `sw.js` unverändert.
 
 ## Nächste Schritte für Marco
-1. Push der Nachbesserung:
-   `git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview`
-2. Auf der NAS: `cd /volume1/docker/torjaeger-preview && sudo sh deploy.sh`, danach `wget -qO- http://127.0.0.1:8081/api/health`.
-3. Auf dem iPad prüfen:
-   - Kabine, "Wer spielt?" und Sprechblasen zeigen das Brustbild.
-   - "Mein Spieler": Farben, Vereinsfarben, Nummer, Name, Mannschaft, Vorne und Hinten.
-   - Torszene: Rückansicht mit Name und Nummer, Satz nach vorn.
-   - Eltern-Bereich, Einstellungen: Trainerfarben und Namen.
-   - Emils migrierter Stand: Farben, Nummer, Name, Mannschaft unverändert.
-4. Nach Abnahme: Merge nach `main` und Live-Deploy nur auf Marcos Anweisung.
+Zuerst alles prüfen, dann erst pushen.
+
+1. Code ansehen, falls gewünscht:
+```
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline main..preview
+```
+2. Preview-Branch pushen (nur auf Marcos Wort, ich habe nichts gepusht):
+```
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
+```
+3. Auf der NAS im Klon `torjaeger-preview` ausliefern (sichert vorher die Daten):
+```
+./deploy.sh
+```
+4. Am iPad die Vorschau öffnen (https://energizer.tailfc5923.ts.net:8443, orange Band VORSCHAU), App ggf. mit „Jetzt laden“ aktualisieren. Prüfliste:
+   - Version in der Trainerbank zeigt 1.5.3.
+   - Deutsch Kreisliga, Thema „i oder ie“: mehrere Päckchen spielen, Wörter wie Spiel, Tier, Fliege, Kind sehen richtig aus, nie „Lieed“.
+   - Mathe Kreisliga, Sachaufgabe mit Netzen: Erklärung nennt den echten Rest.
+   - Päckchen: drei Aufgaben eintragen, „Kabine“ tippen. In der Kabine erscheint „Päckchen weiterspielen?“, Weiterspielen führt zur vierten Aufgabe. Ebenso im Kontroll-Pfiff.
+   - Richtige Antwort im Spiel: Taste „Warum stimmt das?“ im Overlay, Erklärung bleibt bis „Weiter“. Ohne Antippen geht es von allein weiter.
+   - Kabine: Taste heißt „Mix: Mathe & Deutsch“. Zuordnen (Englisch Stufe 2): gepaarte Wörter tragen eine Nummer. Hilfetaste leicht zu treffen, Kopfzeile bricht um.
+   - Neues Konto mit falscher PIN anlegen: Name bleibt stehen.
+   - Englisch-Bilder: Mutter (Frau mit Fläschchen), Frühling (Blüte), kein Bildpaar wie Mund/Zunge zusammen.
+   - Eltern-Bereich: Lernstand sagt „zuletzt sicher geübt“. „Eltern-PIN ändern“ mit alter PIN klappt, danach gilt die neue PIN auch auf dem zweiten Gerät.
+5. Erst nach der Abnahme (und nur auf Marcos Anweisung) Merge nach `main` und Live-Deploy.
