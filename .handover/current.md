@@ -1,107 +1,82 @@
-# Cross-Handover
-
-**Stand:** 2026-09-30
-**Von:** cowork
-**An:** claude-code
-**Stufe:** voll
-**Modus:** bauen
-
-Inhalt identisch mit dem kopierfertigen Block. Setzt voraus, dass 1.4.1 auf preview committet ist.
-
-```
-Cross-Handover cowork nach claude-code, 2026-09-30.
+Cross-Handover cowork nach claude-code, 2026-10-01.
 Modus: bauen. Stufe: voll.
-Projekt: Torjäger-Liga (Fußball-Lernspiel für Emil). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger). Live läuft 1.2.1 (main), preview enthält 1.4.0 und (nach Abschluss der laufenden Sitzung) 1.4.1.
+Projekt: Torjäger-Liga (Fußball-Lernspiel für Emil). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger). Live läuft 1.5.2 (main).
 
 ANKER, zuerst gegenprüfen, nicht arbeiten:
-Stand beim Schreiben (30.09.2026): Auf preview lief noch eine Code-Sitzung mit Änderungen für 1.4.1 (uncommittet: app/js/icons.js, test/v141.test.mjs u. a.). Dieser Auftrag setzt voraus, dass 1.4.1 fertig committet ist.
+Diese Sitzung gehört NUR zum Repo Torjaeger-Liga. Steht die Sitzung in einem anderen Ordner (z. B. TopDesk-SLA-Dashboard): sofort stoppen, nichts ändern, Marco Bescheid geben.
 git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" branch --show-current   -> erwartet preview
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -5          -> erwartet oben die Commits zu 1.4.1 (inkl. Rückübergabe 1.4.1), darunter b95703c
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1 main     -> erwartet adb3c07 (Live 1.2.1), sofern Marco nichts anderes gemeldet hat
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" status --short            -> erwartet genau: ?? .handover/next.md (dieser Auftrag, von Cowork abgelegt), keine weiteren Änderungen, keine Datei test/sedQphNcj
-Dann: .handover/next.md nach .handover/current.md verschieben (überschreiben) und mit dem ersten Commit festhalten.
-grep APP_VERSION app/js/version.js -> erwartet 1.4.1
-Test -Path "C:\Users\marco.haufe\Downloads\Emil Avatar.jpg"; Test -Path "C:\Users\marco.haufe\Downloads\Trainer Team.jpg"  -> beide True
-Bei Abweichung (z. B. 1.4.1 noch nicht committet): nicht anfangen, Marco fragen bzw. als Prüfauftrag an Cowork zurückspielen.
-Hinweis: Stand der Vorschau auf der NAS (1.4.0 oder 1.4.1 deployed?) bei Marco erfragen und in der Rückübergabe festhalten.
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1         -> erwartet 4f872de
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1 main    -> erwartet 4f872de
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" status --short           -> erwartet genau:  M .handover/return.md, ?? .handover/review-2026-10-01.md, ?? .handover/next.md
+grep APP_VERSION app/js/version.js -> erwartet 1.5.2
+Dann als ersten Commit: return.md und review-2026-10-01.md so wie sie sind committen (Bewertungs-Rückübergabe), next.md nach current.md verschieben (überschreiben) und mit committen.
+Hinweis: Eine leere Datei .git\index.lock (01.10.2026 11:38) stammt von Cowork (git status ohne Löschrecht). Wenn kein anderer git-Prozess läuft, darf sie gelöscht werden.
+Bei Abweichung: nicht anfangen, Marco fragen.
 
 LIES ZUERST, in dieser Reihenfolge:
-1. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\CLAUDE.md (Pflichtregel Rückübergabe)
-2. SPEC.md (Abschnitte Avatar, Trainer, Torszene, Datenmodell), CHANGELOG.md, .handover\return.md
-3. .handover\next.md (dieser Auftrag als Zettel, wird zu current.md)
-4. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\specs\Torjaeger-Plan.md (Abschnitt "J. Feste Avatar-Vorlagen")
-5. Die beiden Vorlagebilder (unten) und der Avatar-Code in app\js\ (avatardraw.js, Baukasten, Torszene, Trainer)
+1. CLAUDE.md (Pflichtregel Rückübergabe)
+2. .handover\review-2026-10-01.md und den dort verlinkten Bericht C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\Torjaeger-Bewertung-2026-10-01.md (Quellenstellen, Reproduktionen, Abnahmekriterien; nur lesen)
+3. C:\AI\_MBrain OS\MyBrain\Projects\Torjaeger\specs\Torjaeger-Plan.md, Abschnitt "L. Einordnung der Bewertung" (nur lesen)
+4. SPEC.md (Datenmodell, Abgleich, Eltern-Bereich), CHANGELOG.md
+
+LEITBILD (Marco, 01.10.2026)
+Die App soll Emil Freude am Lernen und Wiederholen machen und nah am Lehrplan bleiben, ohne 100 % lehrplan- oder methodentreu zu sein. Korrekturen also gezielt, kein didaktischer Umbau, Spielfluss bleibt.
 
 AUFTRAG
-Version 1.5.0 auf Branch preview: Die gezeichneten Avatare (1.3.0) werden durch feste Bild-Vorlagen ersetzt. Emils Figur und das Trainerteam kommen aus Marcos Bildern, jeweils vorn und hinten. Anpassbar sind nur noch Farben, Rückennummer, eigener Name und Vereinsname. Lokal testen, auf preview committen, vollständige Rückübergabe schreiben.
+Version 1.5.3 auf Branch preview: Sofort-Korrekturen aus der Bewertung plus leichte Übernahmen. Jede Korrektur mit Regressionstest. Lokal testen, auf preview committen, vollständige Rückübergabe schreiben.
 
-VORLAGEN (Quelle)
-- C:\Users\marco.haufe\Downloads\Emil Avatar.jpg: Junge, blonde Haare, blaues Trikot mit weißen Schulter- und Ärmelstreifen, schwarze Hose, schwarze Stutzen, weiße Schuhe; links vorn, rechts hinten, weißer Hintergrund mit senkrechtem Trennstrich.
-- C:\Users\marco.haufe\Downloads\Trainer Team.jpg: von links Trainerin vorn, Trainerin hinten (blond, Bob, Creolen), Trainer vorn, Trainer hinten (Glatze, Brille); beide dunkelblaues Polo, schwarze Hose, schwarze Stutzen, graue Schuhe; grauer Hintergrund mit Bodenschatten.
-- Originale als Quelle ins Repo unter assets-src/ kopieren (Entscheidung Marco: gezeichnete Avatare dürfen mit dem Spiel ausgeliefert und gespeichert werden).
+TEIL 1: SOFORT-KORREKTUREN (fachlich falsch oder Datenverlust)
+1. i/ie-Vorlagen: Generator erzeugt falsche Wörter ("Lieed", "Spieel"). Vorlagen korrigieren. Test für ALLE Rechtschreib-Listen (nicht nur i/ie): Vorlage plus richtige Lösung ergibt genau das Zielwort, und das Zielwort steht in der Wortliste.
+2. Sachaufgabe Netze "halb voll": Erklärung ist falsch. Den tatsächlichen Rest nennen (z. B. "im letzten Netz sind 3 Bälle"). Test über viele Zufallswerte, dass Erklärung und Rechnung zusammenpassen.
+3. Gleichzeitiges Speichern (Server): Zwei PUTs mit gleicher baseRev dürfen nicht beide gewinnen. Stand und Revision erst nach vollständigem Einlesen der Anfrage lesen, Prüfung und Schreiben ohne await dazwischen bzw. mit Sperre je Konto und je Settings. Der Verlierer bekommt 409, der Client führt wie bisher zusammen. Test mit zwei parallelen Anfragen.
+4. Mindeststruktur: Server lehnt einen strukturell unvollständigen Stand ab (400), statt ihn zu speichern. Pflichtfelder laut SPEC (schemaVersion, Konto-Grunddaten, Fortschritt als Objekt usw.), unbekannte Zusatzfelder bleiben erlaubt (Grundregel "Unbekanntes erhalten"). Der Client sendet nie einen unvollständigen Stand. Test: unvollständig wird abgelehnt, vollständiger Stand aus Fixture 1.5.2 wird angenommen.
+5. Päckchen-Verlust bei "Kabine": Laufendes Päckchen (Kontroll-Pfiff und reguläre Runden, soweit betroffen) wird beim Verlassen gesichert. Beim nächsten Öffnen "Weiterspielen oder neu anfangen?" anbieten. Kurze Rückfrage vor dem Verlassen ist erlaubt, wenn sie nicht nervt. Test für Sichern und Fortsetzen.
+6. Lokales Speichern (IndexedDB): Fehler abfangen, erneut versuchen, bei dauerhaftem Fehler gut sichtbarer, kindgerechter Hinweis für Eltern ("Speichern klappt gerade nicht"), kein stiller Verlust. Test mit simuliertem Fehler.
+7. PIN-Schutz: Die Eltern-PIN darf über den normalen Settings-Abgleich nicht mehr geändert werden. PIN-Änderung nur über einen eigenen Weg, der die aktuelle PIN prüft. Die neue PIN kommt danach weiterhin auf allen Geräten an (Entscheidung Marco: PIN auf allen Geräten gleich). "PIN merken" aus 1.5.2 bleibt. Test: Settings-PUT mit anderer PIN ändert sie nicht, Änderung mit richtiger alter PIN klappt, mit falscher nicht.
 
-1. AUFBEREITUNG (einmalig, Hilfsskript unter tools/, nur beim Entwickeln)
-- Jede Figur einzeln ausschneiden (vorn und hinten), Hintergrund, Trennstrich und Bodenschatten entfernen, freigestellt als PNG oder WebP mit Transparenz, passende Größe für iPad (Retina) bei kleiner Dateigröße.
-- Markenlogo auf Emils Trikotbrust und auf den Stutzen übermalen (Entscheidung Marco), sauber in Trikot- bzw. Stutzenfarbe.
-- Umfärbbare Bereiche als eigene Ebenen mit erhaltener Schattierung abtrennen: Kinder: Trikot, Ärmel-/Schulterstreifen, Hose, Stutzen (Schuhe optional). Trainer: Polo, Hose, Stutzen. Rest (Haut, Haare, Gesicht, Hände, Brille, Ohrringe, Schuhe) bleibt Grundbild.
-- Ein Hilfsskript darf beim Entwickeln Werkzeuge nutzen (z. B. Python mit Pillow); die App selbst bleibt ohne Bibliotheken. Skript und Ablauf in README beschreiben, damit weitere Vorlagen später genauso aufbereitet werden können.
+TEIL 2: LEICHTE ÜBERNAHMEN (Spielfluss bleibt)
+8. Nach richtiger Antwort optional "Warum stimmt das?", ohne den automatischen Weiter-Ablauf zu bremsen (Taste nur kurz sichtbar oder Weiter wartet nur, wenn sie angetippt wird).
+9. Taste "Mix-Spiel" heißt "Mix: Mathe & Deutsch" (bzw. passend zu den gewählten Fächern).
+10. Hilfetaste mindestens 44 px, Kopfzeile darf umbrechen.
+11. Zuordnen: Paare zusätzlich mit Nummer oder Symbol, nicht nur Farbe.
+12. Fehler bei der Kontoanlage: eingegebener Name bleibt stehen.
+13. Eltern-Bereich: statt "sicher" heißt es "zuletzt sicher geübt". Für Emil bleibt das Häkchen.
+14. Englisch-Bilder mit Deutungsspielraum (laut Bericht z. B. Frau für Mutter, Tulpe für Frühling) eindeutiger machen: anderes Motiv oder Antwortauswahl so, dass nur eine Lösung passt. Grundregel: Fragen müssen immer eindeutig sein.
 
-2. UMFÄRBEN IN DER APP
-- Ebenen werden zur Laufzeit in der gewählten Farbe eingefärbt, Falten und Schatten bleiben sichtbar (z. B. Canvas mit Helligkeitsebene mal Farbe, oder CSS mask plus Blend). Ergebnis zwischenspeichern, damit Torszene und Listen flüssig bleiben.
-- Farbwahl je Kind: Trikot, Streifen, Hose, Stutzen (feste, gut unterscheidbare Palette, dazu Vereinsfarben-Vorschläge). Je Trainer: Polo, Hose, Stutzen (Marco: auch die Trainer bekommen neue Farben).
-
-3. NAME, NUMMER, VEREIN
-- Rückansicht Kind: Name leicht gebogen über der Nummer, beides im Rückenfeld des Trikots, automatisch skaliert (lange Namen, zweistellig), nie über die Hose, Schriftfarbe mit gutem Kontrast zur Trikotfarbe (automatisch hell/dunkel). Optional kleine Nummer vorn auf der Brust, wenn es sauber aussieht.
-- Vereinsname nicht aufs Trikot, sondern auf Kachel "Wer spielt?", Kabine und Anzeigetafel.
-- Trainer: Name im Eltern-Bereich einstellbar (Vorgaben "Trainer", "Trainerin" bleiben), keine Nummer.
-
-4. EINSATZ IN DER APP
-- Kachel, Kabine, Trainerbank, Sprechblasen: Brustbild als Ausschnitt aus dem Vorderbild (Kopf und Schultern) im runden Hintergrund.
-- Torszene: Rückansicht des Kindes, animiert (kleiner Satz nach vorn, Ball fliegt ins Tor bzw. an Pfosten, Latte, knapp vorbei), prefers-reduced-motion beachten (Entscheidung Marco).
-- Hilfe: Trainer und Trainerin als Brustbild wie bisher (Tipp Trainer, Erklärung Trainerin).
-- Vorlagen-Auswahl je Konto: vorerst genau eine Kind-Vorlage ("Emil"). Datenmodell und Oberfläche so, dass später weitere Vorlagen (z. B. für Marcos Nichte) einfach als Datei plus Eintrag dazukommen.
-- Einstellungs-Oberfläche "Mein Spieler": Vorschau vorn/hinten, Farben, Name, Nummer, Vereinsname. Trainer-Farben und Namen im Eltern-Bereich.
-- Der alte Baukasten (Kopfform, Frisur, Gesicht usw.) verschwindet aus der Oberfläche; Zeichencode kann bleiben oder entfernt werden, gespeicherte Felder bleiben im Stand erhalten (Unbekanntes erhalten).
-
-DATENMODELL
-- Neue Felder (Vorlage, Farben je Bereich, Name, Nummer, Vereinsname; Trainerfarben) mit der nächsten schemaVersion (Konto, aktuell 5 oder in 1.4.1 höher) und passender globaler Version, Migration ohne Verlust: vorhandene Trikot-/Hosen-/Stutzenfarbe, Nummer, Name und Mannschaftsname aus dem alten Avatar übernehmen. Test mit Fixture im Format 1.4.1.
-- Version 1.5.0 an allen vier Stellen, neue Dateien (Bilder, Skripte) in FILES von sw.js, damit sie offline verfügbar sind. Gesamtgröße der Bilder im Blick behalten (Offline-Cache).
+VERSION UND DATEN
+- Version 1.5.3 an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION, package.json), neue Dateien in FILES von sw.js.
+- Falls ein Feld dazukommt (z. B. gesichertes Päckchen): nächste schemaVersion mit Migration ohne Verlust, Test mit Fixture im Format 1.5.2. Updates setzen nie einen Stand zurück.
 
 NICHT-ZIELE
-- Keine neuen Figuren erzeugen oder zeichnen, keine Schusspose (später eigenes Bild von Marco möglich).
-- Keine Änderungen an Aufgaben, Fächern, Ligen, Kontroll-Pfiff, Stickern.
-- Keine Markenlogos, keine externen Ressourcen, keine Laufzeit-Bibliotheken.
+- Kein didaktischer Umbau, keine Kompetenzdiagnostik, keine neuen Fächer, Ligen oder Aufgabentypen.
+- Kein Sondertraining, keine Mini-Spiele, kein Zurückstellen von Themen (kommt mit 1.6.0, eigener Auftrag).
+- Keine Änderungen an Avatar-Vorlagen und Stickern außer was die Korrekturen zwingend brauchen.
 - Kein Merge nach main, kein Live-Deploy, außer Marco weist es in der Sitzung ausdrücklich an (dann festhalten).
+- Nichts im Vault schreiben.
 
 ENTSCHIEDEN, nicht mehr zur Debatte
-- Feste Bild-Vorlagen statt Avatar-Generator; anpassbar nur Farben, Rückennummer, eigener Name, Vereinsname (Marco, 30.09.2026).
-- Auch die Trainer bekommen umfärbbare Kleidung.
-- Bilder werden mit dem Spiel ausgeliefert und im Repo gespeichert.
-- Markenlogo wird übermalt.
-- Torszene mit animierter Rückansicht.
-- Grundregeln: Updates setzen nie einen Stand zurück, Texte ohne Gedankenstriche.
+- Leitbild Freude vor Perfektion (Marco, 01.10.2026).
+- Alle sieben Sofort-Korrekturen kommen in 1.5.3, auch der PIN-Schutz.
+- Texte ohne Gedankenstriche, Fragen eindeutig, Updates setzen nie einen Stand zurück.
 
 OFFEN, darf die annehmende Seite entscheiden
-- Technik des Freistellens und Einfärbens, Bildformat und Auflösung.
-- Farbpalette (Umfang, Namen der Farben), ob Schuhe umfärbbar sind.
-- Ob der alte Zeichencode entfernt wird.
+- Technik der Sperre im Server, genaue Pflichtfelder der Mindeststruktur (in SPEC.md festhalten).
+- Gestaltung von "Warum stimmt das?", Symbole beim Zuordnen, Ersatzmotive für Englisch.
+- Ob vor dem Verlassen eines Päckchens gefragt wird oder nur Fortsetzen angeboten wird.
 
 ABNAHME
-- node --test grün, neue Tests: Migration auf die neue Schemaversion (Farben, Name, Nummer, Verein übernommen), alle Bilddateien in FILES von sw.js, Name und Nummer im Rückenfeld (lange Namen, zweistellig), Kontrast der Rückenschrift, Umfärben erzeugt für jede Palettenfarbe ein Bild (Canvas-Ersatz im Test).
-- Kachel, Kabine, Sprechblasen zeigen Brustbild aus der Vorlage; Torszene zeigt animierte Rückansicht.
-- "Mein Spieler" ändert Farben, Name, Nummer, Verein; Trainerfarben und -namen im Eltern-Bereich; Abgleich zwischen Geräten.
-- Kein Markenlogo in den ausgelieferten Bildern (Sichtprüfung durch Marco, im Test mindestens Dateiliste).
-- README (Aufbereitung neuer Vorlagen), SPEC.md, CHANGELOG.md (1.5.0) aktuell. Arbeitsbaum sauber, alles auf preview.
+- node --test grün: alle bisherigen Tests plus neue Regressionstests zu Punkt 1 bis 7 und, wo sinnvoll, 8 bis 14.
+- Vorschau auf der NAS: Marco testet nach deploy.sh preview auf dem iPad (Sitzung nennt ihm die Prüfpunkte als kurze Liste).
+- README, SPEC.md (Abgleich, PIN-Weg, Mindeststruktur), CHANGELOG.md (1.5.3) aktuell. Arbeitsbaum sauber, alles auf preview.
 Tests Pflicht: ja
 
 RESTPOSTEN, kategorisiert
 - Echter Blocker: keiner bekannt.
-- Bewusst offen: Abnahme 1.2.1/1.3.0/1.4.0 auf dem iPad; Prüfung docs/Inhalte-Englisch-Sachkunde.md durch Marco; Kontrolle von Emils migriertem Stand; Hyper Backup; Testrunden in Emils Konto; weitere Kind-Vorlagen (Nichte) später; Schusspose später.
-- Kosmetischer Rest: Sticker-Motive einfach; Tailscale auf der NAS 1.58.2.
+- Bewusst offen: iPad-Abnahme, Prüfung docs/Inhalte-Englisch-Sachkunde.md durch Marco, Hyper Backup, Testrunden in Emils Konto, Apple-Geräteprüfung und Nutzungstest laut Bericht.
+- Danach: Auftrag 1.6.0 (Plan Abschnitt K: Sondertraining, Mini-Spiele, Themen zurückstellen, Frust-Bremse).
 
 DOKU-ZUSTÄNDIGKEIT
-Repo trägt die Wahrheit über den Code (SPEC.md, CHANGELOG.md, README.md, docs/). Vault pflegt Cowork, dort nichts schreiben. Rückweg: vollständige Rückübergabe nach .handover\return.md und als Block laut CLAUDE.md, ausdrücklich mit allem, was Marco in der Sitzung selbst ausgeführt oder angewiesen hat, und dem Stand von main/preview/origin sowie der Vorschau auf der NAS.
+Repo trägt die Wahrheit über den Code (SPEC.md, CHANGELOG.md, README.md, docs/). Vault pflegt Cowork. Rückweg: vollständige Rückübergabe nach .handover\return.md und als Block laut CLAUDE.md, ausdrücklich mit allem, was Marco in der Sitzung selbst ausgeführt oder angewiesen hat, und dem Stand von main/preview/origin sowie der Vorschau auf der NAS.
 
 ERSTER SCHRITT
 Anker prüfen, nicht arbeiten.
-```

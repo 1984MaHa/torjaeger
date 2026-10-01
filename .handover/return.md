@@ -1,5 +1,7 @@
 # Rückübergabe claude-code an cowork, 2026-09-30
 
+> Ergänzung 01.10.2026: Neuer reiner Bewertungsauftrag abgeschlossen, keine App-Auslieferung. Maßgeblich für diese Sitzung: [Review-Rückübergabe](review-2026-10-01.md) und der dort verlinkte Brain-Bericht. Historische Bauangaben unten bleiben als Quelle erhalten; sie sind nicht durchgehend aktuelle Handlungsanweisungen. Commitanker der Bewertung: `4f872de`, App 1.5.2.
+
 **Auftrag:** Version 1.5.0 (ausgeliefert als 1.5.1, weil der Service Worker unter gleicher Versionsnummer die alte Fassung im Cache behielt), feste Bild-Vorlagen statt Avatar-Baukasten (Modus bauen, Stufe voll).
 **Stand:** Version 1.5.2 gebaut, in der Vorschau abgenommen, nach `main` gemerged und von Marco live deployt. 173 von 173 Tests grün.
 
