@@ -6,10 +6,10 @@ Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus b
 - Marco hat die Sitzung gestartet, den Anker prüfen lassen und mit „ja“ den Start der Arbeit freigegeben.
 - **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben.
 
-## Stand je Umgebung
-- Lokal: `preview` bei dem Commit mit dieser Rückübergabe (davor `725466b` für den Code, `e60678a` für die Übernahme der Bewertung). `main` unverändert bei `4f872de` (Live, Version 1.5.2).
-- `origin/main` und `origin/preview` standen laut Anker bei `4f872de`. **Es wurde nichts gepusht**, `origin/preview` hängt also hinter dem lokalen `preview`.
-- NAS: Live läuft 1.5.2 (laut früherer Rückübergabe). Die Vorschau auf der NAS zeigt noch den alten Stand, bis Marco pusht und `deploy.sh` ausführt. Version 1.5.3 ist nirgends ausgeliefert.
+## Stand je Umgebung (nachgetragen nach Marcos Abnahme der Vorschau)
+- Marco hat die Vorschau auf dem iPad geprüft: 1.5.3 läuft, die i/ie-Aufgabe ist korrekt. Anfangs zeigte das iPad noch die alte App, Marco musste den Browser-Cache zurücksetzen (Bannerverhalten beim Update dabei nicht beobachtet, siehe Restposten).
+- Marco hat angewiesen, 1.5.3 nach `main` zu schreiben. `main` wurde per Fast-Forward auf `preview` gesetzt. `main` und `preview` liegen auf demselben Commit und werden nach `origin` gepusht (siehe Anker am Ende).
+- **Live-Deploy auf der NAS ist noch nicht erfolgt** (`deploy.sh` im Ordner `torjaeger` steht aus). Live läuft bis dahin 1.5.2.
 
 ## Anker-Prüfung am Anfang
 Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` bei `4f872de`, Status genau die drei erwarteten Dateien, `APP_VERSION` 1.5.2. `.git/index.lock` gab es nicht mehr. Erster Commit (`e60678a`): Bewertungs-Rückübergabe und Review so wie sie waren, `next.md` nach `current.md` verschoben.
@@ -44,6 +44,7 @@ Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` b
 ## Restposten
 - **Echter Blocker:** keiner.
 - **Bewusst offen:** iPad-Abnahme der Vorschau, Prüfung von `docs/Inhalte-Englisch-Sachkunde.md` durch Marco (neue Motive Mutter, Vater, Frühling), Hyper Backup, Testrunden in Emils Konto, Apple-Geräteprüfung und beobachteter Nutzungstest laut Bericht. Danach Auftrag 1.6.0 (Plan Abschnitt K).
+- **Zu beobachten:** Das iPad hat die neue Vorschau erst nach manuellem Cache-Reset geladen. Ob das Banner „Jetzt laden“ erschien, ist offen. Vor dem Live-Deploy beim nächsten Update darauf achten.
 - **Kosmetisch / zu beobachten:** Rote Speicherwarnung und „Warum stimmt das?“ nur im Fake-DOM geprüft, Optik auf dem iPad offen. Das Emoji „Frau mit Fläschchen“ braucht iOS 14 oder neuer (Unicode 13). Die Zuordnungs-Nummer nutzt die Paarfarben, bei Orange ist der weiße Ziffernkontrast knapp.
 
 ## Anker
