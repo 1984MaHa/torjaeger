@@ -6,10 +6,11 @@ Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus b
 - Marco hat die Sitzung gestartet, den Anker prüfen lassen und mit „ja“ den Start der Arbeit freigegeben.
 - **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben.
 
-## Stand je Umgebung (nachgetragen nach Marcos Abnahme der Vorschau)
-- Marco hat die Vorschau auf dem iPad geprüft: 1.5.3 läuft, die i/ie-Aufgabe ist korrekt. Anfangs zeigte das iPad noch die alte App, Marco musste den Browser-Cache zurücksetzen (Bannerverhalten beim Update dabei nicht beobachtet, siehe Restposten).
-- Marco hat angewiesen, 1.5.3 nach `main` zu schreiben. `main` wurde per Fast-Forward auf `preview` gesetzt. `main` und `preview` liegen auf demselben Commit und werden nach `origin` gepusht (siehe Anker am Ende).
-- **Live-Deploy auf der NAS ist noch nicht erfolgt** (`deploy.sh` im Ordner `torjaeger` steht aus). Live läuft bis dahin 1.5.2.
+## Stand je Umgebung (Stand nach Live-Deploy)
+- **Live und Vorschau laufen beide mit 1.5.3** (Marco hat `deploy.sh` im Live-Ordner ausgeführt und beide Versionen am Gerät geprüft). Gemeldet von Marco, nicht von mir geprüft.
+- `main`, `preview`, `origin/main` und `origin/preview` liegen auf demselben Commit (zuletzt der Commit mit dieser Datei).
+- Die Vorschau hat Marco vorher auf dem iPad abgenommen: i/ie korrekt. Das iPad zeigte anfangs noch die alte App, Marco musste den Browser-Cache zurücksetzen.
+- Nicht geprüft: ob Emils Live-Konto nach dem Update unverändert ist (Punkte, Sticker) und ob die PIN auf beiden Geräten weiter passt.
 
 ## Anker-Prüfung am Anfang
 Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` bei `4f872de`, Status genau die drei erwarteten Dateien, `APP_VERSION` 1.5.2. `.git/index.lock` gab es nicht mehr. Erster Commit (`e60678a`): Bewertungs-Rückübergabe und Review so wie sie waren, `next.md` nach `current.md` verschoben.
@@ -52,28 +53,7 @@ Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` b
 - Arbeitsbaum nach dem Commit sauber. Keine neuen Dateien in `app/`, `FILES` in `sw.js` unverändert.
 
 ## Nächste Schritte für Marco
-Zuerst alles prüfen, dann erst pushen.
-
-1. Code ansehen, falls gewünscht:
-```
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline main..preview
-```
-2. Preview-Branch pushen (nur auf Marcos Wort, ich habe nichts gepusht):
-```
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" push origin preview
-```
-3. Auf der NAS im Klon `torjaeger-preview` ausliefern (sichert vorher die Daten):
-```
-./deploy.sh
-```
-4. Am iPad die Vorschau öffnen (https://energizer.tailfc5923.ts.net:8443, orange Band VORSCHAU), App ggf. mit „Jetzt laden“ aktualisieren. Prüfliste:
-   - Version in der Trainerbank zeigt 1.5.3.
-   - Deutsch Kreisliga, Thema „i oder ie“: mehrere Päckchen spielen, Wörter wie Spiel, Tier, Fliege, Kind sehen richtig aus, nie „Lieed“.
-   - Mathe Kreisliga, Sachaufgabe mit Netzen: Erklärung nennt den echten Rest.
-   - Päckchen: drei Aufgaben eintragen, „Kabine“ tippen. In der Kabine erscheint „Päckchen weiterspielen?“, Weiterspielen führt zur vierten Aufgabe. Ebenso im Kontroll-Pfiff.
-   - Richtige Antwort im Spiel: Taste „Warum stimmt das?“ im Overlay, Erklärung bleibt bis „Weiter“. Ohne Antippen geht es von allein weiter.
-   - Kabine: Taste heißt „Mix: Mathe & Deutsch“. Zuordnen (Englisch Stufe 2): gepaarte Wörter tragen eine Nummer. Hilfetaste leicht zu treffen, Kopfzeile bricht um.
-   - Neues Konto mit falscher PIN anlegen: Name bleibt stehen.
-   - Englisch-Bilder: Mutter (Frau mit Fläschchen), Frühling (Blüte), kein Bildpaar wie Mund/Zunge zusammen.
-   - Eltern-Bereich: Lernstand sagt „zuletzt sicher geübt“. „Eltern-PIN ändern“ mit alter PIN klappt, danach gilt die neue PIN auch auf dem zweiten Gerät.
-5. Erst nach der Abnahme (und nur auf Marcos Anweisung) Merge nach `main` und Live-Deploy.
+1. Live kurz prüfen: Emils Konto öffnen, Punkte und Sticker müssen unverändert sein, eine Aufgabe spielen.
+2. Prüfliste aus dem Abschnitt Umgesetzt im Alltag beobachten (Päckchen weiterspielen, Warum stimmt das?, Englisch-Bilder). Auffälliges an Cowork zurückmelden.
+3. Beim nächsten Update darauf achten, ob das Banner „Jetzt laden“ erscheint, ohne dass der Cache zurückgesetzt werden muss.
+4. Offene Folgearbeit: Auftrag 1.6.0 (Plan Abschnitt K), Prüfung von `docs/Inhalte-Englisch-Sachkunde.md`, Hyper Backup, beobachteter Nutzungstest mit Emil.
