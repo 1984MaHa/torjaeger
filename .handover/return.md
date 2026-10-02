@@ -1,6 +1,53 @@
-# Rückübergabe Claude Code nach Cowork, 02.10.2026 (Version 1.5.4)
+# Rückübergabe Claude Code nach Cowork, 02.10.2026 (Versionen 1.6.0 bis 1.6.7)
 
-Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
+Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen, Budget-Modus). Pakete A0 und B1 bis B8 sind **alle fertig**, je Paket ein Commit und ein lokaler Tag. Darunter stehen die Nachträge je Paket (neueste zuerst) und danach die Rückübergabe der früheren 1.5.4-Sitzung.
+
+## Zusammenfassung dieser Sitzung
+| Paket | Version | Commit | Inhalt | Schema | Tests |
+|---|---|---|---|---|---|
+| A0 | (1.5.5) | aca0c5a | Rückübergabe 1.5.5 nachgetragen | 7 | 237 |
+| B1 | 1.6.0 | 5492b1a | Schwerpunkt, Sondertraining für alle Mathe/Deutsch-Themen, Mix 1/3 | 7 | 244 |
+| B2 | 1.6.1 | 91b1877 | Zurückgestellt mit Datum, neue Themen starten zurückgestellt | 8 | 254 |
+| B3 | 1.6.2 | e993d25 | Frust-Bremse (drei Fehler in Folge) | 8 | 260 |
+| B4 | 1.6.3 | 2976330 | Mini-Spiel Torwand | 8 | 267 |
+| B5 | 1.6.4 | a0262eb | Mini-Spiel Memory | 8 | 274 |
+| B6 | 1.6.5 | ffdc0b7 | Mini-Spiel Dribbel-Parcours | 8 | 282 |
+| B7 | 1.6.6 | 66cbe8d | Überraschungsspiel | 8 | 287 |
+| B8 | 1.6.7 | fa29e69 | Liga-Freigaben serverseitig mit Eltern-PIN | 8 | 295 |
+
+## Was Marco in dieser Sitzung ausgeführt oder angewiesen hat
+- Marco hat die Sitzung gestartet, die Anker prüfen lassen und mit "los" die Arbeit freigegeben. Sonst keine Eingriffe.
+- **Nicht ausgeführt:** Push nach `origin`, Merge nach `main`, `deploy.sh` auf der NAS (Vorschau und Live), Test auf iPad oder iPhone, Browser-Vorschau (Marco prüft visuell selbst). Nichts im Vault geschrieben.
+
+## Stand je Umgebung
+- `preview` liegt lokal auf dem Commit mit dieser Datei (direkt nach `fa29e69`), Version **1.6.7**, Schema 8. `origin/preview`, `main` und `origin/main` stehen unverändert auf **e0cd3e5** (Version 1.5.5). Lokale Tags: v1.6.0, v1.6.1, v1.6.2, v1.6.3, v1.6.4, v1.6.5, v1.6.6, v1.6.7 (keine früheren Tags vorhanden, nichts gepusht).
+- Was auf der NAS läuft, ist hier unbekannt (bei Marco erfragen). Die Angabe "Live läuft mit 1.5.3" weiter unten ist überholt.
+
+## Wichtig vor dem Einspielen
+- **Schema 8** (Konto): Beim ersten Start einer neuen App migrieren die Geräte lokal (`topicSeen` wird ergänzt, nichts geht verloren) und senden den neuen Stand. Der Server lehnt ältere Schemas ab (409 "schema_too_old"), Geräte mit App bis 1.6.0 müssen neu laden ("Jetzt laden").
+- **Liga-Freigaben (1.6.7)** laufen über den Server mit Eltern-PIN und nur online. Geräte mit App bis 1.6.6 geben lokal frei, der Server ignoriert es. Bitte alle Geräte laden, bevor Ligen freigegeben werden.
+- Beim Einspielen der Reihe nach 1.6.0 bis 1.6.7 gleichzeitig ist nichts Besonderes zu tun: ein Push von `preview` und ein Deploy reichen, die Tags sind Marken für Zwischenstände.
+
+## Entscheidungen und Abweichungen (Überblick, Details in den Nachträgen)
+- Sondertraining: 3 statt 5 Einheiten je Thema (Generatoren ohne Stufen), Schwerpunkt als Themenmodus ohne Schemawechsel.
+- Neue Themen starten zurückgestellt über `settings.topicSeen` (feste Liste `TOPICS_AT_8` in der Migration).
+- Frust-Bremse ohne gespeicherte Daten (liest die letzten Antworten).
+- Mini-Spiele: eigener Zustand `MG` und eigene Ansicht, Memory ohne Lernstand (Raten verfälscht), Torwand und Parcours mit Lernstand, kein Probetraining-Verbrauch, kein Sticker.
+- Liga-Freigaben: nur online mit PIN; Konto-Neuanlage übernimmt mitgebrachte Freigaben (bekannte Lücke, siehe B8).
+
+## Restposten
+- **Echter Blocker:** keiner.
+- **Bewusst offen:** Prüfung auf iPad/iPhone (Torwand-Größen, Memory-Karten, Parcours-Strecke, Datumsfeld im Eltern-Bereich wurden nur auf Struktur getestet), Prüfung `docs/Inhalte-Englisch-Sachkunde.md`, Testrunden in Emils Konto, Hyper Backup, Neuanlage-Lücke bei Liga-Freigaben, Schwierigkeitsstufen im Sondertraining.
+- **Kosmetisch:** Sondertraining-Einheiten eines Themas sind inhaltlich gleich schwer.
+
+## Anker
+- Branch `preview`, Version 1.6.7, Tests 295 grün, Arbeitsbaum sauber nach dem Commit dieser Datei.
+
+## Nächste Schritte für Marco
+1. Ansehen und pushen: `git push origin preview` und `git push origin --tags`
+2. Vorschau auf der NAS aktualisieren: im Vorschau-Ordner `./deploy.sh`.
+3. Geräte neu laden ("Jetzt laden"), die Prüflisten der Nachträge durchgehen (Reihenfolge B1 bis B8).
+4. Erst nach Abnahme: `git checkout main`, `git merge preview` (oder `git merge v1.6.7`), `git push origin main`, im Live-Ordner `sudo sh deploy.sh`.
 
 ## Nachtrag B8: Version 1.6.7 Liga-Freigaben serverseitig (Tag v1.6.7 lokal, kein Schemawechsel)
 - Neu: `POST /api/admin/profiles/<id>/league` (PIN, `li`, `open`). Freigeben/Sperren in der Trainerbank (PIN wird dafür bis zum Schließen im Speicher gehalten, `UI.parentPin`) und im Eltern-Bereich (`A.pin`) laufen zuerst über den Server, danach lokal. Offline: Meldung, kein lokales Freigeben mehr.
