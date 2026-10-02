@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.6.2 (Frust-Bremse)
+- **Drei Fehler in Folge im selben Thema** (in einer Runde, Spiel mit einzelnen Aufgaben): Das Thema kommt für den Rest der Runde seltener dran (Gewicht mal 0,15, es verschwindet nicht ganz), und bei der nächsten Aufgabe bietet der Trainer von selbst einen Tipp an („Soll ich dir einen Tipp geben?“). Im Trainingslager und im Päckchen greift die Bremse nicht (die Aufgaben stehen dort fest).
+- **Eltern-Bereich, Reiter Stand:** Beim Thema steht „Drei Fehler in Folge. Ist das schon im Unterricht dran?“, solange die letzten drei gezählten Antworten falsch waren. Die Markierung wird aus den letzten Antworten abgelesen und verschwindet nach der ersten richtigen. Zurückgestellte und ausgeschaltete Themen werden nicht markiert.
+- Kein Schemawechsel (bleibt 8), kein neues Datenfeld. Version 1.6.2 an allen vier Stellen. Tests: `test/v162.test.mjs`.
+
 ## 1.6.1 (Themen-Zustände, Schema 8)
 - **Neuer Zustand „Zurückgestellt“** je Thema (Eltern-Bereich, Einstellungen, Themen), freiwillig mit **Datum**: Ab diesem Tag ist das Thema von selbst wieder aktuell. Zurückgestellte Themen kommen nicht ins Spiel und blockieren den Aufstieg nicht (wie ausgeschaltete). Die Zustände sind jetzt: Aktuell, Wiederholen, Zurückgestellt, Aus, Schwerpunkt.
 - **Neue Themen starten zurückgestellt** (spätere App-Versionen): Das Konto merkt sich in `settings.topicSeen`, welche Themen es kennt. Fehlt ein Thema dort, ist es neu. Die Eltern geben es mit Aktuell oder einem anderen Zustand frei. Bestehende Konten und neue Konten kennen alle heutigen Themen, bei ihnen ändert sich nichts.

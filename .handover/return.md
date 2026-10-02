@@ -2,6 +2,12 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B3: Version 1.6.2 Frust-Bremse (Tag v1.6.2 lokal, kein Schemawechsel)
+- Drei Fehler in Folge im selben Thema (je Runde, einzelne Aufgaben): Thema Gewicht x0,15 bis Rundenende, bei der nächsten Aufgabe Tipp-Angebot durch den Trainer. Nicht im Trainingslager und nicht im Päckchen. Eltern-Bereich (Reiter Stand): "Drei Fehler in Folge. Ist das schon im Unterricht dran?" aus den letzten drei Antworten (`stats.<Thema>.last`), ohne neues Feld; zurückgestellte/ausgeschaltete Themen ohne Markierung.
+- Entscheidung: Die Markierung wird abgelesen und nicht gespeichert (Schema bleibt 8, nichts zu migrieren). Die Bremse ist pro Runde, die Eltern-Markierung über die letzten Antworten.
+- Tests: 260 grün (6 neue in `test/v162.test.mjs`). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: in einem Mix-Spiel absichtlich dreimal in Folge im selben Thema falsch antworten: danach kommt das Thema seltener, der Trainer fragt nach einem Tipp. Eltern-Bereich, Stand: Hinweis beim Thema; nach einer richtigen Antwort weg.
+
 ## Nachtrag B2: Version 1.6.1 Themen-Zustände (Schema 8, Tag v1.6.1 lokal)
 - Neuer Zustand **zurueck** ("Zurückgestellt") je Thema, optional mit Datum (`settings.topicUntil.<Thema>`, ab dem Tag von selbst wieder aktuell). Zurückgestellte und ausgeschaltete Themen sind nicht im Spiel und blockieren den Aufstieg nicht. Zustände jetzt: aktuell, wiederholen, zurueck, aus, schwerpunkt.
 - **Neue Themen starten zurückgestellt** über `settings.topicSeen` (Liste bekannter Themen). Migration 7 nach 8 trägt die feste Liste `TOPICS_AT_8` ein, es wird also nichts zurückgestellt. Neue Konten tragen `ALL_TOPICS` ein. Stände ohne `topicSeen` stellen nie etwas zurück. Aktuell/Datum/anderer Zustand macht ein neues Thema bekannt.

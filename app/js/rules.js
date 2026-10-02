@@ -87,11 +87,31 @@ export function weightOf(s,t){
   return topicModeOf(s,t)==="wiederholen"?w*.35:w; // Wiederholen kommt seltener dran
 }
 export const FOCUS_SHARE=1/3;
-export function nextTopic(s,pool,last,rnd=Math.random){
+// Frust-Bremse (ab 1.6.2): Drei Fehler in Folge im selben Thema. Dann kommt das Thema für den Rest der Runde seltener dran (cool),
+// der Trainer bietet einen Tipp an, und im Eltern-Bereich steht eine Markierung. Kein neues Datenfeld: Die Eltern-Markierung liest stats.<Thema>.last.
+export const FRUST_N=3,FRUST_FACTOR=.15;
+// strikes = {Thema: Fehler in Folge} einer Runde. Gibt true zurück, wenn die Bremse mit dieser Antwort greift (genau beim dritten Fehler).
+export function strikeStep(strikes,topic,ok){
+  if(ok){strikes[topic]=0;return false;}
+  strikes[topic]=(strikes[topic]||0)+1;
+  return strikes[topic]===FRUST_N;
+}
+// Themen, bei denen die letzten drei gezählten Antworten alle falsch waren (aktive Themen, ohne zurückgestellte und ausgeschaltete).
+export function frustTopics(s){
+  const out=[];
+  for(const t in s.stats){
+    const l=s.stats[t]&&s.stats[t].last;
+    if(Array.isArray(l)&&l.length>=FRUST_N&&l.slice(-FRUST_N).every(e=>e&&e.ok===0)&&topicOn(s,t))out.push(t);
+  }
+  return out;
+}
+export const isFrust=(s,t)=>frustTopics(s).includes(t);
+// cool = {Thema: true}: Themen, bei denen die Bremse in dieser Runde gegriffen hat
+export function nextTopic(s,pool,last,rnd=Math.random,cool=null){
   const on=activeTopics(s,pool);if(on.length)pool=on; // ausgeschaltete Themen kommen nie dran
   const focus=pool.filter(t=>isFocus(s,t));
   if(focus.length&&focus.length<pool.length&&rnd()<FOCUS_SHARE)pool=focus; // Schwerpunkt: etwa jede dritte Aufgabe
-  let tot=0;const ws=pool.map(t=>{const w=weightOf(s,t)*(t===last?.3:1);tot+=w;return w;});
+  let tot=0;const ws=pool.map(t=>{const w=weightOf(s,t)*(t===last?.3:1)*(cool&&cool[t]?FRUST_FACTOR:1);tot+=w;return w;});
   let x=rnd()*tot;for(let i=0;i<pool.length;i++){x-=ws[i];if(x<=0)return pool[i];}
   return pool[pool.length-1];
 }

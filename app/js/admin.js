@@ -2,7 +2,7 @@
 // Reine Darstellung, kennt weder Speicher noch Netz. Alle Namen laufen durch esc().
 import {LIGEN,TOPICS,PROBE,MASTER_N,FACHER,TOPIC_MODES,isEng,allTopicsOf} from "./content.js";
 import {total,answersOf,helpOf,ctlOf,lvOf,termsOf} from "./model.js";
-import {leagueState,budgetOf,topicSafe,topicDone,topicModeOf,topicRawMode,topicUntil,fachOffOf,gateTopics,safeCount,streakDays,settingsOf,stickerCount} from "./rules.js";
+import {leagueState,budgetOf,topicSafe,topicDone,topicModeOf,topicRawMode,topicUntil,frustTopics,fachOffOf,gateTopics,safeCount,streakDays,settingsOf,stickerCount} from "./rules.js";
 import {esc} from "./util.js";
 import {avatarSVG} from "./avatardraw.js";
 import {lookOf} from "./avatar.js";
@@ -80,13 +80,14 @@ function standTab(A){
   const s=a.state,days=s.progress.days||[];
   const summary=`<div class="sumrow"><span class="pill">${total(s,"points")} Punkte</span><span class="pill">${total(s,"rounds")} Spiele</span><span class="pill">${total(s,"wins")} Siege</span><span class="pill">${stickerCount(s)} Sticker</span><span class="pill">${days.length} Trainingstage, ${streakDays(s)} in Folge</span></div>`;
   let helpN=0,t1=0,t2=0;
+  const frust=new Set(frustTopics(s));
   const rows=LIGEN.map((L,i)=>{
     const head=`<h4 class="gl">${esc(L.name)} (${esc(L.klasse)}) · ${safeCount(s,i)} von ${gateTopics(s,i).length} Themen zuletzt sicher geübt (Mathe und Deutsch)</h4>`;
     return head+allTopicsOf(i).map(t=>{
       const st=s.stats[t],l=st&&st.last?st.last.slice(-MASTER_N):[],k=l.reduce((x,e)=>x+e.ok,0),an=answersOf(s,t),h=helpOf(s,t);
       helpN+=h.n;t1+=h.t1;t2+=h.t2;
       const pct=an.a?Math.round(an.c/an.a*100):0;
-      const mo=topicModeOf(s,t),tag=(isEng(t)?` (Stufe ${lvOf(s,t)})`:"")+(mo==="aktuell"?"":` (${TOPIC_MODE_LABELS[mo].toLowerCase()})`);
+      const mo=topicModeOf(s,t),tag=(isEng(t)?` (Stufe ${lvOf(s,t)})`:"")+(mo==="aktuell"?"":` (${TOPIC_MODE_LABELS[mo].toLowerCase()})`)+(frust.has(t)?` <em class="frust">Drei Fehler in Folge. Ist das schon im Unterricht dran?</em>`:"");
       return `<div class="trow ${topicDone(s,t)?"safe":""}"><span>${topicDone(s,t)?"✓ ":""}${esc(TOPICS[t])}${tag}</span><span>${l.length?`${k}/${l.length}`:"-"}</span><span>${an.a?`${an.c}/${an.a} (${pct}%)`:"-"}</span><span>${h.n||h.t1||h.t2?`${h.n}× · ${h.t1}/${h.t2}`:"-"}</span></div>`;
     }).join("");
   }).join("");

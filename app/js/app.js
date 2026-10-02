@@ -6,7 +6,7 @@ import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResuma
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -317,6 +317,7 @@ function setTask(T){
   G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;G.note="";
   G.pairs=T.type==="match"?T.left.map(()=>-1):null;G.msel=-1;G.sortA=T.type==="sort"?T.cards.map(()=>-1):null;G.ssel=-1;G.ord=[];
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
+  if(G.offerNext){G.offerNext=false;G.offer=true;G.offerDone=true;} // Frust-Bremse: der Trainer bietet einen Tipp an
   armIdle();
 }
 // Keine Aufgabe zweimal in einem Spiel (auch wenn sie zufällig gezogen wird): bis zu 40 neue Versuche, danach gilt die letzte.
@@ -324,7 +325,7 @@ function nextTask(){
   if(G.camp){setTask(G.tasks[G.i]);return;} // Trainingslager: die Aufgaben stehen fest
   let T,t;
   for(let tries=0;tries<40;tries++){
-    t=nextTopic(S(),G.pool,G.last);T=Object.assign({topic:t},GEN[t](levelOpts(t)));
+    t=nextTopic(S(),G.pool,G.last,Math.random,G.cool);T=Object.assign({topic:t},GEN[t](levelOpts(t)));
     if(!G.seen||!G.seen.has(keyOf(T)))break;
   }
   G.last=t;if(G.seen)G.seen.add(keyOf(T));
@@ -367,6 +368,7 @@ function answer(val){
   clearTimeout(idleT);
   G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=G.pen?{kind:ok?"goal":"saved",side:Math.random()<.5?-1:1}:pickShot(ok);G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
+  if(!G.camp&&strikeStep(G.strikes||(G.strikes={}),T.topic,ok)){(G.cool||(G.cool={}))[T.topic]=true;G.offerNext=true;} // Frust-Bremse: Thema seltener, nächste Aufgabe mit Tipp-Angebot
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.
   commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial||!!G.camp,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val),soft:!!T.late}));
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
