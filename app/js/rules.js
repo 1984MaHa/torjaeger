@@ -13,13 +13,14 @@ export function topicSafe(s,t){
   const l=st.last.slice(-MASTER_N);
   return l.length>=MASTER_N&&l.reduce((a,x)=>a+x.ok,0)>=MASTER_K;
 }
-// Themensteuerung der Eltern je Konto: aktuell (Vorgabe), wiederholen (seltener) oder aus (ausgeblendet).
+// Themensteuerung der Eltern je Konto: aktuell (Vorgabe), wiederholen (seltener), aus (ausgeblendet) oder schwerpunkt (ab 1.6.0: Sondertraining und im Mix etwa jede dritte Aufgabe).
 // Fächer (Mathe, Deutsch, Englisch, Sachkunde) schalten die Eltern je Konto ganz aus (settings.fachOff = {fach: true}). Die Einstellung je Thema bleibt dabei erhalten.
 export const fachOffOf=(s,f)=>{const o=s.settings&&s.settings.fachOff;return!!(f&&o&&typeof o==="object"&&!Array.isArray(o)&&o[f]===true);};
-export const topicRawMode=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"?v:"aktuell";};
+export const topicRawMode=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"||v==="schwerpunkt"?v:"aktuell";};
 // wirksame Steuerung: ein ausgeschaltetes Fach schaltet alle seine Themen aus
 export const topicModeOf=(s,t)=>fachOffOf(s,FACH_OF[t])?"aus":topicRawMode(s,t);
 export const topicOn=(s,t)=>topicModeOf(s,t)!=="aus";
+export const isFocus=(s,t)=>topicModeOf(s,t)==="schwerpunkt";
 export const activeTopics=(s,list)=>list.filter(t=>topicOn(s,t));
 // Themen, die für den Aufstieg zählen: nur Mathe und Deutsch, und nur die, die nicht "aus" sind.
 export const gateTopics=(s,i)=>activeTopics(s,topicsOf(i));
@@ -76,8 +77,11 @@ export function weightOf(s,t){
   if(LATE_IDS.includes(t))w*=.4; // Stoff vielleicht noch nicht gehabt: seltener
   return topicModeOf(s,t)==="wiederholen"?w*.35:w; // Wiederholen kommt seltener dran
 }
+export const FOCUS_SHARE=1/3;
 export function nextTopic(s,pool,last,rnd=Math.random){
   const on=activeTopics(s,pool);if(on.length)pool=on; // ausgeschaltete Themen kommen nie dran
+  const focus=pool.filter(t=>isFocus(s,t));
+  if(focus.length&&focus.length<pool.length&&rnd()<FOCUS_SHARE)pool=focus; // Schwerpunkt: etwa jede dritte Aufgabe
   let tot=0;const ws=pool.map(t=>{const w=weightOf(s,t)*(t===last?.3:1);tot+=w;return w;});
   let x=rnd()*tot;for(let i=0;i<pool.length;i++){x-=ws[i];if(x<=0)return pool[i];}
   return pool[pool.length-1];
@@ -165,6 +169,7 @@ export function applySettings(s,ctx,patch){
 // Themensteuerung (Eltern): topic = Thema, mode = aktuell, wiederholen oder aus. Gehört zu den Einstellungen (neuerer Stand gewinnt).
 export function applyTopicMode(s,ctx,topic,mode){
   if(!TOPIC_MODES.includes(mode)||!LIGEN.some((_,i)=>allTopicsOf(i).includes(topic)))return false;
+  if(mode==="schwerpunkt"&&!CAMPS[topic])return false; // Schwerpunkt nur für Mathe und Deutsch
   const m=Object.assign({},s.settings.topicMode);
   if(mode==="aktuell")delete m[topic];else m[topic]=mode;
   s.settings.topicMode=m;s.settings.t=ctx.now;touch(s,ctx);return true;
@@ -221,7 +226,8 @@ export const fixBonus=fixed=>fixed*BONUS_FIX;
 // Je Thema (camps.<Thema>): on/t (Schalter der Eltern), rs (Neustart), units (Ergebnis je Einheit), badge (Zeitpunkt des Abzeichens, 0 = noch nicht).
 // Einheit n ist abgeschlossen, wenn beide Halbzeiten im Ergebnis stehen. Einheit n+1 ist erst danach frei, ohne Mindestquote.
 const campRec=(s,topic)=>{if(!s.camps||typeof s.camps!=="object"||Array.isArray(s.camps))s.camps={};return s.camps[topic]||(s.camps[topic]=defaultCamp());};
-export const campOn=(s,topic)=>!!CAMPS[topic]&&campOf(s,topic).on===true;
+// Das Trainingslager steht bereit, wenn die Eltern es eingeschaltet haben (Teilen mit Rest) oder das Thema als Schwerpunkt markiert ist.
+export const campOn=(s,topic)=>!!CAMPS[topic]&&(campOf(s,topic).on===true||isFocus(s,topic));
 export const unitDone=(s,topic,n)=>{const u=campOf(s,topic).units[String(n)];return !!(u&&u.h1&&u.h2);};
 export const campDone=(s,topic)=>{let n=0;for(let k=1;k<=UNIT_COUNT(topic);k++)if(unitDone(s,topic,k))n++;return n;};
 // Frei ist die erste Einheit und jede, deren Vorgängerin abgeschlossen ist.

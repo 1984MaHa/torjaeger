@@ -30,11 +30,11 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 7 (Konto) und 4 (global), Version 1.5.5 an allen vier Stellen",()=>{
+test("Schema ist 7 (Konto) und 4 (global), Version 1.6.0 an allen vier Stellen",()=>{
   assert.equal(SCHEMA_VERSION,7);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.5"/);assert.match(sw,/VERSION = "1.5.5"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.5"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.5");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.0"/);assert.match(sw,/VERSION = "1.6.0"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.0"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.0");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{

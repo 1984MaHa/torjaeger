@@ -8,13 +8,14 @@ import {avatarSVG} from "./avatardraw.js";
 import {lookOf} from "./avatar.js";
 import {trainerPanelHTML} from "./avatarui.js";
 import {campAdminHTML} from "./campviews.js";
+import {CAMPS} from "./camp.js";
 
 export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings","Einstellungen"],["system","Sicherungen und System"]];
 export const ROUND_CHOICES=[6,8,10];
 export const TRIAL_CHOICES=[2,3,5,8];
 export const HINT_CHOICES=[[0,"Aus"],[20,"20 s"],[30,"30 s"],[45,"45 s"],[60,"60 s"],[90,"90 s"]];
 const MODE={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde",mix:"Mix",topic:"Päckchen",camp:"Trainingslager"};
-export const TOPIC_MODE_LABELS={aktuell:"Aktuell",wiederholen:"Wiederholen",aus:"Aus"};
+export const TOPIC_MODE_LABELS={aktuell:"Aktuell",wiederholen:"Wiederholen",aus:"Aus",schwerpunkt:"Schwerpunkt"};
 const modeLabel=h=>h.mode==="topic"&&h.topic&&TOPICS[h.topic]?`Päckchen: ${TOPICS[h.topic]}`:(MODE[h.mode]||h.mode);
 
 const pad=n=>String(n).padStart(2,"0");
@@ -112,14 +113,14 @@ function standTab(A){
 function topicControl(a){
   const s=a.state;
   const groups=LIGEN.map((L,i)=>{
-    const fach=f=>{const list=(L[f]||[]);return list.length?`<h5 class="gl3">${FACHER[f]}</h5>${list.map(t=>`<div class="setrow"><span>${esc(TOPICS[t])}</span>${seg("data-atopic",TOPIC_MODES.map(m=>[`${t}:${m}`,TOPIC_MODE_LABELS[m]]),`${t}:${topicRawMode(s,t)}`)}</div>`).join("")}`:"";};
+    const fach=f=>{const list=(L[f]||[]);return list.length?`<h5 class="gl3">${FACHER[f]}</h5>${list.map(t=>`<div class="setrow"><span>${esc(TOPICS[t])}</span>${seg("data-atopic",TOPIC_MODES.filter(m=>m!=="schwerpunkt"||CAMPS[t]).map(m=>[`${t}:${m}`,TOPIC_MODE_LABELS[m]]),`${t}:${topicRawMode(s,t)}`)}</div>`).join("")}`:"";};
     return `<h4 class="gl">${esc(L.name)} (${esc(L.klasse)})</h4>${["math","deu","eng","su"].map(fach).join("")}`;
   }).join("");
   const fachRows=["math","deu","eng","su"].map(f=>`<div class="setrow"><span>${FACHER[f]}</span>${seg("data-afach",[[`${f}:on`,"An"],[`${f}:off`,"Aus"]],`${f}:${fachOffOf(s,f)?"off":"on"}`)}</div>`).join("");
   return `<section class="panel"><h3>Fächer: ${esc(a.name)}</h3>
     <p class="note">Ein Fach auf Aus verschwindet für dieses Konto ganz: aus der Spielauswahl, dem Mix, den Listen und dem Aufstieg. Die Einstellungen der einzelnen Themen bleiben erhalten und gelten wieder, wenn das Fach auf An steht. So bleibt der Fokus bei dem, was gerade dran ist.</p>${fachRows}</section>
   <section class="panel"><h3>Themen im Unterricht: ${esc(a.name)}</h3>
-    <p class="note">Aktuell: kommt ganz normal dran. Wiederholen: kommt seltener dran. Aus: ist ausgeblendet. Für den Aufstieg zählen nur Mathe und Deutsch, und nur Themen, die nicht aus sind.</p>${groups}</section>`;
+    <p class="note">Aktuell: kommt ganz normal dran. Wiederholen: kommt seltener dran. Aus: ist ausgeblendet. Schwerpunkt (nur Mathe und Deutsch): bekommt ein eigenes Sondertraining auf der Startseite und kommt im Mix etwa bei jeder dritten Aufgabe dran. Für den Aufstieg zählen nur Mathe und Deutsch, und nur Themen, die nicht aus sind.</p>${groups}</section>`;
 }
 
 // ---------- Einstellungen ----------

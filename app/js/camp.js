@@ -4,10 +4,12 @@
 import {GEN,mk} from "./generators.js";
 import {packOf,keyOf} from "./check.js";
 import {R,pick,shuffle} from "./util.js";
+import {LIGEN,TOPICS} from "./content.js";
 
 export const HALF_LEN=10;   // Aufgaben je Halbzeit
 export const PEN_LEN=5;     // Schüsse im Elfmeterschießen
 export const CAMP_IDS=["m3_rest"];
+export const SPECIAL_CAMP="m3_rest"; // hat fünf besondere Einheiten und einen eigenen Schalter der Eltern
 
 // Beschreibung je Camp. units: 5 Einheiten, jede mit Titel, Kurztext und der Art ihrer Halbzeiten.
 export const CAMPS={
@@ -22,6 +24,17 @@ export const CAMPS={
     ]
   }
 };
+// Sondertraining (ab 1.6.0): Jedes Mathe- und Deutsch-Thema hat ein Trainingslager aus drei Einheiten mit Aufgaben aus dem eigenen Generator.
+// Es erscheint, sobald die Eltern das Thema als Schwerpunkt markieren (settings.topicMode.<Thema> = "schwerpunkt").
+const GENERIC_UNITS=[
+  {n:1,title:"Aufwärmen",text:"Aufgaben zum Einspielen. Nimm dir Zeit."},
+  {n:2,title:"Training",text:"Noch einmal Aufgaben zu diesem Thema."},
+  {n:3,title:"Spieltag",text:"Das große Spiel: zeig, was du kannst."}
+];
+LIGEN.forEach((L,li)=>L.math.concat(L.deu).forEach(t=>{
+  if(!CAMPS[t])CAMPS[t]={id:t,name:TOPICS[t],title:"Sondertraining: "+TOPICS[t],li,badge:"Trainings-Profi",units:GENERIC_UNITS.map(u=>Object.assign({},u)),generic:true};
+}));
+export const GENERIC_CAMP_IDS=Object.keys(CAMPS).filter(t=>CAMPS[t].generic);
 export const campOfTopic=t=>CAMPS[t]||null;
 export const unitOf=(topic,n)=>{const c=CAMPS[topic];return c&&c.units.find(u=>u.n===n)||null;};
 export const UNIT_COUNT=topic=>CAMPS[topic]?CAMPS[topic].units.length:0;
@@ -73,7 +86,8 @@ function sachTask(){
 }
 // Eine Aufgabe der Einheit n in Halbzeit half (1 oder 2).
 export function campTask(topic,n,half){
-  if(topic!=="m3_rest")throw new Error("Unbekanntes Trainingslager: "+topic);
+  if(!CAMPS[topic])throw new Error("Unbekanntes Trainingslager: "+topic);
+  if(CAMPS[topic].generic)return Object.assign({topic},GEN[topic]());
   let T;
   if(n===1)T=warmTask();
   else if(n===2)T=restUnitTask(5,50,half===1);

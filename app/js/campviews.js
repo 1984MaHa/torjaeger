@@ -1,6 +1,6 @@
 // Darstellung des Trainingslagers (ab 1.5.4): Kachel auf der Startseite, Halbzeitpause, Ergebnisse, Abschnitt im Eltern-Bereich.
 // Reine Darstellung, kennt weder Speicher noch Netz. Texte ohne Gedankenstriche.
-import {CAMPS,CAMP_IDS,halftimeSay,finalSay,penaltyScore,unitOf} from "./camp.js";
+import {CAMPS,SPECIAL_CAMP,halftimeSay,finalSay,penaltyScore,unitOf} from "./camp.js";
 import {campOf} from "./model.js";
 import {campOn,campDone,campNext,campBadge,unitDone,unitOpen} from "./rules.js";
 import {trainerSVG} from "./avatardraw.js";
@@ -14,7 +14,7 @@ export function unitResultText(rec){
 
 // ----- Startseite: die Kachel je eingeschaltetem Trainingslager -----
 export function campTilesHTML(s){
-  return CAMP_IDS.filter(t=>campOn(s,t)).map(t=>campTileHTML(s,t)).join("");
+  return Object.keys(CAMPS).filter(t=>campOn(s,t)).map(t=>campTileHTML(s,t)).join("");
 }
 function campTileHTML(s,t){
   const C=CAMPS[t],nU=C.units.length,done=campDone(s,t),next=campNext(s,t),badge=campBadge(s,t),cm=campOf(s,t),pct=Math.round(done/nU*100);
@@ -73,7 +73,7 @@ export function penaltyResultHTML(s,G,teamName){
 // ----- Eltern-Bereich: Einstellung und Fortschritt je Konto -----
 export function campAdminHTML(A,a,seg){
   const s=a.state;
-  return CAMP_IDS.map(t=>{
+  return Object.keys(CAMPS).filter(t=>t===SPECIAL_CAMP||campOn(s,t)).map(t=>{ // Teilen mit Rest immer, die übrigen nur als Schwerpunkt
     const C=CAMPS[t],cm=campOf(s,t),on=campOn(s,t),done=campDone(s,t),nU=C.units.length;
     const rows=C.units.map(u=>{
       const rec=cm.units[String(u.n)],d=unitDone(s,t,u.n);
@@ -81,8 +81,8 @@ export function campAdminHTML(A,a,seg){
     }).join("");
     const ask=`campreset:${a.id}:${t}`;
     return `<section class="panel"><h3>${esc(C.title)}: ${esc(a.name)}</h3>
-      <p class="note">Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Der Schalter gilt nur für dieses Konto. Auf der Startseite des Kontos erscheint eine eigene Kachel, solange er an ist.</p>
-      <div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on:${a.id}`,"An"],[`${t}:off:${a.id}`,"Aus"]],`${t}:${on?"on":"off"}:${a.id}`)}</div>
+      <p class="note">${C.generic?`Dieses Thema ist als Schwerpunkt markiert (Reiter Einstellungen, Themen). Das Sondertraining hat ${nU} Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Im Mix kommt das Thema außerdem etwa bei jeder dritten Aufgabe dran.`:`Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Der Schalter gilt nur für dieses Konto. Auf der Startseite des Kontos erscheint eine eigene Kachel, solange er an ist oder das Thema als Schwerpunkt markiert ist.`}</p>
+      ${C.generic?"":`<div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on:${a.id}`,"An"],[`${t}:off:${a.id}`,"Aus"]],`${t}:${on?"on":"off"}:${a.id}`)}</div>`}
       <p class="small">Fortschritt: ${done} von ${nU} Einheiten${campBadge(s,t)?`, Abzeichen ${esc(C.badge)} erreicht`:""}.</p>${rows}
       <div class="row"><button class="btn warn" data-aask="${esc(ask)}">Trainingslager neu starten</button></div>
       ${A.confirm===ask?`<div class="confirm"><p>Das Trainingslager von <b>${esc(a.name)}</b> wirklich neu starten? Alle Einheiten und das Abzeichen werden gelöscht. Schon verdiente Punkte und Sticker bleiben.</p><div class="row"><button class="btn warn" data-ado>Ja, neu starten</button><button class="btn ghost" data-acancel>Abbrechen</button></div></div>`:""}</section>`;

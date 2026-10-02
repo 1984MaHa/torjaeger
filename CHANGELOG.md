@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.6.0 (Sondertraining für jedes Thema, Schwerpunkt)
+- **Schwerpunkt:** Im Eltern-Bereich (Reiter Einstellungen, Themen) gibt es je Mathe- und Deutsch-Thema neben Aktuell, Wiederholen und Aus den Zustand **Schwerpunkt**. Mehrere Themen können Schwerpunkt sein. Für Englisch und Sachkunde gibt es ihn nicht.
+- **Sondertraining:** Für jedes Schwerpunkt-Thema erscheint auf der Startseite eine Kachel „Sondertraining: <Thema>“ mit drei Einheiten (Aufwärmen, Training, Spieltag). Jede Einheit hat zwei Halbzeiten zu je 10 Aufgaben mit Halbzeitpause, Abpfiff, Elfmeterschießen als Nachspielzeit, Sichern und Fortsetzen, Abzeichen „Trainings-Profi“ nach Einheit 3. Die Aufgaben kommen aus dem Generator des Themas, die Antworten zählen im Lernstand des Themas. Teilen mit Rest behält seine fünf besonderen Einheiten und seinen eigenen Schalter (die Kachel erscheint dort auch, wenn das Thema Schwerpunkt ist).
+- **Mix:** Schwerpunkt-Themen kommen im Mix und in den Fächern etwa bei jeder dritten Aufgabe dran (Zufall mit Wahrscheinlichkeit 1/3, danach normale Gewichtung unter den Schwerpunkt-Themen).
+- Kein Schemawechsel (bleibt 7): Der Wert liegt in `settings.topicMode.<Thema> = "schwerpunkt"`, der Fortschritt in `camps.<Thema>` wie bei Teilen mit Rest. Ältere App-Versionen behandeln „schwerpunkt“ wie „aktuell“. Version 1.6.0 an allen vier Stellen. Tests: `test/v160.test.mjs`.
+
 ## 1.5.5 (Fächer ganz ausschalten)
 - **Fächer-Schalter im Eltern-Bereich:** Reiter Einstellungen, Abschnitt „Fächer“ (je Konto): Mathe, Deutsch, Englisch und Sachkunde lassen sich einzeln auf Aus stellen. Ein ausgeschaltetes Fach verschwindet aus der Spielauswahl, dem Mix, den Themenlisten, der Trainerbank und dem Aufstieg (es blockiert ihn nicht). Ist kein Fach mehr an, steht ein freundlicher Hinweis da. Die Einstellungen der einzelnen Themen bleiben erhalten und gelten wieder, sobald das Fach auf An steht.
 - Kein Schemawechsel: Der Schalter liegt in `settings.fachOff` (`{deu: true}`), Zusammenführen wie die übrigen Einstellungen (neuerer Stand gewinnt). Version 1.5.5 an allen vier Stellen (neue Nummer, damit das iPad die neue Fassung sicher lädt).
