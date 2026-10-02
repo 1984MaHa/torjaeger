@@ -2,6 +2,16 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B2: Version 1.6.1 Themen-Zustände (Schema 8, Tag v1.6.1 lokal)
+- Neuer Zustand **zurueck** ("Zurückgestellt") je Thema, optional mit Datum (`settings.topicUntil.<Thema>`, ab dem Tag von selbst wieder aktuell). Zurückgestellte und ausgeschaltete Themen sind nicht im Spiel und blockieren den Aufstieg nicht. Zustände jetzt: aktuell, wiederholen, zurueck, aus, schwerpunkt.
+- **Neue Themen starten zurückgestellt** über `settings.topicSeen` (Liste bekannter Themen). Migration 7 nach 8 trägt die feste Liste `TOPICS_AT_8` ein, es wird also nichts zurückgestellt. Neue Konten tragen `ALL_TOPICS` ein. Stände ohne `topicSeen` stellen nie etwas zurück. Aktuell/Datum/anderer Zustand macht ein neues Thema bekannt.
+- Schema 7 nach 8, Fixture `state-v7.json` (Format 1.6.0), Mindeststruktur (`topicUntil` Objekt, `topicSeen` Liste, beide freiwillig). Zusammenführen: Teil der Einstellungen (neuerer Stand gewinnt), keine Änderung in merge.js nötig.
+- Entscheidung: Zustand heißt im Code `zurueck` (ohne Umlaut), Anzeige "Zurückgestellt". Ein Datum, das schon erreicht ist, ändert den gespeicherten Zustand nicht, es wirkt nur in der Anzeige und im Spiel (kein Schreiben ohne Eltern).
+- Wichtig für den Rollout: Ein Gerät mit App 1.6.0 (Schema 7) bekommt vom Server bei Schema 8 ein 409 "schema_too_old" und muss die App neu laden ("Jetzt laden"). Die Hinweise dafür gibt es seit 1.5.5.
+- Tests: 254 grün (10 neue in `test/v161.test.mjs`, die Schema-Tests auf 8 angehoben).
+- **Nicht ausgeführt:** Push, Merge nach main, Deploy.
+- Prüfliste iPad: Eltern-Bereich, Einstellungen, Themen: bei einem Thema "Zurückgestellt" wählen, das Datumsfeld erscheint; Thema ist weg aus Spiel und Liste; Datum auf gestern setzen: Thema ist wieder da. Alle bisherigen Themen müssen "Aktuell" (oder wie vorher) bleiben.
+
 ## Nachtrag B1: Version 1.6.0 Sondertraining (Commit siehe git log, Tag v1.6.0 lokal)
 - **Schwerpunkt** als vierter Themenmodus (`settings.topicMode.<Thema> = "schwerpunkt"`, nur Mathe und Deutsch). **Kein Schemawechsel** (bleibt 7); ältere App-Versionen lesen den Wert als "aktuell".
 - **Sondertraining:** 25 Mathe/Deutsch-Themen bekommen ein Trainingslager aus 3 Einheiten (Aufwärmen, Training, Spieltag), je 2 Halbzeiten zu 10 Aufgaben aus dem Generator des Themas, Elfmeterschießen, Sichern/Fortsetzen, Abzeichen "Trainings-Profi". Kachel nur bei Schwerpunkt. Teilen mit Rest behält 5 Einheiten und eigenen Schalter. Fortschritt in `camps.<Thema>` wie bisher.

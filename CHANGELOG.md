@@ -2,7 +2,7 @@
 
 ## 1.6.1 (Themen-Zustände, Schema 8)
 - **Neuer Zustand „Zurückgestellt“** je Thema (Eltern-Bereich, Einstellungen, Themen), freiwillig mit **Datum**: Ab diesem Tag ist das Thema von selbst wieder aktuell. Zurückgestellte Themen kommen nicht ins Spiel und blockieren den Aufstieg nicht (wie ausgeschaltete). Die Zustände sind jetzt: Aktuell, Wiederholen, Zurückgestellt, Aus, Schwerpunkt.
-- **Neue Themen starten zurückgestellt** (spätere App-Versionen): Das Konto merkt sich in `settings.topicSeen", welche Themen es kennt. Fehlt ein Thema dort, ist es neu. Die Eltern geben es mit Aktuell oder einem anderen Zustand frei. Bestehende Konten und neue Konten kennen alle heutigen Themen, bei ihnen ändert sich nichts.
+- **Neue Themen starten zurückgestellt** (spätere App-Versionen): Das Konto merkt sich in `settings.topicSeen`, welche Themen es kennt. Fehlt ein Thema dort, ist es neu. Die Eltern geben es mit Aktuell oder einem anderen Zustand frei. Bestehende Konten und neue Konten kennen alle heutigen Themen, bei ihnen ändert sich nichts.
 - **Schema 8** (global bleibt 4): Migration 7 nach 8 trägt `topicSeen` ein und ändert sonst nichts (Fixture `test/fixtures/state-v7.json`, Format 1.6.0). Schwerpunkt, Aus und Wiederholen aus 1.4.0 und 1.6.0 bleiben verlustfrei. Tests: `test/v161.test.mjs`. Version 1.6.1 an allen vier Stellen.
 
 ## 1.6.0 (Sondertraining für jedes Thema, Schwerpunkt)
