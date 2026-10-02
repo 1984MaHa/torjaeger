@@ -23,6 +23,9 @@ export function bandHTML(label){return label?`<div class="preview-band" role="st
 // Hinweis, wenn das lokale Speichern nicht klappt (kindgerecht, aber an die Eltern gerichtet). Nie still verlieren.
 export function saveWarnHTML(fail){return fail?`<div class="savewarn" role="alert"><b>Huch! Das Speichern klappt gerade nicht.</b> Bitte hol Mama oder Papa und mach die App noch nicht zu. Dein Spiel läuft weiter. Die App versucht es immer wieder.</div>`:"";}
 
+// Hinweis auf eine neue App-Version (Taste „Jetzt laden“). Steht auf der Startseite, in „Wer spielt?“ und im Eltern-Bereich.
+export function updateBannerHTML(ready){return ready?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"";}
+
 export {rightText,stickerHTML};
 
 export function boardHTML(s){
@@ -114,7 +117,7 @@ export function homeHTML(s,UI,env){
   const name=esc(s.profile.name);
   const packBanner=env.pack?`<section class="panel packresume" role="status"><h3>Päckchen weiterspielen?</h3><p class="note">Du hast ein Päckchen angefangen: <b>${TOPICS[env.pack.topic]}</b>${env.pack.phase==="check"?" (alle Aufgaben sind eingetragen, es fehlt nur noch der Kontroll-Pfiff)":` (${env.pack.done} von ${env.pack.len} Aufgaben sind eingetragen)`}.</p><div class="row"><button class="btn" id="packResume">Weiterspielen</button><button class="btn ghost" id="packDrop">Neu anfangen</button></div></section>`:"";
   const campBanner=campResumeHTML(env.camp);
-  return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+packBanner+campBanner+`
+  return updateBannerHTML(env.updateReady)+boardHTML(s)+packBanner+campBanner+`
   <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="teamline">${esc(teamOf(s))}</p><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
   ${campTilesHTML(s)}

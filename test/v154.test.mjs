@@ -407,3 +407,14 @@ test("Fach-Schalter wird beim Zusammenführen wie die Einstellungen behandelt (n
   assert.deepEqual(m.settings.fachOff,{deu:true});assert.equal(canon(m.settings),canon(m2.settings));
   assert.equal(checkProfileState(m),null);
 });
+
+test("Hinweis „Jetzt laden“: eigener Baustein, app.js zeichnet ihn auf Startseite, Wer spielt? und im Eltern-Bereich",async()=>{
+  const {updateBannerHTML}=await import("../app/js/views.js");
+  assert.ok(updateBannerHTML(true).includes('id="upd"')&&updateBannerHTML(true).includes("Jetzt laden"));
+  assert.equal(updateBannerHTML(false),"");
+  const app=fs.readFileSync(path.join(ROOT,"app/js/app.js"),"utf8");
+  assert.ok(/view==="accounts"\|\|view==="admin"\?updateBannerHTML\(UI\.updateReady\)/.test(app),"Banner in Wer spielt? und Eltern-Bereich");
+  assert.ok(app.includes("renderIfIdle()"),"neu zeichnen, sobald eine neue Version bereit ist");
+  const home=homeHTML(newProfile({id:"k-abc12345",name:"X",deviceId:"d"}),{},env({updateReady:true}));
+  assert.equal([...home.matchAll(/id="upd"/g)].length,1,"auf der Startseite genau einmal");
+});

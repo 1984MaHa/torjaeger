@@ -18,7 +18,7 @@ import {cleanLook,cleanTrainer,lookOf,withKit,withPreset,defaultTrainer,defaultT
 import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
-import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML} from "./views.js";
+import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML,updateBannerHTML} from "./views.js";
 import {APP_VERSION} from "./version.js";
 
 const root=document.getElementById("app");
@@ -263,18 +263,20 @@ function syncText(){
   return when+(dirty?" (Änderungen werden gleich gesendet)":"");
 }
 window.addEventListener("online",()=>scheduleSync(300));
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")scheduleSync(300);else if(view==="play")saveGame();});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){scheduleSync(300);if(swReg)swReg.update().catch(()=>{});}else if(view==="play")saveGame();});
 window.addEventListener("pagehide",()=>{if(view==="play")saveGame();});
 setInterval(()=>{if(document.visibilityState==="visible")syncNow();},60000);
 
 // ================= Service Worker und Updates =================
 let swReg=null;
+// Neu zeichnen, wenn gerade keine Eingabe läuft und keine Aufgabe offen ist (Startseite, Wer spielt?, Eltern-Bereich)
+function renderIfIdle(){const typing=document.activeElement&&document.activeElement.tagName==="INPUT";if(!typing&&!UI.fatal&&["home","accounts","admin"].includes(view))render();}
 async function initSW(){
   if(!("serviceWorker" in navigator))return;
   try{
     swReg=await navigator.serviceWorker.register("/sw.js");
-    const watch=w=>w&&w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller){UI.updateReady=true;if(view==="home")render();}});
-    if(swReg.waiting&&navigator.serviceWorker.controller)UI.updateReady=true;
+    const watch=w=>w&&w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller){UI.updateReady=true;renderIfIdle();}});
+    if(swReg.waiting&&navigator.serviceWorker.controller){UI.updateReady=true;renderIfIdle();}
     swReg.addEventListener("updatefound",()=>watch(swReg.installing));
     watch(swReg.installing);
   }catch(e){console.warn("Service Worker:",e);}
@@ -460,7 +462,7 @@ function campInfo(){
 }
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
-  root.innerHTML=bandHTML(UI.preview)+saveWarnHTML(UI.saveFail)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
+  root.innerHTML=bandHTML(UI.preview)+saveWarnHTML(UI.saveFail)+(view==="accounts"||view==="admin"?updateBannerHTML(UI.updateReady):"")+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
     :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):resultHTML(S(),G,UI));
   bind();
 }

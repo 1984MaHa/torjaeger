@@ -3,7 +3,8 @@
 ## 1.5.5 (Fächer ganz ausschalten)
 - **Fächer-Schalter im Eltern-Bereich:** Reiter Einstellungen, Abschnitt „Fächer“ (je Konto): Mathe, Deutsch, Englisch und Sachkunde lassen sich einzeln auf Aus stellen. Ein ausgeschaltetes Fach verschwindet aus der Spielauswahl, dem Mix, den Themenlisten, der Trainerbank und dem Aufstieg (es blockiert ihn nicht). Ist kein Fach mehr an, steht ein freundlicher Hinweis da. Die Einstellungen der einzelnen Themen bleiben erhalten und gelten wieder, sobald das Fach auf An steht.
 - Kein Schemawechsel: Der Schalter liegt in `settings.fachOff` (`{deu: true}`), Zusammenführen wie die übrigen Einstellungen (neuerer Stand gewinnt). Version 1.5.5 an allen vier Stellen (neue Nummer, damit das iPad die neue Fassung sicher lädt).
-- Tests: 4 neue in `test/v154.test.mjs`.
+- **Hinweis „Jetzt laden“** erscheint jetzt auch in „Wer spielt?“ und im Eltern-Bereich, nicht nur auf der Startseite eines Kontos. Die App fragt beim Zurückkehren nach einer neuen Version (`swReg.update()`) und zeichnet den Hinweis sofort, wenn gerade nichts getippt wird.
+- Tests: 5 neue in `test/v154.test.mjs`.
 
 ## 1.5.4 (Vorschau: Trainingslager „Teilen mit Rest“)
 Vorgezogener erster Baustein des Sondertrainings aus 1.6.0, zugeschnitten auf ein Thema, aber je Thema aufgebaut (`camps: { m3_rest: ... }`, `CAMPS` in `camp.js`). Leitbild: Freude am Lernen und Wiederholen vor Perfektion.
