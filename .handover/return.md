@@ -2,6 +2,15 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B1: Version 1.6.0 Sondertraining (Commit siehe git log, Tag v1.6.0 lokal)
+- **Schwerpunkt** als vierter Themenmodus (`settings.topicMode.<Thema> = "schwerpunkt"`, nur Mathe und Deutsch). **Kein Schemawechsel** (bleibt 7); ältere App-Versionen lesen den Wert als "aktuell".
+- **Sondertraining:** 25 Mathe/Deutsch-Themen bekommen ein Trainingslager aus 3 Einheiten (Aufwärmen, Training, Spieltag), je 2 Halbzeiten zu 10 Aufgaben aus dem Generator des Themas, Elfmeterschießen, Sichern/Fortsetzen, Abzeichen "Trainings-Profi". Kachel nur bei Schwerpunkt. Teilen mit Rest behält 5 Einheiten und eigenen Schalter. Fortschritt in `camps.<Thema>` wie bisher.
+- **Mix:** Schwerpunkt-Themen kommen mit Wahrscheinlichkeit 1/3 vorrangig dran (`nextTopic`, `FOCUS_SHARE`).
+- Entscheidung: 3 statt 5 Einheiten, weil die Generatoren keine Stufen haben (Schwierigkeit steigt nicht, bekannte Grenze). Keine Pause-/Torwart-Änderungen.
+- Tests: 244 grün (7 neue in `test/v160.test.mjs`).
+- **Nicht ausgeführt:** Push, Merge nach main, Deploy. main und origin stehen weiter bei e0cd3e5.
+- Prüfliste iPad: Eltern-Bereich, Einstellungen, bei Emil ein Mathe-Thema auf "Schwerpunkt" stellen; Startseite zeigt "Sondertraining: <Thema>"; Einheit 1 spielen (Halbzeitpause, Abpfiff, Elfmeterschießen); im Mix kommt das Thema deutlich öfter; Schwerpunkt wieder auf "Aktuell": Kachel weg, Fortschritt bleibt.
+
 ## Nachtrag 02.10.2026: Version 1.5.5 und e0cd3e5 (kamen ohne eigene Rückübergabe)
 - **750e247, 1.5.5 "Fächer je Konto ganz ausschalten":** Im Eltern-Bereich (Reiter Einstellungen, Abschnitt "Fächer") lassen sich Mathe, Deutsch, Englisch und Sachkunde je Konto einzeln ausschalten. Ein ausgeschaltetes Fach verschwindet aus Spielauswahl, Mix, Themenlisten, Trainerbank und Aufstieg und blockiert den Aufstieg nicht. Ist kein Fach an, erscheint ein freundlicher Hinweis. Themeneinstellungen bleiben erhalten. **Kein Schemawechsel:** `settings.fachOff` (`{deu: true}`), Zusammenführen wie übrige Einstellungen (neuerer Stand gewinnt). Version an allen vier Stellen auf 1.5.5. Geändert: admin.js, app.js, content.js, rules.js, views.js.
 - **e0cd3e5 "Hinweis Jetzt laden auch in Wer spielt und im Eltern-Bereich":** Der Hinweis auf eine neue App-Version erscheint jetzt auch in "Wer spielt?" und im Eltern-Bereich, nicht nur auf der Startseite. Die App fragt beim Zurückkehren nach einer neuen Version (`swReg.update()`) und zeichnet den Hinweis sofort, wenn gerade nichts getippt wird. Grund: das iPad lud neue Fassungen nicht zuverlässig.
