@@ -15,7 +15,7 @@ export const CAMPS={
     id:"m3_rest",name:"Teilen mit Rest",title:"Trainingslager: Teilen mit Rest",li:1,badge:"Rest-Profi",
     units:[
       {n:1,title:"Aufwärmen",text:"Einmaleins rückwärts und Teilen ohne Rest."},
-      {n:2,title:"Erste Reste",text:"Teilen mit Rest mit 2 bis 5, erst mit Bällen, dann ohne Bilder."},
+      {n:2,title:"Erste Reste",text:"Teilen mit Rest mit 2 bis 5, ohne Bilder, die Rechnung muss im Kopf klappen."},
       {n:3,title:"Alle Reihen",text:"Teilen mit Rest mit 2 bis 9. Achte auf den Rest."},
       {n:4,title:"Kontroll-Pfiff",text:"Zwei Päckchen. Kontrolliere jedes mit der Probe."},
       {n:5,title:"Spieltag",text:"Sachaufgaben mit Rest: Busse, Netze, Kabinen, Mannschaften."}
@@ -34,7 +34,6 @@ export const halfLenOf=(topic,n)=>isPackUnit(topic,n)?6:HALF_LEN;
 const restTask=(a,b,pic)=>{
   const T=mk.rest(a,b),q=Math.floor(a/b),r=a%b;
   T.ex=r?`${b} · ${q} = ${b*q}, ${a} − ${b*q} = ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`:`${b} · ${q} = ${a}, es bleibt nichts übrig. Also ${a} : ${b} = ${q} Rest 0.`;
-  if(!pic)delete T.vis;
   return T;
 };
 // Päckchen-Aufgabe mit dem Rechenweg in der Erklärung (die Aufgabe selbst bleibt, wie sie ist)

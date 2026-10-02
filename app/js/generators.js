@@ -29,7 +29,7 @@ export const SPELL_LISTS={IE,VERL,DOPPEL,ieGap};
 // Bausteine für Aufgaben, die auch als Päckchen (check.js) vorkommen. inv: Gegenaufgabe für die Probe (check.js).
 export const mk={
   rest(a,b){const q=Math.floor(a/b),r=a%b;
-    return{type:"pair",q:`${a} : ${b} = ? <mark>Rest</mark> ?`,vis:groupsSVG(a,b),a:[q,r],labels:["Ergebnis","Rest"],inv:{op:"rest",y:b},
+    return{type:"pair",q:`${a} : ${b} = ? <mark>Rest</mark> ?`,a:[q,r],labels:["Ergebnis","Rest"],inv:{op:"rest",y:b},
       ex:`${q} · ${b} = ${q*b}. Bis ${a} fehlen noch ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`,hint:`Suche die größte Zahl aus der ${b}er-Reihe, die in ${a} passt. Der Rest muss kleiner als ${b} sein.`};},
   einmaleins(a,b,div){
     if(!div)return{type:"num",q:`${a} · ${b} = ?`,a:a*b,inv:{op:"*",y:b},ex:`${a} · ${b} = ${a*b}. Tipp: ${a} · ${b} ist dasselbe wie ${b} · ${a}.`};

@@ -176,11 +176,10 @@ test("Ende zu Ende 1.5.4: Trainingslager von den Eltern bis zum Elfmeterschieße
     for(const u of [2,3]){
       await clickData("camp","m3_rest:"+u);
       await until(()=>has(`Einheit ${u} · 1. Halbzeit · Aufgabe 1 von 10`),"Einheit "+u);
-      if(u===2)assert.ok(has('class="vis"'),"Einheit 2, 1. Halbzeit mit Ballbildern");
+      assert.ok(!has('class="vis"'),"keine Punktebilder, sie verraten die Lösung");
       await playTasks(1,10,10,u===3?[1]:[],{expectNote:u===3});
       await until(()=>has("Halbzeitpause!"),"Pause "+u);await clickId("halfGo");
       await until(()=>has(`Einheit ${u} · 2. Halbzeit · Aufgabe 1 von 10`),"2. Halbzeit "+u);
-      if(u===2)assert.ok(!has('class="vis"'),"Einheit 2, 2. Halbzeit ohne Bilder");
       await playTasks(1,10,10,[]);
       await until(()=>has('id="penGo"'),"Ergebnis "+u);
       await clickId("home");await until(()=>has("Hallo Emil"),"Kabine "+u);

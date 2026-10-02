@@ -90,12 +90,11 @@ test("Einheit 1: Einmaleins rückwärts und Teilen ohne Rest, Teiler 2 bis 5",()
   }
   assert.deepEqual([...seenB].sort(),[2,3,4,5]);
 });
-test("Einheit 2: Rest kleiner als Teiler, Teiler 2 bis 5, bis 50, Bilder nur in der 1. Halbzeit",()=>{
+test("Einheit 2: Rest kleiner als Teiler, Teiler 2 bis 5, bis 50, keine Punktebilder",()=>{
   for(let n=0;n<150;n++)for(const half of [1,2])for(const T of campHalf(TOP,2,half)){
     const [a,b]=nums(T.q),q=Math.floor(a/b),r=a%b;
     assert.ok(b>=2&&b<=5&&a<=50&&a>b,T.q);assert.deepEqual(T.a,[q,r]);assert.ok(r<b);
-    assert.equal(!!T.vis,half===1,"Bilder nur in der 1. Halbzeit");
-    if(half===1)assert.ok(T.vis.includes(`${a} Punkte`));
+    assert.ok(!T.vis,"Punktebilder verraten die Lösung");
     assert.ok(T.ex.includes(`${b} · ${q} = ${b*q}`)&&T.ex.includes(`${a} − ${b*q} = ${r}`)||r===0,T.ex);
     assert.ok(probeHTML(T,T.a).includes(`${b} · ${q} + ${r} = ?`),"Probe stimmt");
     noLeak(T,T.q);
