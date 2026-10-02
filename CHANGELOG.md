@@ -1,5 +1,25 @@
 # Änderungen
 
+## 1.5.4 (Vorschau: Trainingslager „Teilen mit Rest“)
+Vorgezogener erster Baustein des Sondertrainings aus 1.6.0, zugeschnitten auf ein Thema, aber je Thema aufgebaut (`camps: { m3_rest: ... }`, `CAMPS` in `camp.js`). Leitbild: Freude am Lernen und Wiederholen vor Perfektion.
+
+### Neu
+- **Kachel „Trainingslager: Teilen mit Rest“** oben auf der Startseite (nur wenn die Eltern es einschalten, Standard aus) mit Fortschritt (x von 5 Einheiten) und Abzeichen „Rest-Profi“. Die nächste Einheit ist frei, sobald die vorige zu Ende gespielt ist (keine Mindestquote), fertige Einheiten lassen sich wiederholen.
+- **Eine Einheit = zwei Halbzeiten** zu je 10 Aufgaben mit Halbzeitpause (Zwischenstand, Trainer-Satz, „2. Halbzeit anpfeifen“), Abpfiff mit Ergebnis und Bonus wie bei normalen Runden, danach **Nachspielzeit**.
+- **Fünf Einheiten:** 1 Aufwärmen (Einmaleins rückwärts, Teilen ohne Rest, Teiler 2 bis 5), 2 Erste Reste (Teiler 2 bis 5, bis 50, Ballbilder in der 1. Halbzeit), 3 Alle Reihen (Teiler 2 bis 9, bis 90, freundliche Rückmeldung „Da passt noch einer rein!“, wenn der Rest zu groß ist), 4 Kontroll-Pfiff (je Halbzeit ein Päckchen mit 6 Aufgaben und Probe), 5 Spieltag (Sachaufgaben mit Rest: Busse, Kabinen, Netze, Mannschaften, Kästen; Aufrunden oder Abrunden steht eindeutig im Text). Die Erklärung nennt den Rechenweg (5 · 3 = 15, 17 − 15 = 2).
+- **Elfmeterschießen** (Mini-Spiel, wiederverwendbar mit einer Liste von Aufgaben): 5 Schüsse, richtig = Tor, falsch = der Torwart hält („Gehalten!“), Ergebnis wie 4 : 1. Neue Torszene mit Torwart (`sceneSVG` mit `keeper`), mit `prefers-reduced-motion` steht die Endpose. Das Elfmeterschießen kommt nur nach dem Abpfiff der Einheit.
+- **Sichern und Fortsetzen:** Ein laufendes Spiel (Halbzeit, Halbzeitpause, Kontroll-Pfiff, Elfmeterschießen) liegt auf dem Gerät (`camp:<Konto>`, nicht im Spielstand) und wird bei jeder Antwort, bei „Kabine“ und im Hintergrund gesichert. In der Kabine: „Weiterspielen“ oder „Neu anfangen“.
+- **Eltern-Bereich:** Schalter je Konto, Fortschritt je Einheit (Ergebnis je Halbzeit und Elfmeterschießen), „Trainingslager neu starten“ mit Rückfrage. Im Verlauf heißt der Modus „Trainingslager“.
+
+### Datenmodell (Schemaversion 7, global 4)
+- Neu: `camps.<Thema>` = `{on, t, rs, units: {"1": {h1:{c,n}, h2:{c,n}, pen?:{c,n}, t, runs}}, badge}`. Migration 6 nach 7 ergänzt `camps: {}`, alles andere bleibt (Test mit Fixture `state-v6.json` im Format 1.5.3). Mindeststruktur: `camps` ist freiwillig, wenn vorhanden ein Objekt (je Thema ein Objekt, `units` ein Objekt), unbekannte Felder bleiben erlaubt.
+- Zusammenführen: Schalter der neuere Stand (`t`), Neustart (`rs`) gewinnt vollständig, sonst je Einheit der neuere Stand, Abzeichen der frühere Zeitpunkt.
+- Zurücksetzen des Kontos löscht den Fortschritt, der Schalter bleibt. Die Antworten im Trainingslager verbrauchen kein Probetraining.
+
+### Technik
+- Neue Dateien `js/camp.js` (Inhalt, Generatoren, Sichern) und `js/campviews.js` (Darstellung), beide in `FILES` des Service Workers. Version 1.5.4 an allen vier Stellen.
+- Neue Tests: `test/v154.test.mjs` (28) und `test/v154-e2e.test.mjs` (Ende zu Ende mit Eltern-Bereich, Halbzeitpause, Fortsetzen, Elfmeterschießen, Einheit 4, Abzeichen, Neustart). Ältere Tests auf Schema 7 und Version 1.5.4 angepasst.
+
 ## 1.5.3 (Vorschau: Korrekturen nach der Bewertung vom 01.10.2026)
 Leitbild: Freude am Lernen und Wiederholen, nah am Lehrplan, ohne didaktischen Umbau. Gezielte Korrekturen, der Spielfluss bleibt. Kein Schemawechsel (Konto 6, global 4), Updates setzen keinen Stand zurück. Jede Korrektur hat einen Regressionstest (neue Dateien `test/v153*.test.mjs`).
 

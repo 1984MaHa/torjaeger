@@ -7,12 +7,13 @@ import {esc} from "./util.js";
 import {avatarSVG} from "./avatardraw.js";
 import {lookOf} from "./avatar.js";
 import {trainerPanelHTML} from "./avatarui.js";
+import {campAdminHTML} from "./campviews.js";
 
 export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings","Einstellungen"],["system","Sicherungen und System"]];
 export const ROUND_CHOICES=[6,8,10];
 export const TRIAL_CHOICES=[2,3,5,8];
 export const HINT_CHOICES=[[0,"Aus"],[20,"20 s"],[30,"30 s"],[45,"45 s"],[60,"60 s"],[90,"90 s"]];
-const MODE={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde",mix:"Mix",topic:"Päckchen"};
+const MODE={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde",mix:"Mix",topic:"Päckchen",camp:"Trainingslager"};
 export const TOPIC_MODE_LABELS={aktuell:"Aktuell",wiederholen:"Wiederholen",aus:"Aus"};
 const modeLabel=h=>h.mode==="topic"&&h.topic&&TOPICS[h.topic]?`Päckchen: ${TOPICS[h.topic]}`:(MODE[h.mode]||h.mode);
 
@@ -129,7 +130,7 @@ function settingsTab(A){
     <div class="setrow"><span>Tipp-Zeit: der Trainer meldet sich nach</span>${seg("data-aset",HINT_CHOICES.map(([n,l])=>[`hintAfter:${n}`,l]),`hintAfter:${st.hintAfter}`)}</div>
     <p class="small">Die Tipp-Zeit gilt, wenn bei einer Aufgabe so lange nichts angetippt wird. „Aus“ heißt: Der Trainer meldet sich nicht von selbst. Die Hilfe-Taste bleibt immer da.</p></section>`
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
-  const topics=a?topicControl(a):"";
+  const topics=a?campAdminHTML(A,a,seg)+topicControl(a):"";
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
   return `${acct}${topics}${trainerPanelHTML(A.tr1,1)}${trainerPanelHTML(A.tr2,2)}${pin}`;

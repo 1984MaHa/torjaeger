@@ -239,5 +239,5 @@ test("Geräteliste: Server führt Kennung, Art und zuletzt gesehen, Name änderb
 
 test("/api/config nennt Server- und Schemaversion",async()=>{
   const c=(await api(S.base,"GET","/api/config")).json;
-  assert.equal(c.schemaVersion,6);assert.equal(c.globalSchemaVersion,4);assert.match(c.serverVersion,/^\d+\.\d+\.\d+$/);
+  assert.equal(c.schemaVersion,7);assert.equal(c.globalSchemaVersion,4);assert.match(c.serverVersion,/^\d+\.\d+\.\d+$/);
 });

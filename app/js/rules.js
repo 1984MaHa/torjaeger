@@ -2,7 +2,8 @@
 // Alles reine Funktionen auf dem Stand `s` (kein DOM), damit sie getestet werden können.
 // Änderungen laufen über die apply*-Funktionen mit ctx = {deviceId, now}.
 import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,LATE_IDS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
-import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf} from "./model.js";
+import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf,campOf,defaultCamp} from "./model.js";
+import {CAMPS,UNIT_COUNT} from "./camp.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
 import {todayKey} from "./util.js";
 
@@ -205,6 +206,49 @@ export function applyControl(s,ctx,{topic,probes=0,fixed=0,bonus=0}){
 }
 export const fixBonus=fixed=>fixed*BONUS_FIX;
 
+// ---------- Trainingslager (ab 1.5.4) ----------
+// Je Thema (camps.<Thema>): on/t (Schalter der Eltern), rs (Neustart), units (Ergebnis je Einheit), badge (Zeitpunkt des Abzeichens, 0 = noch nicht).
+// Einheit n ist abgeschlossen, wenn beide Halbzeiten im Ergebnis stehen. Einheit n+1 ist erst danach frei, ohne Mindestquote.
+const campRec=(s,topic)=>{if(!s.camps||typeof s.camps!=="object"||Array.isArray(s.camps))s.camps={};return s.camps[topic]||(s.camps[topic]=defaultCamp());};
+export const campOn=(s,topic)=>!!CAMPS[topic]&&campOf(s,topic).on===true;
+export const unitDone=(s,topic,n)=>{const u=campOf(s,topic).units[String(n)];return !!(u&&u.h1&&u.h2);};
+export const campDone=(s,topic)=>{let n=0;for(let k=1;k<=UNIT_COUNT(topic);k++)if(unitDone(s,topic,k))n++;return n;};
+// Frei ist die erste Einheit und jede, deren Vorgängerin abgeschlossen ist.
+export const unitOpen=(s,topic,n)=>n>=1&&n<=UNIT_COUNT(topic)&&(n===1||unitDone(s,topic,n-1));
+export const campNext=(s,topic)=>{for(let k=1;k<=UNIT_COUNT(topic);k++)if(!unitDone(s,topic,k))return k;return 0;}; // 0 = alle geschafft
+export const campBadge=(s,topic)=>campOf(s,topic).badge>0;
+export function applyCampOn(s,ctx,topic,on){
+  if(!CAMPS[topic])return false;
+  const c=campRec(s,topic);c.on=!!on;c.t=ctx.now;touch(s,ctx);return true;
+}
+// Eine Einheit ist zu Ende (Abpfiff): Ergebnis beider Halbzeiten {c, n}. Beim ersten Abschluss der letzten Einheit gibt es das Abzeichen
+// und, falls noch ein Sticker fehlt, einen Jubel-Sticker. Gibt {badgeNew, sticker} zurück (sticker = Nummer oder null).
+export function applyCampUnit(s,ctx,{topic,unit,h1,h2}){
+  if(!CAMPS[topic]||!Number.isInteger(unit)||unit<1||unit>UNIT_COUNT(topic))return{badgeNew:false,sticker:null};
+  const c=campRec(s,topic),prev=c.units[String(unit)]||{};
+  const half=h=>({c:Math.max(0,h.c|0),n:Math.max(0,h.n|0)});
+  c.units[String(unit)]={h1:half(h1),h2:half(h2),t:ctx.now,runs:(prev.runs||0)+1};
+  let badgeNew=false,sticker=null;
+  if(campDone(s,topic)===UNIT_COUNT(topic)&&!(c.badge>0)){
+    c.badge=ctx.now;badgeNew=true;
+    if(total(s,"stickers")<STICKERS.length){sticker=total(s,"stickers");devOf(s,ctx.deviceId).stickers++;}
+  }
+  touch(s,ctx);
+  return{badgeNew,sticker};
+}
+// Nachspielzeit (Elfmeterschießen) einer abgeschlossenen Einheit: Tore c von n Schüssen.
+export function applyCampPen(s,ctx,{topic,unit,c,n}){
+  const u=s.camps&&s.camps[topic]&&s.camps[topic].units&&s.camps[topic].units[String(unit)];
+  if(!u)return false;
+  u.pen={c:Math.max(0,c|0),n:Math.max(0,n|0)};u.t=ctx.now;touch(s,ctx);return true;
+}
+// Trainingslager neu starten (Eltern): Einheiten und Abzeichen werden gelöscht, der Schalter bleibt. rs sorgt dafür, dass der Neustart auf allen Geräten gewinnt.
+// Bereits vergebene Punkte und Sticker bleiben (sie stehen in den Zählern).
+export function applyCampReset(s,ctx,topic){
+  if(!CAMPS[topic])return false;
+  const c=campRec(s,topic);c.units={};c.badge=0;c.rs=ctx.now;touch(s,ctx);return true;
+}
+
 // Zurücksetzen: Spielstand leer, Name und Einstellungen bleiben. resetAt sorgt dafür, dass der leere
 // Stand auf allen Geräten gewinnt (siehe merge.js).
 export function applyReset(s,ctx){
@@ -213,5 +257,7 @@ export function applyReset(s,ctx){
   fresh.settings=s.settings;
   fresh.profile.avatar=s.profile.avatar||null;fresh.profile.avatarAsked=!!s.profile.avatarAsked; // Aussehen bleibt
   if(s.profile.pin)fresh.profile.pin=s.profile.pin; // PIN des Kindes bleibt
+  // Trainingslager: der Schalter der Eltern bleibt, der Fortschritt geht mit dem Spielstand (rs trägt das Zurücksetzen)
+  if(s.camps&&typeof s.camps==="object"&&!Array.isArray(s.camps))for(const k in s.camps){const o=s.camps[k]||{};fresh.camps[k]=Object.assign({},o,{units:{},badge:0,rs:ctx.now});}
   return fresh;
 }

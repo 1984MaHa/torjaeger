@@ -2,10 +2,11 @@
 import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng} from "./content.js";
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
+import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume} from "./camp.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -26,7 +27,7 @@ let globalRec;                 // {state:{pin,...}, baseRev, dirty, lastSync}
 let accounts=[];               // [{id,name}]
 let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null;
-const UI={saveFail:false,savedPack:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
+const UI={saveFail:false,savedPack:null,savedCamp:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
 const S=()=>cur.rec.state;
 
@@ -82,6 +83,7 @@ async function useAccount(id,unlocked=false){
   UI.pinAsk=null;
   cur={rec:a.rec};await store.put("current",id);
   await loadSavedPack();
+  await loadSavedCamp();
   view="home";UI.parent=false;UI.pinMsg="";UI.celebrate="";
   if(!maybeOfferAvatar())render();
   scheduleSync(0);
@@ -109,6 +111,85 @@ function resumePack(){
   setTask(G.tasks[G.phase==="solve"?G.i:0]);
   view="play";UI.fach=null;render();window.scrollTo(0,0);
   if(G.phase==="solve")armIdle();
+}
+// ----- Trainingslager (ab 1.5.4): Spiel starten, sichern, fortsetzen -----
+// Eine Einheit: 1. Halbzeit, Halbzeitpause, 2. Halbzeit, Abpfiff, danach als Belohnung das Elfmeterschießen. Ein laufendes Spiel liegt nur auf dem Gerät.
+const campKey=id=>"camp:"+id;
+async function loadSavedCamp(){
+  UI.savedCamp=null;if(!cur)return;
+  let snap=null;try{snap=await store.get(campKey(cur.rec.id));}catch(e){}
+  if(!snap)return;
+  const live=campResumable(snap)&&campOn(S(),snap.topic)&&(snap.pen?unitDone(S(),snap.topic,snap.unit):unitOpen(S(),snap.topic,snap.unit));
+  if(live)UI.savedCamp=snap;else await store.del(campKey(cur.rec.id));
+}
+function saveCamp(){
+  if(!cur||!G||!G.camp)return;
+  const snap=campSnapshot(G);
+  if(snap){UI.savedCamp=snap;store.put(campKey(cur.rec.id),snap);}
+}
+function dropCamp(){UI.savedCamp=null;if(cur)store.del(campKey(cur.rec.id));}
+const saveGame=()=>{if(G&&G.camp)saveCamp();else savePack();};
+// Aufgaben und Zähler einer Halbzeit (Einheit 4 spielt ein Päckchen mit Kontroll-Pfiff, sonst einzelne Aufgaben mit Sofort-Rückmeldung)
+function segFields(tasks,pack){
+  const base={tasks,len:tasks.length,i:0,res:[],hist:[],pts:0,streak:0,pack};
+  return pack?Object.assign(base,{phase:"solve",ans:[],finals:[],helps:[],probeOpen:{},probed:{},ei:0,grade:null,checked:false}):base;
+}
+function startCamp(topic,unit){
+  if(!CAMPS[topic]||!campOn(S(),topic)||!unitOpen(S(),topic,unit))return;
+  dropCamp();
+  const sets=campUnit(topic,unit),pack=isPackUnit(topic,unit);
+  G=Object.assign({li:CAMPS[topic].li,mode:"camp",trial:false,topic,pool:[topic],last:null,seen:null,rival:pick(RIVALS),t0:Date.now(),
+    camp:{topic,unit,half:1,halves:[],rec:false,brk:false,sets}},segFields(sets.h1,pack));
+  setTask(G.tasks[0]);view="play";UI.fach=null;render();window.scrollTo(0,0);armIdle();
+}
+// Nachspielzeit: 5 Schüsse gegen den Torwart, jede Aufgabe ein Schuss. Wiederverwendbar: tasks ist eine Liste von Aufgaben.
+function startPenalty(topic,unit,tasks,sets){
+  dropCamp();
+  G={li:CAMPS[topic].li,mode:"pen",pen:true,trial:false,topic,pool:[topic],last:null,seen:null,rival:"Torwart",t0:Date.now(),pack:false,
+    camp:{topic,unit,half:2,halves:[],rec:false,brk:false,sets:sets||{h1:[],h2:[],pen:tasks}},tasks,len:tasks.length,i:0,res:[],hist:[],pts:0,streak:0};
+  setTask(tasks[0]);view="play";UI.fach=null;render();window.scrollTo(0,0);armIdle();
+}
+// Letzte Antwort einer Halbzeit (oder Kontroll-Pfiff ausgewertet): Ergebnis festhalten. Nach der 2. Halbzeit wird die Einheit sofort gezählt.
+function campRecord(c,n,pts,res){
+  const C=G.camp;C.halves[C.half-1]={c,n,pts,res:res.map(Boolean)};
+  if(C.half===2){campFinalCommit();return;}
+  C.rec=true;saveCamp();
+}
+function campFinalCommit(){
+  const C=G.camp,hs=C.halves,c=hs.reduce((a,h)=>a+h.c,0),n=hs.reduce((a,h)=>a+h.n,0),pts=hs.reduce((a,h)=>a+h.pts,0);
+  const bonus=(c/n>=.6?20:0)+(c===n&&n>=5?30:0);
+  const r=commit((s,cx)=>applyRoundEnd(s,cx,{li:G.li,mode:"camp",trial:false,c,n,pts:pts+bonus,bonus,dur:(Date.now()-G.t0)/1000,topic:C.topic}));
+  const u=commit((s,cx)=>applyCampUnit(s,cx,{topic:C.topic,unit:C.unit,h1:hs[0],h2:hs[1]}));
+  C.final={c,n,pts:pts+bonus,bonus,res:[].concat(...hs.map(h=>h.res)),newSticker:r.newSticker,celebrate:r.celebrate,badgeNew:u.badgeNew,badgeSticker:u.sticker};
+  dropCamp();
+}
+// Nach der letzten Aufgabe einer Halbzeit: 1. Halbzeit gibt die Halbzeitpause, die 2. das Ergebnis der Einheit.
+function campAfterHalf(){
+  const C=G.camp;
+  if(C.half===1){C.brk=true;saveCamp();render();window.scrollTo(0,0);return;}
+  const f=C.final;
+  G.res=f.res;G.len=f.n;G.pts=f.pts;G.bonus=f.bonus;G.newSticker=f.newSticker;G.badgeNew=f.badgeNew;G.badgeSticker=f.badgeSticker;UI.celebrate=f.celebrate;
+  view="result";render();window.scrollTo(0,0);scheduleSync(0);
+}
+function halfGo(){
+  const C=G.camp;C.half=2;C.brk=false;C.rec=false;
+  Object.assign(G,segFields(C.sets.h2,isPackUnit(C.topic,C.unit)));
+  setTask(G.tasks[0]);saveCamp();render();window.scrollTo(0,0);armIdle();
+}
+function penCommit(){
+  const C=G.camp,c=G.res.filter(Boolean).length;
+  commit((s,cx)=>applyCampPen(s,cx,{topic:C.topic,unit:C.unit,c,n:G.len}));
+  G.penDone=true;dropCamp();
+}
+function resumeCamp(){
+  const snap=UI.savedCamp;if(!snap||!campResumable(snap)){dropCamp();render();return;}
+  G=Object.assign(campResume(snap),{rival:snap.rival||(snap.pen?"Torwart":pick(RIVALS))});
+  UI.fach=null;view="play";const C=G.camp;
+  if(C.brk){render();window.scrollTo(0,0);return;}
+  if(C.rec){campAfterHalf();return;}
+  setTask(G.tasks[Math.min(G.pack?(G.phase==="solve"?G.i:0):G.i,G.tasks.length-1)]);
+  render();window.scrollTo(0,0);
+  if(!G.pack||G.phase==="solve")armIdle();
 }
 // Ein Konto ohne Avatar bekommt beim ersten Öffnen den Baukasten angeboten (überspringbar, wird nur einmal angeboten).
 function maybeOfferAvatar(){
@@ -169,7 +250,7 @@ const accountsSig=()=>accounts.map(a=>a.id+":"+(a.rec.state?a.rec.state.meta.upd
 // Konto lokal entfernen (nach Löschen im Eltern-Bereich, auch auf anderen Geräten).
 async function removeAccountLocal(id){
   accounts=accounts.filter(a=>a.id!==id);
-  await store.del("profile:"+id);await store.del(packKey(id));
+  await store.del("profile:"+id);await store.del(packKey(id));await store.del(campKey(id));
   if(cur&&cur.rec.id===id){cur=null;G=null;await store.del("current");if(view!=="admin")view="accounts";}
 }
 function syncText(){
@@ -182,8 +263,8 @@ function syncText(){
   return when+(dirty?" (Änderungen werden gleich gesendet)":"");
 }
 window.addEventListener("online",()=>scheduleSync(300));
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")scheduleSync(300);else if(view==="play")savePack();});
-window.addEventListener("pagehide",()=>{if(view==="play")savePack();});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")scheduleSync(300);else if(view==="play")saveGame();});
+window.addEventListener("pagehide",()=>{if(view==="play")saveGame();});
 setInterval(()=>{if(document.visibilityState==="visible")syncNow();},60000);
 
 // ================= Service Worker und Updates =================
@@ -231,13 +312,14 @@ function startRound(li,mode,trial,topic){
   armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
 function setTask(T){
-  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;
+  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;G.note="";
   G.pairs=T.type==="match"?T.left.map(()=>-1):null;G.msel=-1;G.sortA=T.type==="sort"?T.cards.map(()=>-1):null;G.ssel=-1;G.ord=[];
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
   armIdle();
 }
 // Keine Aufgabe zweimal in einem Spiel (auch wenn sie zufällig gezogen wird): bis zu 40 neue Versuche, danach gilt die letzte.
 function nextTask(){
+  if(G.camp){setTask(G.tasks[G.i]);return;} // Trainingslager: die Aufgaben stehen fest
   let T,t;
   for(let tries=0;tries<40;tries++){
     t=nextTopic(S(),G.pool,G.last);T=Object.assign({topic:t},GEN[t](levelOpts(t)));
@@ -281,12 +363,18 @@ function answer(val){
   if(G.pack){packAnswer(val);return;}
   const ok=isRight(T,val);
   clearTimeout(idleT);
-  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok);G.offer=false;
+  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=G.pen?{kind:ok?"goal":"saved",side:Math.random()<.5?-1:1}:pickShot(ok);G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.
-  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val),soft:!!T.late}));
+  commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain:G.gain,li:G.li,trial:G.trial||!!G.camp,help:G.helpLevel,lv:T.level||0,terms:termResults(T,val),soft:!!T.late}));
   G.hist.push({topic:T.topic,ok,q:T.q.replace(/<[^>]+>/g,""),given:String(val),right:rightText(T)});
   tone(ok?[523,659,784]:[220,180],ok?.12:.18,S().settings.sound);
+  if(G.camp){ // Trainingslager: Stand sichern, nach der letzten Aufgabe zählen
+    const last=G.i+1>=G.len;
+    if(G.pen){if(last)penCommit();else saveCamp();}
+    else if(last)campRecord(G.res.filter(Boolean).length,G.len,G.pts,G.res);
+    else saveCamp();
+  }
   render();
   if(ok)autoNext();
 }
@@ -301,14 +389,14 @@ function next(){
 // ----- Päckchen: Schreiben, Kontroll-Pfiff, Auswertung -----
 function packAnswer(val){
   clearTimeout(idleT);
-  if(G.phase==="edit"){G.finals[G.ei]=val;G.phase="check";savePack();render();window.scrollTo(0,0);return;}
+  if(G.phase==="edit"){G.finals[G.ei]=val;G.phase="check";saveGame();render();window.scrollTo(0,0);return;}
   if(G.phase!=="solve")return;
   const i=G.i;G.ans[i]=val;G.finals[i]=val;G.helps[i]=G.helpLevel;
   tone([440],.06,S().settings.sound);
-  if(i+1>=G.len){G.phase="check";savePack();render();window.scrollTo(0,0);return;}
-  G.i++;savePack();setTask(G.tasks[G.i]);render();window.scrollTo(0,0);
+  if(i+1>=G.len){G.phase="check";saveGame();render();window.scrollTo(0,0);return;}
+  G.i++;saveGame();setTask(G.tasks[G.i]);render();window.scrollTo(0,0);
 }
-function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;savePack();render();}
+function probeToggle(i){G.probeOpen[i]=!G.probeOpen[i];G.probed[i]=true;saveGame();render();}
 function editAnswer(i){
   G.phase="edit";G.ei=i;setTask(G.tasks[i]);clearTimeout(idleT);prefill(G.tasks[i],G.finals[i]);render();window.scrollTo(0,0);
 }
@@ -322,14 +410,14 @@ function prefill(T,val){
 // Abgeben: alle Antworten zählen jetzt (Endantworten). Mit Kontrolle gibt es Bonus für selbst gefundene Fehler.
 function finishCheck(checked){
   clearTimeout(idleT);
-  dropPack(); // ab jetzt zählt alles, das gesicherte Päckchen wird nicht mehr gebraucht
+  if(!G.camp)dropPack(); // ab jetzt zählt alles, das gesicherte Päckchen wird nicht mehr gebraucht
   const grade=gradePack({tasks:G.tasks,answers:G.ans,finals:G.finals,checked});
   G.grade=grade;G.checked=checked;G.gains=[];let streak=0;
   G.tasks.forEach((T,i)=>{
     const ok=grade.items[i].ok;let gain=0;
     if(ok){streak++;gain=10+(streak>=3?5:0);}else streak=0;
     G.gains[i]=gain;
-    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:false,help:G.helps[i]||0,lv:T.level||0,terms:termResults(T,G.finals[i]),soft:!!T.late}));
+    commit((s,c)=>applyAnswer(s,c,{topic:T.topic,ok,gain,li:G.li,trial:!!G.camp,help:G.helps[i]||0,lv:T.level||0,terms:termResults(T,G.finals[i]),soft:!!T.late}));
   });
   if(checked){
     const probes=Object.keys(G.probed).length;
@@ -337,19 +425,22 @@ function finishCheck(checked){
   }
   G.pts=G.gains.reduce((a,x)=>a+x,0)+(checked?grade.bonus:0);
   G.phase="eval";G.i=0;G.res=[];G.streak=0;
+  if(G.camp)campRecord(grade.items.filter(x=>x.ok).length,G.len,G.pts,grade.items.map(x=>x.ok));
   evalShow(0);
 }
 // Auswertung: eine Torszene je Aufgabe mit der Antwort nach der Kontrolle
 function evalShow(i){
   const T=G.tasks[i],it=G.grade.items[i];
   G.task=T;G.done=true;G.why=false;G.given=G.finals[i];G.ok=it.ok;G.fixedNow=it.fixed;G.gain=G.gains[i]+(it.fixed?BONUS_FIX:0);G.offer=false;
-  G.shot=pickShot(it.ok);G.res.push(it.ok);
+  G.shot=pickShot(it.ok);G.note=G.camp&&!it.ok?wrongNote(T,G.finals[i]):"";G.res.push(it.ok);
   G.hist.push({topic:T.topic,ok:it.ok,q:T.q.replace(/<[^>]+>/g,""),given:String(G.given),right:rightText(T)});
   tone(it.ok?[523,659,784]:[220,180],it.ok?.12:.18,S().settings.sound);
   render();window.scrollTo(0,0);
   if(it.ok)autoNext();
 }
 function finish(){
+  if(G.pen){view="result";render();window.scrollTo(0,0);scheduleSync(0);return;}
+  if(G.camp){campAfterHalf();return;}
   const c=G.res.filter(Boolean).length,n=G.len,win=!G.trial&&c/n>=.6,perfect=!G.trial&&c===n&&n>=5;
   G.bonus=(win?20:0)+(perfect?30:0);G.pts+=G.bonus;
   const r=commit((s,cx)=>applyRoundEnd(s,cx,{li:G.li,mode:G.mode,trial:G.trial,c,n,pts:G.pts,bonus:G.bonus,dur:(Date.now()-G.t0)/1000,topic:G.pack?G.topic:undefined,pk:G.pack}));
@@ -358,7 +449,15 @@ function finish(){
 }
 
 // ================= Darstellung und Ereignisse =================
-function env(){return{pack:UI.savedPack&&{topic:UI.savedPack.topic,done:UI.savedPack.ans.filter(a=>a!==undefined&&a!==null).length,len:UI.savedPack.tasks.length,phase:UI.savedPack.phase},hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
+function env(){return{camp:campInfo(),pack:UI.savedPack&&{topic:UI.savedPack.topic,done:UI.savedPack.ans.filter(a=>a!==undefined&&a!==null).length,len:UI.savedPack.tasks.length,phase:UI.savedPack.phase},hasPin:!!globalRec.state.pin,syncText:syncText(),updateReady:UI.updateReady,persistent:store.persistent,version:APP_VERSION};}
+// Zusammenfassung des gesicherten Trainingslager-Spiels für den Hinweis in der Kabine
+function campInfo(){
+  const k=UI.savedCamp;if(!k)return null;
+  const done=k.pen?[]:k.halves,okc=a=>a.filter(Boolean).length;
+  let c=done.reduce((a,h)=>a+h.c,0),n=done.reduce((a,h)=>a+h.n,0);
+  if(k.pen||!(k.rec||k.brk)){c+=okc(k.res);n+=k.res.length;}
+  return{topic:k.topic,unit:k.unit,half:k.half,brk:!!(k.brk||(k.rec&&k.half===1)),pen:!!k.pen,c,m:n-c};
+}
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
   root.innerHTML=bandHTML(UI.preview)+saveWarnHTML(UI.saveFail)+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
@@ -466,6 +565,9 @@ async function adminDo(){
     if(!r.ok){adminSay("err",adminError(r));render();return;}
     const a=accounts.find(x=>x.id===arg);if(a)await sync.syncProfile(a.rec); // holt den geleerten Stand, er gewinnt beim Zusammenführen
     adminSay("ok","Der Spielstand ist zurückgesetzt. Der alte Stand liegt als Sicherung auf dem Server.");
+  }else if(kind==="campreset"){
+    const [id,t]=arg.split(":"),rec=adminRec(id);
+    if(rec){commitOn(rec,(s,c)=>applyCampReset(s,c,t));adminSay("ok","Das Trainingslager ist neu gestartet.");}
   }else if(kind==="delete"){
     const r=await adminApi.remove(A.pin,arg);
     if(!r.ok){adminSay("err",adminError(r));render();return;}
@@ -528,6 +630,9 @@ function bindAdmin($){
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const kv=b.dataset.aset.split(":"),k=kv[0],v=kv[1];
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
+  document.querySelectorAll("[data-acamp]").forEach(b=>b.onclick=()=>{
+    const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
+    const [t,v]=b.dataset.acamp.split(":");commitOn(a.rec,(s,c)=>applyCampOn(s,c,t,v==="on"));render();});
   document.querySelectorAll("[data-atopic]").forEach(b=>b.onclick=()=>{
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const [t,m]=b.dataset.atopic.split(":");commitOn(a.rec,(s,c)=>applyTopicMode(s,c,t,m));render();});
@@ -564,6 +669,11 @@ function bind(){
   document.querySelectorAll("[data-cur]").forEach(b=>b.onclick=()=>{const li=Number(b.dataset.cur);commit((s,c)=>applyCurrent(s,c,li));UI.fach=null;UI.lgOpen={};render();window.scrollTo(0,0);});
   document.querySelectorAll("[data-probe]").forEach(b=>b.onclick=()=>probeToggle(Number(b.dataset.probe)));
   document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editAnswer(Number(b.dataset.edit)));
+  document.querySelectorAll("[data-camp]").forEach(b=>b.onclick=()=>{const [t,u]=b.dataset.camp.split(":");startCamp(t,Number(u));});
+  if($("campResume"))$("campResume").onclick=resumeCamp;
+  if($("campDrop"))$("campDrop").onclick=()=>{const k=UI.savedCamp;dropCamp();if(k&&k.pen)startPenalty(k.topic,k.unit,penaltyTasks(k.topic,k.unit));else if(k)startCamp(k.topic,k.unit);else render();}; // neu anfangen: dieselbe Einheit, frische Aufgaben
+  if($("halfGo"))$("halfGo").onclick=halfGo;
+  if($("penGo"))$("penGo").onclick=()=>startPenalty(G.camp.topic,G.camp.unit,G.camp.sets.pen,G.camp.sets);
   if($("packResume"))$("packResume").onclick=resumePack;
   if($("packDrop"))$("packDrop").onclick=()=>{const sn=UI.savedPack;dropPack();if(sn)startRound(sn.li,"topic",false,sn.topic);else render();}; // neu anfangen: dasselbe Thema, frisches Päckchen
   if($("ctlDone"))$("ctlDone").onclick=()=>finishCheck(true);
@@ -572,7 +682,7 @@ function bind(){
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
   document.querySelectorAll("[data-bank]").forEach(d=>{d.ontoggle=()=>{UI.bankOpen=!!d.open;};}); // Trainerbank merkt sich nur, solange man sie selbst aufgeklappt hat
-  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")savePack();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
+  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")saveGame();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
   // „Warum stimmt das?“: hält das automatische Weiter an und zeigt die Erklärung, bis das Kind „Weiter“ tippt
@@ -628,6 +738,7 @@ function bind(){
 for(const ev of ["pointerdown","keydown"])document.addEventListener(ev,()=>{if(view==="play"&&G&&!G.done&&!G.offer)armIdle();},true);
 document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&&e.target.tagName==="INPUT")return;
   if(G.pack&&G.phase==="check")return;
+  if(G.camp&&G.camp.brk)return;
   if(G.done&&(e.key==="Enter"||e.key===" ")){e.preventDefault();next();return;}if(G.done)return;
   const T=G.task;if(T.type!=="num"&&T.type!=="pair")return;
   if(/^[0-9]$/.test(e.key))typeDigit(e.key);else if(e.key==="Backspace")del();else if(e.key==="Enter")ok();});

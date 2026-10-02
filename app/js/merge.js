@@ -10,6 +10,8 @@
 //  - Englisch-Stufe (stats.<Thema>.lv): der höhere Wert gewinnt (steigt nie zurück). Begriffsstatistik (stats.<Thema>.terms): je Gerät der größere Wert, angezeigt wird die Summe.
 //  - Themensteuerung (settings.topicMode) ist Teil der Einstellungen: der neuere Stand gewinnt.
 //  - Gewählte aktuelle Liga (progress.cur): der neuere Stand gewinnt (eigener Zeitstempel t).
+//  - Trainingslager (camps.<Thema>, ab 1.5.4): Schalter (on) der neuere Stand (t). Neustart (rs): der spätere gewinnt vollständig. Sonst je Einheit der Stand mit dem
+//    neueren t (Wiederholungen: runs der größere Wert), Abzeichen: der frühere Zeitpunkt (wer es hat, behält es).
 //  - Zurücksetzen (meta.resetAt): der Stand mit dem späteren Zurücksetzen gewinnt vollständig.
 //  - Unbekannte Felder bleiben erhalten.
 // Das Ergebnis ist unabhängig von der Reihenfolge und ändert sich nicht, wenn man erneut zusammenführt.
@@ -61,6 +63,33 @@ function mergeLast(a,b){
   return [...seen.values()].sort((x,y)=>x.t-y.t||String(x.d).localeCompare(String(y.d))).slice(-MASTER_N);
 }
 
+const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
+// Ein Trainingslager. Reine Funktion, unabhängig von der Reihenfolge.
+function mergeCamp(a,b){
+  a=isObj(a)?a:{};b=isObj(b)?b:{};
+  const ra=a.rs||0,rb=b.rs||0,rs=Math.max(ra,rb);
+  const onSrc=(a.t||0)!==(b.t||0)?((a.t||0)>(b.t||0)?a:b):(canon(a)>=canon(b)?a:b);
+  const usable=x=>(x.rs||0)===rs; // nur Stände vom letzten Neustart bringen Einheiten mit
+  const units={};
+  for(const x of [a,b])if(usable(x)&&isObj(x.units))for(const k in x.units){
+    const u=x.units[k];if(!isObj(u))continue;
+    const p=units[k];
+    if(!p){units[k]=clone(u);continue;}
+    const w=newerBy(p,u);units[k]=Object.assign(clone(w),{runs:Math.max(p.runs||0,u.runs||0)});
+  }
+  const bd=[a,b].filter(usable).map(x=>x.badge||0).filter(v=>v>0);
+  const [lo,wi]=ra!==rb?(ra>rb?[b,a]:[a,b]):(canon(a)>=canon(b)?[b,a]:[a,b]); // unbekannte Felder: der Stand vom letzten Neustart gewinnt
+  const out=Object.assign({},clone(lo),clone(wi));
+  out.on=!!onSrc.on;out.t=Math.max(a.t||0,b.t||0);out.rs=rs;out.units=units;out.badge=bd.length?Math.min(...bd):0;
+  return out;
+}
+export function mergeCamps(a,b){
+  a=isObj(a)?a:{};b=isObj(b)?b:{};
+  const out={};
+  for(const t of new Set([...Object.keys(a),...Object.keys(b)]))out[t]=mergeCamp(a[t],b[t]);
+  return out;
+}
+
 export function mergeProfile(local,remote){
   const lr=local.meta.resetAt||0,rr=remote.meta.resetAt||0;
   if(lr!==rr){
@@ -106,6 +135,7 @@ export function mergeProfile(local,remote){
   out.history=[...hist.values()].sort((x,y)=>(x.t||0)-(y.t||0)||String(x.id).localeCompare(String(y.id))).slice(-200);
 
   out.settings=clone((local.settings.t||0)>=(remote.settings.t||0)?local.settings:remote.settings);
+  out.camps=mergeCamps(local.camps,remote.camps);
   return out;
 }
 

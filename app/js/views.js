@@ -14,6 +14,7 @@ import {rightText,coachHTML} from "./coach.js";
 import {total,lvOf} from "./model.js";
 import {esc} from "./util.js";
 import {adminAskHTML} from "./admin.js";
+import {campTilesHTML,campResumeHTML,breakHTML,campResultHTML,campButtonsHTML,penaltyResultHTML} from "./campviews.js";
 import {topicSafe,topicDone,topicOn,activeTopics,gateTopics,fachProgress,safeCount,mastered,leagueState,playable,currentLeague,canTrial,budgetOf,streakDays,stickerCount,settingsOf,roundLen,trialLen,winNeed} from "./rules.js";
 
 // Band oben in der Vorschau (label kommt vom Server, leer bei Live).
@@ -110,9 +111,11 @@ export function homeHTML(s,UI,env){
     return `<div class="stat"><span>${TOPICS[t]}${stufe(s,t)}</span><span class="b"><i style="width:${l.length?p:0}%;background:${col}"></i></span><span class="v">${l.length?`${k}/${l.length}`:"-"}</span></div>`;}).join("")).join("");
   const name=esc(s.profile.name);
   const packBanner=env.pack?`<section class="panel packresume" role="status"><h3>Päckchen weiterspielen?</h3><p class="note">Du hast ein Päckchen angefangen: <b>${TOPICS[env.pack.topic]}</b>${env.pack.phase==="check"?" (alle Aufgaben sind eingetragen, es fehlt nur noch der Kontroll-Pfiff)":` (${env.pack.done} von ${env.pack.len} Aufgaben sind eingetragen)`}.</p><div class="row"><button class="btn" id="packResume">Weiterspielen</button><button class="btn ghost" id="packDrop">Neu anfangen</button></div></section>`:"";
-  return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+packBanner+`
+  const campBanner=campResumeHTML(env.camp);
+  return (env.updateReady?`<div class="banner"><span>Es gibt eine neue Version der App.</span><button class="btn sm" id="upd">Jetzt laden</button></div>`:"")+boardHTML(s)+packBanner+campBanner+`
   <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="teamline">${esc(teamOf(s))}</p><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
+  ${campTilesHTML(s)}
   <div class="leagues">${currentCard(s,UI,currentLeague(s))}<h2 class="gl2">Andere Ligen</h2>${LIGEN.map((_,i)=>i).filter(i=>i!==currentLeague(s)).map(i=>miniRow(s,UI,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
   <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
@@ -163,7 +166,7 @@ function checkHTML(s,G){
     <div class="row"><button class="helpbtn" data-probe="${i}">Probe</button><button class="btn ghost sm" data-edit="${i}">Antwort ändern</button></div>
     ${G.probeOpen[i]?`<div class="bubble probebox" role="status">${probeHTML(T,G.finals[i])}</div>`:""}</div>`).join("");
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button><div class="score">${esc(s.profile.name)} · Päckchen</div><div class="dots">${G.tasks.map(()=>'<i class="set"></i>').join("")}</div></div>
-    <section class="card check"><div class="tag">${L.name} · ${TOPICS[G.topic]} · Kontroll-Pfiff</div>
+    <section class="card check"><div class="tag">${G.camp?`Trainingslager · Einheit ${G.camp.unit} · ${G.camp.half}. Halbzeit`:L.name} · ${TOPICS[G.topic]} · Kontroll-Pfiff</div>
     <h2 class="cheer2">Kontroll-Pfiff!</h2>
     <p class="q" style="font-size:1.3rem">Schau dein Päckchen noch einmal genau an. Tippe bei jeder Aufgabe auf „Probe“ und rechne oder prüfe selbst nach. Wenn etwas nicht stimmt, darfst du die Antwort ändern.</p>
     ${rows}
@@ -172,8 +175,12 @@ function checkHTML(s,G){
 }
 
 export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
+  if(G.camp&&G.camp.brk)return breakHTML(s,G,trainers,teamOf(s));
   if(G.pack&&G.phase==="check")return checkHTML(s,G);
   const T=G.task,c=G.res.filter(Boolean).length,m=G.res.length-c,L=LIGEN[G.li];
+  // Trainingslager: der Spielstand zählt beide Halbzeiten zusammen, der Abpfiff der ersten Halbzeit heißt Halbzeitpause
+  const prior=G.camp&&!G.pen?G.camp.halves.slice(0,G.camp.half-1):[],tc=c+prior.reduce((a,h)=>a+h.c,0),tm=m+prior.reduce((a,h)=>a+h.n-h.c,0);
+  const lastLbl=G.camp&&!G.pen&&G.camp.half===1?"Halbzeitpause":"Abpfiff";
   const blind=G.pack&&(G.phase==="solve"||G.phase==="edit"); // im Päckchen vor der Auswertung keine Rückmeldung
   const dots=blind?Array.from({length:G.len},(_,i)=>`<i class="${G.phase==="edit"||i<G.i?"set":i===G.i?"now":""}"></i>`).join("")
     :Array.from({length:G.len},(_,i)=>`<i class="${i<G.res.length?(G.res[i]?"ok":"no"):i===G.i?"now":""}"></i>`).join("");
@@ -181,27 +188,29 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   let fb="",overlay="";
   if(G.done){
     const shot=G.shot||{kind:G.ok?"goal":"wide",side:1},look=lookOf(s.profile);
-    if(G.ok&&G.why&&T.ex)overlay=`<div class="ovl why" role="status"><div class="ovlcard whycard"><div class="whyhead">Darum stimmt das</div><div class="whytxt">${T.ex}</div><button class="btn" id="ovlNext">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button></div></div>`;
-    else if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot)}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div>${T.ex?`<button class="btn sm ovlwhy" id="why">Warum stimmt das?</button>`:""}</div></div>`;
-    else fb=`<div class="fb no">${sceneSVG(look,shot)}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+`<button class="btn" id="next">${G.i+1>=G.len?"Abpfiff":"Weiter"}</button>`;
+    if(G.ok&&G.why&&T.ex)overlay=`<div class="ovl why" role="status"><div class="ovlcard whycard"><div class="whyhead">Darum stimmt das</div><div class="whytxt">${T.ex}</div><button class="btn" id="ovlNext">${G.i+1>=G.len?lastLbl:"Weiter"}</button></div></div>`;
+    else if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot,{keeper:!!G.pen})}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div>${T.ex?`<button class="btn sm ovlwhy" id="why">Warum stimmt das?</button>`:""}</div></div>`;
+    else fb=`<div class="fb no">${sceneSVG(look,shot,{keeper:!!G.pen})}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+(G.note?`<div class="bubble" role="status"><span class="who">${esc(trainers[1].name)}</span><p>${esc(G.note)}</p></div>`:"")+`<button class="btn" id="next">${G.i+1>=G.len?lastLbl:"Weiter"}</button>`;
   }
   let coach=G.done||G.phase==="edit"?"":coachHTML({T,G,trainers});
   const isMini=coach.startsWith('<div class="coach mini"'),mini=isMini?coach:"";if(isMini)coach="";
-  const tag=G.pack?(G.phase==="edit"?`${L.name} · Antwort ändern · Aufgabe ${G.ei+1} von ${G.len} · ${TOPICS[T.topic]}`:G.phase==="solve"?`${L.name} · Päckchen · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`:`${L.name} · Auswertung · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`)
+  const tag0=G.pack?(G.phase==="edit"?`${L.name} · Antwort ändern · Aufgabe ${G.ei+1} von ${G.len} · ${TOPICS[T.topic]}`:G.phase==="solve"?`${L.name} · Päckchen · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`:`${L.name} · Auswertung · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`)
     :`${L.name}${G.trial?" · Schnuppern":""} · Aufgabe ${G.i+1} von ${G.len} · ${TOPICS[T.topic]}`;
+  const tag=G.camp?`Trainingslager · Einheit ${G.camp.unit} · ${G.pen?"Nachspielzeit":G.camp.half+". Halbzeit"} · `+tag0.split(" · ").slice(1).join(" · "):tag0;
   const edit=G.phase==="edit"?`<p class="note">Deine Antwort war: <b>${esc(givenText(T,G.finals[G.ei]))}</b></p>${G.probeOpen[G.ei]?`<div class="bubble probebox" role="status">${probeHTML(T,G.finals[G.ei])}</div>`:""}`:"";
   const foot=G.phase==="edit"?`<button class="btn ghost" id="editBack">Zurück zur Kontrolle</button>`:"";
-  const tip=G.pack&&G.phase==="solve"?"Schreibe erst alle Aufgaben des Päckchens. Danach kontrollierst du sie selbst.":"Lies zuerst das gelb markierte Wort. Dann erst schießen!";
+  const tip=G.pen?"Fünf Schüsse gegen den Torwart. Jede richtige Antwort ist ein Tor!":G.pack&&G.phase==="solve"?"Schreibe erst alle Aufgaben des Päckchens. Danach kontrollierst du sie selbst.":"Lies zuerst das gelb markierte Wort. Dann erst schießen!";
   return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button>
-    <div class="score">${blind?`${esc(teamOf(s))} · Päckchen`:`${esc(teamOf(s))} <em>${c}</em> : <em>${m}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
+    <div class="score">${blind?`${esc(teamOf(s))} · Päckchen`:`${esc(teamOf(s))} <em>${tc}</em> : <em>${tm}</em> ${G.rival}`}</div><div class="dots">${dots}</div></div>
     <section class="card"><div class="cardtop"><div class="tag">${tag}</div>${mini}</div>
     <p class="q">${T.q}${T.speak?" "+speakBtn(T.speak):""}</p>${T.late?`<p class="note late">Das hattest du vielleicht noch nicht in der Schule. Raten ist okay: Ein falscher Tipp zählt dann nicht.</p>`:""}${T.vis?`<div class="vis">${T.vis}</div>`:""}${edit}${coach}${inputHTML(T,G)}${fb}${foot}</section>${overlay}
     <p class="lead small" style="color:#fff">${tip}</p>`;
 }
 
 export function resultHTML(s,G,UI){
+  if(G.pen)return boardHTML(s)+penaltyResultHTML(s,G,teamOf(s));
   const c=G.res.filter(Boolean).length,n=G.len,m=n-c,L=LIGEN[G.li];
-  const pk=G.pack?G.grade:null,head=G.trial?"Schnuppertraining vorbei":c===n?"Perfektes Spiel!":c/n>=.6?"Sieg!":c/n>=.5?"Unentschieden":"Heute verloren. Nächstes Mal klappt es!";
+  const pk=G.pack&&!G.camp?G.grade:null,head=G.trial?"Schnuppertraining vorbei":c===n?"Perfektes Spiel!":c/n>=.6?"Sieg!":c/n>=.5?"Unentschieden":"Heute verloren. Nächstes Mal klappt es!";
   const st=leagueState(s,G.li);let info="";
   if(G.trial)info=`<p>So fühlt sich die ${L.name} an. Freispielen kannst du sie in der ${LIGEN[G.li-1].name}.</p>`;
   else if(st==="probe")info=`<p>Probetraining in der ${L.name}: noch ${budgetOf(s,G.li)} Aufgaben.</p>`;
@@ -209,8 +218,9 @@ export function resultHTML(s,G,UI){
   return boardHTML(s)+`<section class="card result"><h2>${head}</h2>
     <div class="final"><span class="team">${esc(teamOf(s))}<small>Heim</small></span><span>${c} : ${m}</span><span class="team">${G.rival}<small>Gast</small></span></div>
     <p class="q" style="font-size:1.4rem">+${G.pts} Punkte${G.bonus?` (davon ${G.bonus} Bonus)`:""}</p>
+    ${G.camp?campResultHTML(s,G):""}
     ${pk?(G.checked?(pk.fixed?`<div class="celebrate">Kontroll-Pfiff: Du hast ${pk.fixed} Fehler selbst gefunden und verbessert. Stark! (+${pk.bonus} Bonus)</div>`:`<p>Kontroll-Pfiff gemacht. Gutes Kontrollieren!</p>`):`<p>Nächstes Mal kontrollierst du vor dem Abgeben. Dann gibt es Kontroll-Bonus.</p>`):""}
     ${UI.celebrate?`<div class="celebrate">${UI.celebrate}</div>`:""}${info}
     ${G.newSticker!==null?`<p>Neuer Sticker für dein Album:</p><div class="newst">${stickerHTML(G.newSticker,true)}</div>`:G.trial?"":(c/n>=.6?"<p>Dein Album ist voll. Stark!</p>":"<p>Gewinne ein Spiel, dann bekommst du einen Sticker.</p>")}
-    <div class="row" style="justify-content:center">${!G.trial&&playable(s,G.li)?`<button class="btn" id="again">Nächstes Spiel</button>`:""}<button class="btn ghost" id="home">Zur Kabine</button></div></section>`;
+    ${G.camp?campButtonsHTML(s,G):`<div class="row" style="justify-content:center">${!G.trial&&playable(s,G.li)?`<button class="btn" id="again">Nächstes Spiel</button>`:""}<button class="btn ghost" id="home">Zur Kabine</button></div>`}</section>`;
 }

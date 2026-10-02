@@ -46,7 +46,7 @@ test("Konten ohne Avatar bekommen eine feste Vorgabe aus dem Namen",()=>{
 
 test("Torszene: Treffer und drei Fehlschuss-Varianten, beide Seiten, ohne Vereinsschild",()=>{
   assert.deepEqual(SHOT_KINDS,["goal","post","bar","wide"]);
-  const texts=new Set(Object.values(SHOT_TEXT));assert.equal(texts.size,4);assert.equal(SHOT_TEXT.goal,"Tor!");
+  const texts=new Set(Object.values(SHOT_TEXT));assert.equal(texts.size,5);assert.equal(SHOT_TEXT.goal,"Tor!");assert.equal(SHOT_TEXT.saved,"Gehalten!");
   for(let i=0;i<50;i++)assert.equal(pickShot(true).kind,"goal");
   const kinds=new Set();for(let i=0;i<300;i++){const s=pickShot(false);kinds.add(s.kind);assert.ok(["post","bar","wide"].includes(s.kind));assert.ok(s.side===-1||s.side===1);}
   assert.deepEqual([...kinds].sort(),["bar","post","wide"]);

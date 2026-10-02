@@ -1,6 +1,6 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 5):
+// Konto (profile-Stand, schemaVersion 7):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
 //   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
@@ -8,6 +8,7 @@
 //             lv (Stufe 1 bis 3, nur Englisch, steigt nie zurück) und terms (Statistik je Begriff: je Gerät {"a:Begriff": Antworten, "c:Begriff": richtige})
 //   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?} (pk = Päckchen, topic = Themenblock; mode auch eng und su)
 //   settings  sound, t, perRound, trialN, trialDaily, hintAfter, topicMode (je Thema "wiederholen" oder "aus", fehlt = aktuell)
+//   camps     (ab Schema 7, App 1.5.4) Trainingslager je Thema: {m3_rest: {on, t (Schalter), rs (Neustart), units: {"1": {h1, h2, pen?, t, runs}}, badge (Zeitpunkt oder 0)}}
 // Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
 // Schemaversion 2 (bis App 1.1.5) hatte weder progress.cur noch stats.ctl noch topic und pk im Verlauf.
@@ -22,9 +23,10 @@ import {PROBE} from "./content.js";
 import {clone} from "./util.js";
 import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer,upgradeOldHair} from "./avatar.js";
 
-export const SCHEMA_VERSION=6;        // Konto-Stand
+export const SCHEMA_VERSION=7;        // Konto-Stand
 export const GLOBAL_SCHEMA_VERSION=4; // globale Einstellungen
 
+const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
 
 // Einstellungen je Konto (Eltern im Admin): Ton, Aufgaben pro Runde (6, 8, 10), Schnupper-Aufgaben, Schnuppern nur einmal pro Tag,
@@ -38,7 +40,8 @@ export function newProfile({id,name,deviceId,now=Date.now()}){
     profile:{id,name,t:now,avatar:null,avatarAsked:false},
     progress:{dev:{},days:[],lg:{},sel:0,cur:{li:null,t:0}},
     stats:{},history:[],
-    settings:defaultSettings()
+    settings:defaultSettings(),
+    camps:{}
   };
 }
 export function newGlobal(now=Date.now()){return{schemaVersion:GLOBAL_SCHEMA_VERSION,pin:null,updatedAt:now,trainer:defaultTrainer(),trainer2:defaultTrainer2()};}
@@ -52,6 +55,12 @@ export function ctlOf(s,topic){const st=s.stats[topic];let n=0,p=0,f=0;if(st&&st
 // Englisch-Stufe eines Themas (1 bis 3) und Begriffsstatistik (Summe über alle Geräte)
 export const lvOf=(s,topic)=>{const v=s.stats[topic]&&s.stats[topic].lv;return Number.isInteger(v)&&v>=1&&v<=3?v:1;};
 export function termsOf(s,topic){const st=s.stats[topic],out={};if(st&&st.terms)for(const d in st.terms)for(const k in st.terms[d]){const id=k.slice(2),e=out[id]||(out[id]={a:0,c:0});e[k[0]]+=st.terms[d][k]||0;}return out;}
+// Trainingslager eines Themas mit Vorgaben (ältere Stände und Konten ohne Trainingslager funktionieren weiter). Verändert den Stand nicht.
+export const defaultCamp=()=>({on:false,t:0,rs:0,units:{},badge:0});
+export function campOf(s,topic){
+  const c=s&&isObj(s.camps)&&isObj(s.camps[topic])?s.camps[topic]:null;
+  return Object.assign(defaultCamp(),c,{units:c&&isObj(c.units)?c.units:{}});
+}
 export function statOf(s,topic){return s.stats[topic]||(s.stats[topic]={tot:{},last:[]});}
 export function answersOf(s,topic){const st=s.stats[topic];let a=0,c=0;if(st)for(const k in st.tot){a+=st.tot[k].a||0;c+=st.tot[k].c||0;}return{a,c};}
 
@@ -94,6 +103,12 @@ const PROFILE_MIGRATIONS=[
     if(av&&typeof av==="object")s.profile.avatar=Object.assign(cleanLook(av),{t:Number.isFinite(av.t)?av.t:0});
     s.meta.schemaVersion=6;
     return s;
+  }},
+  // 6 -> 7 (App 1.5.4): Trainingslager (camps). Der Fortschritt je Thema entsteht erst bei Nutzung, ein Stand ohne Trainingslager bleibt gültig. Alles Vorhandene bleibt, Unbekanntes auch.
+  {from:6,to:7,run:s=>{
+    if(!isObj(s.camps))s.camps={};
+    s.meta.schemaVersion=7;
+    return s;
   }}
 ];
 export function migrateProfile(state,opts={}){
@@ -125,7 +140,6 @@ export function migrateGlobal(g){
 // Gibt null zurück, wenn der Stand die Pflichtfelder hat, sonst einen kurzen Grund. Unbekannte Zusatzfelder sind erlaubt.
 // Pflicht Konto: meta.schemaVersion (ganze Zahl ab 1), meta.updatedAt (Zahl), profile.id und profile.name (Text),
 // progress als Objekt mit dev (Objekt), days (Liste), lg (Objekt), stats (Objekt), history (Liste), settings (Objekt).
-const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
 export function checkProfileState(s){
   if(!isObj(s))return"Stand ist kein Objekt";
   if(!isObj(s.meta))return"meta fehlt";
@@ -141,6 +155,14 @@ export function checkProfileState(s){
   if(!isObj(s.stats))return"stats fehlt";
   if(!Array.isArray(s.history))return"history fehlt";
   if(!isObj(s.settings))return"settings fehlt";
+  // Trainingslager (ab 1.5.4) ist freiwillig. Ist es da, muss es ein Objekt sein, je Thema ein Objekt mit units als Objekt.
+  if(s.camps!==undefined){
+    if(!isObj(s.camps))return"camps ist kein Objekt";
+    for(const k in s.camps){
+      if(!isObj(s.camps[k]))return"camps."+k+" ist kein Objekt";
+      if(s.camps[k].units!==undefined&&!isObj(s.camps[k].units))return"camps."+k+".units ist kein Objekt";
+    }
+  }
   return null;
 }
 // Pflicht global: schemaVersion (ganze Zahl ab 1), pin leer oder mit Hash (und Salz, außer beim Alt-Hash), trainer und trainer2 (falls vorhanden) als Objekte.
