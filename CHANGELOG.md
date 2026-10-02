@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.6.1 (Themen-Zustände, Schema 8)
+- **Neuer Zustand „Zurückgestellt“** je Thema (Eltern-Bereich, Einstellungen, Themen), freiwillig mit **Datum**: Ab diesem Tag ist das Thema von selbst wieder aktuell. Zurückgestellte Themen kommen nicht ins Spiel und blockieren den Aufstieg nicht (wie ausgeschaltete). Die Zustände sind jetzt: Aktuell, Wiederholen, Zurückgestellt, Aus, Schwerpunkt.
+- **Neue Themen starten zurückgestellt** (spätere App-Versionen): Das Konto merkt sich in `settings.topicSeen", welche Themen es kennt. Fehlt ein Thema dort, ist es neu. Die Eltern geben es mit Aktuell oder einem anderen Zustand frei. Bestehende Konten und neue Konten kennen alle heutigen Themen, bei ihnen ändert sich nichts.
+- **Schema 8** (global bleibt 4): Migration 7 nach 8 trägt `topicSeen` ein und ändert sonst nichts (Fixture `test/fixtures/state-v7.json`, Format 1.6.0). Schwerpunkt, Aus und Wiederholen aus 1.4.0 und 1.6.0 bleiben verlustfrei. Tests: `test/v161.test.mjs`. Version 1.6.1 an allen vier Stellen.
+
 ## 1.6.0 (Sondertraining für jedes Thema, Schwerpunkt)
 - **Schwerpunkt:** Im Eltern-Bereich (Reiter Einstellungen, Themen) gibt es je Mathe- und Deutsch-Thema neben Aktuell, Wiederholen und Aus den Zustand **Schwerpunkt**. Mehrere Themen können Schwerpunkt sein. Für Englisch und Sachkunde gibt es ihn nicht.
 - **Sondertraining:** Für jedes Schwerpunkt-Thema erscheint auf der Startseite eine Kachel „Sondertraining: <Thema>“ mit drei Einheiten (Aufwärmen, Training, Spieltag). Jede Einheit hat zwei Halbzeiten zu je 10 Aufgaben mit Halbzeitpause, Abpfiff, Elfmeterschießen als Nachspielzeit, Sichern und Fortsetzen, Abzeichen „Trainings-Profi“ nach Einheit 3. Die Aufgaben kommen aus dem Generator des Themas, die Antworten zählen im Lernstand des Themas. Teilen mit Rest behält seine fünf besonderen Einheiten und seinen eigenen Schalter (die Kachel erscheint dort auch, wenn das Thema Schwerpunkt ist).

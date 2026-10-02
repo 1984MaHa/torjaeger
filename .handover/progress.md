@@ -1,15 +1,16 @@
 # Fortschritt (Auftrag current.md vom 02.10.2026, Teil B)
 
-Anker (Fortsetzung): Branch preview, Version 1.6.0, Tests 244 grün, Tag v1.6.0 lokal (nicht gepusht). main und origin unverändert bei e0cd3e5.
+Anker (Fortsetzung): Branch preview, Version 1.6.1, Schema 8, Tests 254 grün. Tags v1.6.0 und v1.6.1 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
 
 | Paket | Stand | Tests |
 |---|---|---|
 | A0 Rückübergabe 1.5.5 | fertig (aca0c5a) | 237 |
-| B1 Sondertraining (1.6.0) | fertig, siehe git log und Tag v1.6.0 | 244 |
-| B2 Themen-Zustände (1.6.1) | offen, als Nächstes | - |
-| B3 bis B8 | offen | - |
+| B1 Sondertraining (1.6.0) | fertig (5492b1a, Tag v1.6.0) | 244 |
+| B2 Themen-Zustände (1.6.1, Schema 8) | fertig, siehe git log, Tag v1.6.1 | 254 |
+| B3 Frust-Bremse (1.6.2) | offen, als Nächstes | - |
+| B4 bis B8 | offen | - |
 
-B1: Schwerpunkt als Themenmodus (kein Schemawechsel), Sondertraining mit 3 Einheiten für alle 25 Mathe/Deutsch-Themen ausser Teilen mit Rest, Mix-Anteil 1/3.
-Offen für B2: Zustände aktuell/wiederholen/aus/schwerpunkt existieren bereits in settings.topicMode; fehlend sind "zurückgestellt (bis Datum)" und Standard "zurückgestellt" für neue Themen.
-Bekannte Grenze B1: Die 3 Einheiten eines Themas nutzen denselben Generator ohne Stufen (Schwierigkeit steigt nicht).
+B2: zurueck (mit optionalem Datum topicUntil), topicSeen (neue Themen starten zurückgestellt), Migration 7 nach 8, Fixture state-v7.json.
+Für B3: Zustände aus settings.topicMode, Fehlerfolge je Thema aus stats.<Thema>.last (letzte 10 Antworten) ablesbar, kein neues Datenfeld nötig für die Bremse selbst; Eltern-Markierung "schon im Unterricht dran?" braucht evtl. Feld.
+Bekannte Grenzen: B1 Einheiten ohne Stufen. Datumsfeld im Eltern-Bereich nur per Test auf Struktur geprüft (kein Browsertest).
 NAS-Stand laut Marco unbekannt.

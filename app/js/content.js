@@ -36,4 +36,6 @@ export const topicsOf=i=>LIGEN[i].math.concat(LIGEN[i].deu);
 export const allTopicsOf=i=>topicsOf(i).concat(LIGEN[i].eng||[],LIGEN[i].su||[]);
 // Themen eines Spiels: mix = nur Mathe und Deutsch, sonst das Fach (math, deu, eng, su).
 export const poolOf=(li,mode)=>{const L=LIGEN[li];return mode==="mix"?L.math.concat(L.deu):(L[mode]||[]);};
-export const TOPIC_MODES=["aktuell","wiederholen","aus","schwerpunkt"];
+export const TOPIC_MODES=["aktuell","wiederholen","zurueck","aus","schwerpunkt"];
+// Alle Themen-Kennungen (für neue Konten: sie kennen alle aktuellen Themen, nur später dazukommende starten zurückgestellt)
+export const ALL_TOPICS=[...new Set(LIGEN.flatMap((_,i)=>allTopicsOf(i)))];

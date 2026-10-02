@@ -16,10 +16,19 @@ export function topicSafe(s,t){
 // Themensteuerung der Eltern je Konto: aktuell (Vorgabe), wiederholen (seltener), aus (ausgeblendet) oder schwerpunkt (ab 1.6.0: Sondertraining und im Mix etwa jede dritte Aufgabe).
 // Fächer (Mathe, Deutsch, Englisch, Sachkunde) schalten die Eltern je Konto ganz aus (settings.fachOff = {fach: true}). Die Einstellung je Thema bleibt dabei erhalten.
 export const fachOffOf=(s,f)=>{const o=s.settings&&s.settings.fachOff;return!!(f&&o&&typeof o==="object"&&!Array.isArray(o)&&o[f]===true);};
-export const topicRawMode=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"||v==="schwerpunkt"?v:"aktuell";};
+// Zurückgestellt (zurueck): nicht im Spiel und kein Hindernis für den Aufstieg; mit Datum (settings.topicUntil.<Thema> = "JJJJ-MM-TT") wird das Thema an diesem Tag von selbst wieder aktuell.
+// Ein Thema, das das Konto noch nicht kennt (fehlt in topicSeen und in topicMode), startet zurückgestellt. Ohne topicSeen (älterer Stand) gibt es das nicht.
+export const topicUntil=(s,t)=>{const u=s.settings&&s.settings.topicUntil,v=u&&typeof u==="object"?u[t]:null;return typeof v==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v:"";};
+export function topicRawMode(s,t,now=Date.now()){
+  const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;
+  if(v==="zurueck"){const u=topicUntil(s,t);return u&&u<=todayKey(now)?"aktuell":"zurueck";}
+  if(v==="aus"||v==="wiederholen"||v==="schwerpunkt")return v;
+  const seen=s.settings&&s.settings.topicSeen;
+  return Array.isArray(seen)&&!seen.includes(t)?"zurueck":"aktuell";
+}
 // wirksame Steuerung: ein ausgeschaltetes Fach schaltet alle seine Themen aus
-export const topicModeOf=(s,t)=>fachOffOf(s,FACH_OF[t])?"aus":topicRawMode(s,t);
-export const topicOn=(s,t)=>topicModeOf(s,t)!=="aus";
+export const topicModeOf=(s,t,now=Date.now())=>fachOffOf(s,FACH_OF[t])?"aus":topicRawMode(s,t,now);
+export const topicOn=(s,t)=>{const m=topicModeOf(s,t);return m!=="aus"&&m!=="zurueck";};
 export const isFocus=(s,t)=>topicModeOf(s,t)==="schwerpunkt";
 export const activeTopics=(s,list)=>list.filter(t=>topicOn(s,t));
 // Themen, die für den Aufstieg zählen: nur Mathe und Deutsch, und nur die, die nicht "aus" sind.
@@ -172,7 +181,22 @@ export function applyTopicMode(s,ctx,topic,mode){
   if(mode==="schwerpunkt"&&!CAMPS[topic])return false; // Schwerpunkt nur für Mathe und Deutsch
   const m=Object.assign({},s.settings.topicMode);
   if(mode==="aktuell")delete m[topic];else m[topic]=mode;
-  s.settings.topicMode=m;s.settings.t=ctx.now;touch(s,ctx);return true;
+  s.settings.topicMode=m;
+  if(mode!=="zurueck"&&s.settings.topicUntil&&topic in s.settings.topicUntil){const u=Object.assign({},s.settings.topicUntil);delete u[topic];s.settings.topicUntil=u;}
+  if(Array.isArray(s.settings.topicSeen)&&!s.settings.topicSeen.includes(topic))s.settings.topicSeen=s.settings.topicSeen.concat(topic); // ab jetzt bekannt, "aktuell" bleibt aktuell
+  s.settings.t=ctx.now;touch(s,ctx);return true;
+}
+// Datum für ein zurückgestelltes Thema (Eltern): "JJJJ-MM-TT" oder leer (ohne Datum). Nur für Themen, die zurückgestellt sind. Gibt false bei ungültigem Datum.
+export function applyTopicUntil(s,ctx,topic,date){
+  if(topicRawMode(s,topic,0)!=="zurueck"&&(s.settings.topicMode||{})[topic]!=="zurueck")return false;
+  const d=date===""||date===null||date===undefined?"":String(date);
+  if(d!==""&&!(/^\d{4}-\d{2}-\d{2}$/.test(d)&&!Number.isNaN(Date.parse(d))))return false;
+  const u=Object.assign({},s.settings.topicUntil);
+  if(d)u[topic]=d;else delete u[topic];
+  s.settings.topicUntil=u;
+  s.settings.topicMode=Object.assign({},s.settings.topicMode,{[topic]:"zurueck"}); // ein neues Thema wird damit ausdrücklich zurückgestellt
+  if(Array.isArray(s.settings.topicSeen)&&!s.settings.topicSeen.includes(topic))s.settings.topicSeen=s.settings.topicSeen.concat(topic);
+  s.settings.t=ctx.now;touch(s,ctx);return true;
 }
 // Fach ganz ein- oder ausschalten (Eltern). Gehört zu den Einstellungen (neuerer Stand gewinnt). Gibt false für ein unbekanntes Fach.
 export function applyFach(s,ctx,fach,on){

@@ -1,12 +1,12 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
-import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng} from "./content.js";
+import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng,ALL_TOPICS} from "./content.js";
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
 import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume} from "./camp.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -514,7 +514,7 @@ async function createAccount(){
 }
 async function makeAccount(name){
   const id="k-"+randomId("",8),now=Date.now();
-  const rec={id,name,state:newProfile({id,name,deviceId,now}),baseRev:null,dirty:true,lastSync:null};
+  const rec={id,name,state:newProfile({id,name,deviceId,now,topics:ALL_TOPICS}),baseRev:null,dirty:true,lastSync:null};
   await store.put("profile:"+id,rec);
   accounts.push({id,name,rec});scheduleSync(300);
   return id;
@@ -641,6 +641,9 @@ function bindAdmin($){
   document.querySelectorAll("[data-atopic]").forEach(b=>b.onclick=()=>{
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const [t,m]=b.dataset.atopic.split(":");commitOn(a.rec,(s,c)=>applyTopicMode(s,c,t,m));render();});
+  document.querySelectorAll("[data-auntil]").forEach(i=>i.onchange=()=>{
+    const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
+    commitOn(a.rec,(s,c)=>applyTopicUntil(s,c,i.dataset.auntil,i.value));render();});
   document.querySelectorAll("[data-apin]").forEach(b=>b.onclick=adminChangePin);
   // PIN eines Kindes: Eltern sehen sie, setzen sie neu oder entfernen sie
   document.querySelectorAll("[data-akpin]").forEach(b=>b.onclick=()=>{const rec=adminRec(b.dataset.akpin),v=$("kpin-"+b.dataset.akpin).value.trim();

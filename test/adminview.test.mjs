@@ -114,7 +114,7 @@ test("Aufrufe des Eltern-Bereichs gegen den echten Server",async()=>{
     assert.equal((await api.renameDevice("1234","g-test00001","Test")).ok,true);
     assert.equal((await api.changePin("1234","5678")).ok,true);
     assert.equal((await api.verify("1234")).ok,false);assert.equal((await api.verify("5678")).ok,true);
-    assert.equal((await api.config()).data.schemaVersion,7);
+    assert.equal((await api.config()).data.schemaVersion,8);
   }finally{await S.close();}
   // ohne Server: status 0, verständliche Meldung
   const off=createAdminApi({base:"http://127.0.0.1:1",fetchFn:()=>Promise.reject(new TypeError("offline"))});

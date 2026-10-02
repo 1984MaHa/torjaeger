@@ -32,7 +32,7 @@ test("Zustand Schwerpunkt: wird gespeichert, gilt nur für Mathe und Deutsch, ke
   const s=prof();
   assert.equal(applyTopicMode(s,ctx(2),"m3_1x1","schwerpunkt"),true);
   assert.equal(topicModeOf(s,"m3_1x1"),"schwerpunkt");assert.equal(isFocus(s,"m3_1x1"),true);
-  assert.equal(checkProfileState(s),null);assert.equal(s.meta.schemaVersion,7);
+  assert.equal(checkProfileState(s),null);assert.equal(s.meta.schemaVersion,8);
   assert.equal(applyTopicMode(s,ctx(3),"en_farben","schwerpunkt"),false,"Englisch hat kein Sondertraining");
   assert.equal(applyTopicMode(s,ctx(4),"m3_1x1","aktuell"),true);assert.equal(topicModeOf(s,"m3_1x1"),"aktuell");
 });

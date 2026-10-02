@@ -30,18 +30,18 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 7 (Konto) und 4 (global), Version 1.6.0 an allen vier Stellen",()=>{
-  assert.equal(SCHEMA_VERSION,7);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.0"/);assert.match(sw,/VERSION = "1.6.0"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.0"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.0");
+test("Schema ist 8 (Konto) und 4 (global), Version 1.6.1 an allen vier Stellen",()=>{
+  assert.equal(SCHEMA_VERSION,8);assert.equal(GLOBAL_SCHEMA_VERSION,4);
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.1"/);assert.match(sw,/VERSION = "1.6.1"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.1"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.1");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{
   const old=fx("state-v5.json"),before=JSON.stringify(old),s=migrateProfile(old);
   assert.equal(old.meta.schemaVersion,5);assert.equal(JSON.stringify(old),before,"Eingabe bleibt unverändert");
-  assert.equal(s.meta.schemaVersion,7);
-  for(const k of ["progress","stats","history","settings","zusatz","futureField"])assert.deepEqual(s[k],old[k],k);
+  assert.equal(s.meta.schemaVersion,8);
+  for(const k of ["progress","stats","history","settings","zusatz","futureField"])assert.deepEqual(k==="settings"?(({topicSeen,...r})=>r)(s[k]):s[k],old[k],k);
   assert.equal(total(s,"points"),total(old,"points"));
   assert.deepEqual({...s.profile,avatar:0},{...old.profile,avatar:0});
   const a=s.profile.avatar,o=old.profile.avatar;
@@ -52,13 +52,13 @@ test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Num
   // ohne Avatar, zweimal migrieren, ältere Fixtures, neuere Version
   const n=clone(old);n.profile.avatar=null;assert.equal(migrateProfile(n).profile.avatar,null);
   assert.deepEqual(migrateProfile(clone(s)),s);
-  for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,7,f);
-  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=8;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
+  for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,8,f);
+  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=9;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
 });
 
 test("Stand aus Emils Konto im Format 1.2.1 geht über alle Stufen, der Avatar bleibt lesbar und trägt die alten Farben",()=>{
   const old=fx("state-v3.json"),s=migrateProfile(old),a=s.profile.avatar,o=old.profile.avatar;
-  assert.equal(s.meta.schemaVersion,7);assert.equal(a.t,o.t);assert.equal(a.hair,"zoepfe","alte Frisur als Schlüssel, bleibt im Stand");
+  assert.equal(s.meta.schemaVersion,8);assert.equal(a.t,o.t);assert.equal(a.hair,"zoepfe","alte Frisur als Schlüssel, bleibt im Stand");
   assert.equal(a.kit.trikot,o.shirt);assert.equal(a.number,o.number);assert.equal(a.shirtName,o.shirtName);assert.equal(a.team,o.team);
   const l=lookOf(s.profile);clean(avatarSVG(l,{view:"back",px:190}),"Rücken");clean(avatarSVG(l,{crop:"bust",px:90}),"Brustbild");
 });

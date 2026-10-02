@@ -44,19 +44,19 @@ function wrong(T){
 
 // ---------- Schema 5 ----------
 test("Schema 5 (seit 1.4.0): Migration 4 nach 5, Stand im Format 1.3.0 bleibt vollständig erhalten, alles ist aktuell",()=>{
-  assert.equal(SCHEMA_VERSION,7);
+  assert.equal(SCHEMA_VERSION,8);
   const old=fx("state-v4.json"),before=JSON.stringify(old);
   assert.equal(old.meta.schemaVersion,4);assert.ok(!("topicMode" in old.settings));
   const s=migrateProfile(old);
   assert.equal(JSON.stringify(old),before,"Eingabe bleibt unverändert");
-  assert.equal(s.meta.schemaVersion,7);
-  assert.deepEqual(s.settings,{...old.settings,topicMode:{}});
+  assert.equal(s.meta.schemaVersion,8);
+  assert.deepEqual(s.settings,{...old.settings,topicMode:{},topicSeen:s.settings.topicSeen});
   assert.deepEqual({...s.profile,avatar:0},{...old.profile,avatar:0},"Konto ohne das Aussehen unverändert");
   for(const k of ["progress","stats","history","zusatz","futureField"])assert.deepEqual(s[k],old[k],k);
   for(const t of allTopicsOf(1))assert.equal(topicModeOf(s,t),"aktuell");
   assert.equal(canon(migrateProfile(s)),canon(s),"zweimal migrieren ändert nichts");
-  for(const f of ["state-v1.json","state-v2.json","state-v3.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,7,f);
-  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=8;
+  for(const f of ["state-v1.json","state-v2.json","state-v3.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,8,f);
+  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=9;
   assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
 });
 
@@ -456,11 +456,11 @@ test("Eltern-Bereich: Themensteuerung je Konto (aktuell, wiederholen, aus) für 
 });
 
 // ---------- Dateien ----------
-test("Neue Dateien stehen im Service Worker, Version 1.6.0 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
+test("Neue Dateien stehen im Service Worker, Version 1.6.1 an allen vier Stellen, Inhaltsliste ist vollständig",()=>{
   const ROOT=fileURLToPath(new URL("..",import.meta.url)),sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
   for(const f of ["content-en.js","content-su.js","speech.js","tasks.js","inputs.js","icons.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.0"/);assert.match(sw,/VERSION = "1.6.0"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.0"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.0");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.1"/);assert.match(sw,/VERSION = "1.6.1"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.1"/);assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.1");
   const doc=fs.readFileSync(path.join(ROOT,"docs/Inhalte-Englisch-Sachkunde.md"),"utf8");
   for(const [id,t] of Object.entries(EN_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const w of t.words){assert.ok(doc.includes(`| ${w[0]} | ${w[1]} |`),w[0]);assert.ok(doc.includes(w[3])&&doc.includes(w[4]),w[0]);}}
   for(const [id,t] of Object.entries(SU_TOPICS)){assert.ok(doc.includes("`"+id+"`"),id);for(const d of t.tasks){if(d.hint)assert.ok(doc.includes(d.hint),d.hint);if(d.unsure)assert.ok(doc.includes(d.unsure),d.unsure);
