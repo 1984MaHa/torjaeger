@@ -19,7 +19,7 @@ import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML,updateBannerHTML} from "./views.js";
-import {newMini,miniAnswer,miniNext,miniOver,memoryFlip,miniBonus} from "./mini.js";
+import {newMini,newSurprise,miniAnswer,miniNext,miniOver,memoryFlip,miniBonus} from "./mini.js";
 import {miniHTML} from "./miniviews.js";
 import {APP_VERSION} from "./version.js";
 
@@ -345,9 +345,9 @@ function startPack(li,topic){
 }
 // ----- Mini-Spiele (Torwand): fünf Aufgaben, die Antworten zählen im Lernstand, kein Spiel, kein Sticker, kein Probetraining-Budget -----
 function startMini(kind){
-  const M=newMini(kind,S());
-  if(!M){UI.celebrate="";return;}
-  MG=M;view="mini";render();window.scrollTo(0,0);
+  const M=kind==="surprise"?newSurprise(S(),Math.random,MG&&MG.kind):newMini(kind,S());
+  if(!M){UI.miniMsg=kind==="surprise"?"Gerade gibt es kein Mini-Spiel mit passenden Aufgaben.":"Dafür gibt es gerade keine passenden Aufgaben. Probier ein anderes Mini-Spiel.";if(view==="home")render();return;}
+  UI.miniMsg="";MG=M;view="mini";render();window.scrollTo(0,0);
 }
 // Memory: Karte umdrehen. Beim letzten Paar gibt es die Punkte (Memory zählt nicht im Lernstand).
 function memoryTap(idx){

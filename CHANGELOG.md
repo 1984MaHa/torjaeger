@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.6.6 (Überraschungsspiel)
+- **Überraschungsspiel** in den Mini-Spielen der Kabine: Ein Tipp, und die App lost eines der Mini-Spiele (Torwand, Memory, Dribbel-Parcours) aus. Die zuletzt gespielte Art kommt nicht gleich wieder, solange es eine andere gibt. Nach dem Spiel gibt es „Noch eine Überraschung“. Wer lieber selbst wählt, tippt weiterhin auf das Mini-Spiel seiner Wahl.
+- Arten ohne passende Aufgaben (zum Beispiel Memory, wenn alle Rechenthemen aus sind) werden nicht gelost. Gibt es gar kein spielbares Mini-Spiel, steht in der Kabine ein freundlicher Hinweis statt eines Fehlers. Das gilt auch für die einzelnen Mini-Spiele.
+- Kein Schemawechsel (bleibt 8). Version 1.6.6 an allen vier Stellen. Tests: `test/v166.test.mjs`.
+
 ## 1.6.5 (Mini-Spiel Dribbel-Parcours)
 - **Dribbel-Parcours** in den Mini-Spielen der Kabine: Eine Strecke mit fünf Hindernissen (Hütchen und Gegner im Wechsel) und dem Tor am Ende. Jede **richtige Antwort** (vier Antworten zum Antippen) bringt den Spieler an einem Hindernis vorbei (10 Punkte, 15 ab der dritten in Folge). Bei einer **falschen Antwort ist der Ball verloren**: Erklärung, dann eine neue Aufgabe am selben Hindernis. Nach dem fünften Hindernis fällt das Tor: Bonus 20 Punkte ohne verlorenen Ball, sonst 10.
 - Es gibt höchstens zwölf Aufgaben je Spiel. Wer bis dahin nicht durch ist, bekommt das Ergebnis „bis Hindernis x von 5“ (kein Bonus). Aufgaben wie bei der Torwand aus dem Mix der aktiven Themen, die Antworten zählen im Lernstand (ohne Spiel, Sticker und Probetraining-Verbrauch).

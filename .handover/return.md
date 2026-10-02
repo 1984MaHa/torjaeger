@@ -2,6 +2,12 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B7: Version 1.6.6 Überraschungsspiel (Tag v1.6.6 lokal, kein Schemawechsel)
+- Neue Taste "Überraschungsspiel" im Bereich Mini-Spiele der Kabine: lost Torwand, Memory oder Dribbel-Parcours (`newSurprise`). Letzte Art wird vermieden, nicht spielbare Arten ausgelassen. Nach dem Spiel "Noch eine Überraschung". Auswahl durch Emil selbst bleibt (die einzelnen Tasten).
+- Neu: `UI.miniMsg` für freundliche Hinweise, wenn ein Spiel nicht startet (kein Fach/Thema passend).
+- Tests: 287 grün (5 neue in `test/v166.test.mjs`). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: Kabine, Mini-Spiele: "Überraschungsspiel" mehrmals tippen, es kommen verschiedene Spiele. Ein Fach ausschalten (Eltern-Bereich): Hinweis statt Absturz.
+
 ## Nachtrag B6: Version 1.6.5 Mini-Spiel Dribbel-Parcours (Tag v1.6.5 lokal, kein Schemawechsel)
 - Parcours aus 5 Hindernissen (Hütchen und Gegner im Wechsel, SVG-Strecke), Antworten als vier große Tasten. Richtig = Hindernis weiter, falsch = "Ball verloren", Erklärung, neue Aufgabe am selben Hindernis. Höchstens 12 Aufgaben, danach Ende ohne Tor. Tor: Bonus 20 (ohne Ballverlust) oder 10 über `applyMiniPoints`. Antworten zählen im Lernstand wie bei der Torwand.
 - Entscheidung: Obergrenze 12 Aufgaben, damit ein Spiel nicht endlos wird; Bonus nur bei Tor. Antwortauswahl wie Torwand (nur Aufgaben mit Zahl oder Auswahl als Antwort).

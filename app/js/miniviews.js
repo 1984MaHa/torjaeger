@@ -6,15 +6,16 @@ import {lookOf} from "./avatar.js";
 import {esc} from "./util.js";
 
 // Kabine: Auswahl der Mini-Spiele
-export function miniPanelHTML(s){
-  return `<section class="panel minipanel"><h3>Mini-Spiele</h3><p class="note">Kurze Spiele zwischendurch. Fünf Aufgaben, die Antworten zählen für dein Training.</p>
-    <div class="row">${MINI_IDS.map(k=>`<button class="btn" data-mini="${k}">${esc(MINI[k].name)}</button>`).join("")}</div></section>`;
+export function miniPanelHTML(s,msg=""){
+  return `<section class="panel minipanel"><h3>Mini-Spiele</h3><p class="note">Kurze Spiele zwischendurch. Such dir eins aus oder lass dich überraschen.</p>
+    <div class="row">${MINI_IDS.map(k=>`<button class="btn" data-mini="${k}">${esc(MINI[k].name)}</button>`).join("")}<button class="btn ghost" data-mini="surprise">Überraschungsspiel</button></div>
+    ${msg?`<p class="note" role="status">${esc(msg)}</p>`:""}</section>`;
 }
 const hud=(s,M)=>`<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button><div class="score">${esc(MINI[M.kind].name)} <em>${miniGoals(M)}</em> : <em>${M.res.length-miniGoals(M)}</em></div>
   <div class="dots">${Array.from({length:MINI_LEN},(_,i)=>`<i class="${i<M.res.length?(M.res[i]?"ok":"no"):i===M.i?"now":""}"></i>`).join("")}</div></div>`;
 
 export function miniHTML(s,M){
-  if(miniOver(M))return miniResultHTML(s,M);
+  if(miniOver(M))return miniResultHTML(s,M)+(M.surprise?`<div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost" data-mini="surprise">Noch eine Überraschung</button></div>`:"");
   if(M.kind==="wall")return wallHTML(s,M);
   if(M.kind==="memory")return memoryHTML(s,M);
   if(M.kind==="dribble")return dribbleHTML(s,M);

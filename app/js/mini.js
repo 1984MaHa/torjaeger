@@ -97,6 +97,13 @@ export function newMini(kind,s,rnd=Math.random){
   if(items.length<MINI_LEN)return null;
   return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null};
 }
+// Überraschungsspiel: lost eine Art aus, für die es gerade passende Aufgaben gibt. exclude = die zuletzt gespielte Art (kommt nur dran, wenn es nichts anderes gibt).
+// Gibt das neue Spiel zurück (M.surprise = true) oder null, wenn gar nichts spielbar ist.
+export function newSurprise(s,rnd=Math.random,exclude=null){
+  const kinds=mixed(MINI_IDS.filter(k=>k!==exclude),rnd).concat(MINI_IDS.includes(exclude)?[exclude]:[]);
+  for(const k of kinds){const M=newMini(k,s,rnd);if(M){M.surprise=true;return M;}}
+  return null;
+}
 // Antwort im Mini-Spiel: Loch idx. Verändert M und gibt {topic, ok, gain, val, T} zurück (für den Lernstand), oder null, wenn schon beantwortet.
 export function miniAnswer(M,idx,shot=null){
   if(!M||M.done||idx<0)return null;
