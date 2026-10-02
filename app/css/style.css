@@ -388,3 +388,10 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .camp-break .final{margin:8px 0}
 .hz{display:flex;flex-direction:column;gap:4px;max-width:320px;margin:0 auto 8px}
 .hzrow{display:flex;justify-content:space-between;gap:12px}
+.minipanel .row{gap:10px}
+.wall{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px auto;padding:16px;max-width:520px;border-radius:18px;background:repeating-linear-gradient(0deg,#8a5a3c 0 18px,#7a4d33 18px 20px);border:4px solid var(--ink)}
+.hole{display:grid;place-items:center;aspect-ratio:1/1;min-height:96px;border-radius:50%;border:4px solid var(--ink);background:radial-gradient(circle at 50% 40%,#2b2b2b,#0b0b0b);color:#fff;font:inherit;cursor:pointer}
+.hole .holein{font-family:var(--display);font-size:clamp(1.3rem,5vw,2rem);padding:6px;text-align:center;line-height:1.1;overflow-wrap:anywhere}
+.hole.right{background:radial-gradient(circle at 50% 40%,#1f7a3d,#0e3d1f);border-color:var(--goal)}
+.hole.wrong{background:radial-gradient(circle at 50% 40%,#8a2a2d,#3d1012);border-color:var(--miss)}
+.hole:disabled{cursor:default}

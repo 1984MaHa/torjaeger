@@ -291,7 +291,7 @@ test("Elfmeterschießen sichern und fortsetzen",()=>{
 
 // ---------- Darstellung ----------
 const clean=h=>assert.ok(!/undefined|NaN|\[object|—|–/.test(h.replace(/data-[a-z]+="[^"]*"/g,"")),"kaputter Wert oder Gedankenstrich");
-const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.6.2"},extra);
+const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.6.3"},extra);
 test("Startseite: Kachel nur mit Schalter, Einheiten gesperrt oder frei, Fortschritt und Abzeichen",()=>{
   const s=migrateProfile(fx("state-v6.json"));
   assert.ok(!homeHTML(s,{},env()).includes("Trainingslager"),"standardmäßig aus");
@@ -346,12 +346,12 @@ test("Eltern-Bereich: Schalter, Fortschritt je Einheit, Neustart mit Rückfrage"
 });
 
 // ---------- Dateien und Versionen ----------
-test("Version 1.6.2 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
+test("Version 1.6.3 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
   const sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
   for(const f of ["camp.js","campviews.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.2"/);assert.match(sw,/VERSION = "1.6.2"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.2"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.2");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.3"/);assert.match(sw,/VERSION = "1.6.3"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.3"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.3");
   for(const f of ["camp.js","campviews.js"])assert.ok(!/[—–]/.test(fs.readFileSync(path.join(ROOT,"app/js",f),"utf8")),f);
   assert.equal(CAMPS.m3_rest.units.length,5);assert.equal(CAMPS.m3_rest.badge,"Rest-Profi");
 });

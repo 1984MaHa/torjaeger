@@ -2,6 +2,13 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B4: Version 1.6.3 Mini-Spiel Torwand (Tag v1.6.3 lokal, kein Schemawechsel)
+- Neuer Bereich "Mini-Spiele" in der Kabine (Startseite des Kontos) mit Torwand: 5 Aufgaben aus dem Mix der aktuellen Liga (nur aktive Themen, nur Aufgaben mit Zahl oder Auswahl als Antwort), Antworten auf 4 Löchern, Tipp aufs richtige Loch = Tor. Punkte 10 je Tor (15 ab dem dritten in Folge). Antworten zählen im Lernstand (`applyAnswer`, `trial: true`), kein Spiel, kein Sticker, kein Budgetverbrauch, kein Sichern des laufenden Spiels (5 Aufgaben, kurz).
+- Neu: `app/js/mini.js` (Regeln, wiederverwendbar für B5 bis B7: `newMini`, `miniAnswer`, `miniNext`), `app/js/miniviews.js` (Kabinen-Auswahl `miniPanelHTML`, `miniHTML`), Stil `.wall`/`.hole` in style.css, Steuerung in app.js (`startMini`, `miniShoot`, `view="mini"`, Zustand `MG`).
+- Entscheidung: Mini-Spiele sind ein eigener Ansicht-Zustand (`MG`) und nicht Teil von `G`, damit das Spiel mit Halbzeiten/Päckchen unberührt bleibt. Der Trainer-Tipp fehlt im Mini-Spiel bewusst (leichtes Spiel zwischendurch).
+- Tests: 267 grün (7 neue in `test/v163.test.mjs`). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: Kabine, "Mini-Spiele", "Torwand": Aufgabe mit 4 Löchern, Antippen. Richtig: grünes Loch, "Tor ins richtige Loch!". Falsch: rotes Loch, richtiges Loch grün, Erklärung. Nach 5 Aufgaben Ergebnis, "Nochmal spielen". Bedienung mit dem Finger auf Größe der Löcher prüfen (min. 96 px).
+
 ## Nachtrag B3: Version 1.6.2 Frust-Bremse (Tag v1.6.2 lokal, kein Schemawechsel)
 - Drei Fehler in Folge im selben Thema (je Runde, einzelne Aufgaben): Thema Gewicht x0,15 bis Rundenende, bei der nächsten Aufgabe Tipp-Angebot durch den Trainer. Nicht im Trainingslager und nicht im Päckchen. Eltern-Bereich (Reiter Stand): "Drei Fehler in Folge. Ist das schon im Unterricht dran?" aus den letzten drei Antworten (`stats.<Thema>.last`), ohne neues Feld; zurückgestellte/ausgeschaltete Themen ohne Markierung.
 - Entscheidung: Die Markierung wird abgelesen und nicht gespeichert (Schema bleibt 8, nichts zu migrieren). Die Bremse ist pro Runde, die Eltern-Markierung über die letzten Antworten.

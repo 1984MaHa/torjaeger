@@ -19,6 +19,8 @@ import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML,updateBannerHTML} from "./views.js";
+import {newMini,miniAnswer,miniNext,miniOver} from "./mini.js";
+import {miniHTML} from "./miniviews.js";
 import {APP_VERSION} from "./version.js";
 
 const root=document.getElementById("app");
@@ -26,7 +28,7 @@ let store,deviceId,sync,adminApi;
 let globalRec;                 // {state:{pin,...}, baseRev, dirty, lastSync}
 let accounts=[];               // [{id,name}]
 let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
-let view="accounts",G=null;
+let view="accounts",G=null,MG=null; // MG: laufendes Mini-Spiel
 const UI={saveFail:false,savedPack:null,savedCamp:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
 const S=()=>cur.rec.state;
@@ -341,6 +343,21 @@ function startPack(li,topic){
   G={li,mode:"topic",topic,trial:false,pack:true,phase:"solve",tasks,len:tasks.length,i:0,ans:[],finals:[],helps:[],probeOpen:{},probed:{},ei:0,res:[],hist:[],pts:0,streak:0,rival:pick(RIVALS),last:null,t0:Date.now(),pool:[topic]};
   setTask(tasks[0]);view="play";render();window.scrollTo(0,0);armIdle();
 }
+// ----- Mini-Spiele (Torwand): fünf Aufgaben, die Antworten zählen im Lernstand, kein Spiel, kein Sticker, kein Probetraining-Budget -----
+function startMini(kind){
+  const M=newMini(kind,S());
+  if(!M){UI.celebrate="";return;}
+  MG=M;view="mini";render();window.scrollTo(0,0);
+}
+function miniShoot(idx){
+  if(!MG||MG.done)return;
+  const ok0=MG.items[MG.i].right===idx;
+  const r=miniAnswer(MG,idx,pickShot(ok0));
+  if(!r)return;
+  commit((s,c)=>applyAnswer(s,c,{topic:r.topic,ok:r.ok,gain:r.gain,li:MG.li,trial:true,lv:r.T.level||0,terms:termResults(r.T,r.val),soft:!!r.T.late}));
+  tone(r.ok?[523,659,784]:[220,180],r.ok?.12:.18,S().settings.sound);
+  render();
+}
 // ----- Trainer: Angebot nach langer Pause, gestufte Hilfe -----
 let idleT=null,autoT=null;
 const AUTO_MS=1800; // so lange bleibt das Overlay nach einer richtigen Antwort
@@ -465,7 +482,7 @@ function campInfo(){
 function render(){
   if(UI.fatal){root.innerHTML=`<section class="panel"><h3>Bitte App neu öffnen</h3><p>${UI.fatal}</p></section>`;return;}
   root.innerHTML=bandHTML(UI.preview)+saveWarnHTML(UI.saveFail)+(view==="accounts"||view==="admin"?updateBannerHTML(UI.updateReady):"")+(view==="accounts"?accountsHTML(accounts.filter(a=>a.rec.state||a.name).map(a=>({id:a.id,name:a.name,avatar:a.rec.state?a.rec.state.profile.avatar:null,locked:!!(a.rec.state&&a.rec.state.profile.pin&&a.rec.state.profile.pin.code)})),UI,env())
-    :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):resultHTML(S(),G,UI));
+    :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):view==="mini"?miniHTML(S(),MG):resultHTML(S(),G,UI));
   bind();
 }
 function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
@@ -693,6 +710,9 @@ function bind(){
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
   document.querySelectorAll("[data-bank]").forEach(d=>{d.ontoggle=()=>{UI.bankOpen=!!d.open;};}); // Trainerbank merkt sich nur, solange man sie selbst aufgeklappt hat
   if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")saveGame();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
+  document.querySelectorAll("[data-mini]").forEach(b=>b.onclick=()=>startMini(b.dataset.mini));
+  document.querySelectorAll("[data-hole]").forEach(b=>b.onclick=()=>miniShoot(Number(b.dataset.hole)));
+  if($("miniNext"))$("miniNext").onclick=()=>{miniNext(MG);render();window.scrollTo(0,0);if(miniOver(MG))scheduleSync(0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
   // „Warum stimmt das?“: hält das automatische Weiter an und zeigt die Erklärung, bis das Kind „Weiter“ tippt

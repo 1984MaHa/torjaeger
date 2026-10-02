@@ -14,6 +14,7 @@ import {rightText,coachHTML} from "./coach.js";
 import {total,lvOf} from "./model.js";
 import {esc} from "./util.js";
 import {adminAskHTML} from "./admin.js";
+import {miniPanelHTML} from "./miniviews.js";
 import {campTilesHTML,campResumeHTML,breakHTML,campResultHTML,campButtonsHTML,penaltyResultHTML} from "./campviews.js";
 import {topicSafe,topicDone,topicOn,activeTopics,gateTopics,fachProgress,safeCount,mastered,leagueState,playable,currentLeague,canTrial,budgetOf,streakDays,stickerCount,settingsOf,roundLen,trialLen,winNeed} from "./rules.js";
 
@@ -121,6 +122,7 @@ export function homeHTML(s,UI,env){
   <div class="hero"><span class="herofig">${avatarSVG(lookOf(s.profile),{crop:"bust",px:104})}</span><div><h1 class="title">Torjäger-Liga</h1><p class="teamline">${esc(teamOf(s))}</p><p class="lead">Hallo ${name}! Jedes Spiel hat ${roundLen(s)} Aufgaben. Richtig heißt Tor! Spiel deine Liga durch, dann darfst du in die nächste aufsteigen. In die leichteren Ligen kannst du immer zurück.</p>
     <div class="row" style="margin-top:8px"><button class="snd" id="switch">Spieler wechseln (${name})</button><button class="snd" id="avEdit">Mein Spieler</button></div></div></div>
   ${campTilesHTML(s)}
+  ${miniPanelHTML(s)}
   <div class="leagues">${currentCard(s,UI,currentLeague(s))}<h2 class="gl2">Andere Ligen</h2>${LIGEN.map((_,i)=>i).filter(i=>i!==currentLeague(s)).map(i=>miniRow(s,UI,i)).join("")}</div>
   <section class="panel"><h3>Sammelalbum · ${stickerCount(s)} von ${STICKERS.length}</h3><div class="album">${STICKERS.map((_,i)=>stickerHTML(i,i<stickerCount(s))).join("")}</div>
   <p class="small">Für jedes gewonnene Spiel gibt es einen Sticker. Gewonnen hast du ab ${winNeed(roundLen(s))} von ${roundLen(s)} Toren.</p></section>
