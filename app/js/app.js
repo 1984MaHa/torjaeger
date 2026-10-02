@@ -6,7 +6,7 @@ import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResuma
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -19,7 +19,7 @@ import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML,updateBannerHTML} from "./views.js";
-import {newMini,miniAnswer,miniNext,miniOver} from "./mini.js";
+import {newMini,miniAnswer,miniNext,miniOver,memoryFlip} from "./mini.js";
 import {miniHTML} from "./miniviews.js";
 import {APP_VERSION} from "./version.js";
 
@@ -348,6 +348,14 @@ function startMini(kind){
   const M=newMini(kind,S());
   if(!M){UI.celebrate="";return;}
   MG=M;view="mini";render();window.scrollTo(0,0);
+}
+// Memory: Karte umdrehen. Beim letzten Paar gibt es die Punkte (Memory zählt nicht im Lernstand).
+function memoryTap(idx){
+  if(!MG||MG.kind!=="memory")return;
+  const r=memoryFlip(MG,idx);if(!r||r.event==="none")return;
+  if(r.event==="done"){commit((s,c)=>applyMiniPoints(s,c,MG.pts));tone([523,659,784],.12,S().settings.sound);}
+  else if(r.event==="pair")tone([523,659],.1,S().settings.sound);
+  render();if(r.event==="done"){window.scrollTo(0,0);scheduleSync(0);}
 }
 function miniShoot(idx){
   if(!MG||MG.done)return;
@@ -712,6 +720,7 @@ function bind(){
   if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")saveGame();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-mini]").forEach(b=>b.onclick=()=>startMini(b.dataset.mini));
   document.querySelectorAll("[data-hole]").forEach(b=>b.onclick=()=>miniShoot(Number(b.dataset.hole)));
+  document.querySelectorAll("[data-card]").forEach(b=>b.onclick=()=>memoryTap(Number(b.dataset.card)));
   if($("miniNext"))$("miniNext").onclick=()=>{miniNext(MG);render();window.scrollTo(0,0);if(miniOver(MG))scheduleSync(0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;

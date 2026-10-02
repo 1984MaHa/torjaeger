@@ -8,8 +8,10 @@ import {activeTopics,nextTopic,currentLeague} from "./rules.js";
 
 export const MINI_LEN=5;
 export const MINI={
-  wall:{id:"wall",name:"Torwand",text:"Schieße auf das Loch mit der richtigen Antwort."}
+  wall:{id:"wall",name:"Torwand",text:"Schieße auf das Loch mit der richtigen Antwort."},
+  memory:{id:"memory",name:"Memory",text:"Finde zu jeder Aufgabe das passende Ergebnis."}
 };
+export const MEM_PAIRS=5; // Kartenpaare im Memory
 export const MINI_IDS=Object.keys(MINI);
 
 const mixed=(a,rnd)=>a.map(x=>[rnd(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
@@ -47,9 +49,42 @@ export function miniTasks(s,li,n=MINI_LEN,rnd=Math.random,make=wallOptions){
   }
   return out;
 }
+// Memory: Aufgabe und Ergebnis als Kartenpaar. Taugt nur eine kurze Rechenaufgabe "a · b = ?" mit ganzer Zahl als Ergebnis.
+const plain=q=>String(q).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+export function memoryPair(T){
+  if(!T||T.type!=="num"||!Number.isInteger(T.a)||T.vis)return null;
+  const m=/^(.{1,16}?)\s*=\s*\?$/.exec(plain(T.q));
+  return m?{front:m[1].trim(),back:String(T.a)}:null;
+}
+function newMemory(s,rnd){
+  const li=currentLeague(s),found=miniTasks(s,li,16,rnd,memoryPair),items=[],fronts=new Set(),backs=new Set();
+  for(const it of found){
+    if(fronts.has(it.front)||backs.has(it.back))continue; // jedes Ergebnis und jede Aufgabe nur einmal, sonst wäre ein Paar nicht eindeutig
+    fronts.add(it.front);backs.add(it.back);items.push(it);
+    if(items.length===MEM_PAIRS)break;
+  }
+  if(items.length<MEM_PAIRS)return null;
+  const cards=[];items.forEach((it,k)=>{cards.push({k,side:"q",text:it.front});cards.push({k,side:"a",text:it.back});});
+  return{kind:"memory",li,items,cards:mixed(cards,rnd),open:[],found:[],tries:0,pts:0};
+}
+// Karte idx umdrehen. Zwei offene Karten, die nicht passen, bleiben liegen, bis die nächste Karte angetippt wird.
+// Gibt {event: "open" | "pair" | "miss" | "done" | "none"} zurück. Memory zählt nicht im Lernstand: beim Raten wären fast alle ersten Versuche falsch.
+export function memoryFlip(M,idx){
+  if(!M||M.kind!=="memory"||miniOver(M))return null;
+  if(M.open.length===2)M.open=[];
+  const c=M.cards[idx];
+  if(!c||M.found.includes(c.k)||M.open.includes(idx))return{event:"none"};
+  M.open.push(idx);
+  if(M.open.length<2)return{event:"open"};
+  M.tries++;
+  const a=M.cards[M.open[0]],b=M.cards[M.open[1]];
+  if(a.k===b.k&&a.side!==b.side){M.found.push(a.k);M.pts+=10;M.open=[];return{event:miniOver(M)?"done":"pair"};}
+  return{event:"miss"};
+}
 // Neues Mini-Spiel. null, wenn die Art unbekannt ist oder keine passenden Aufgaben da sind.
 export function newMini(kind,s,rnd=Math.random){
   if(!MINI[kind])return null;
+  if(kind==="memory")return newMemory(s,rnd);
   const li=currentLeague(s),items=miniTasks(s,li,MINI_LEN,rnd);
   if(items.length<MINI_LEN)return null;
   return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null};
@@ -69,6 +104,6 @@ export function miniNext(M){
   M.i++;M.done=false;M.pick=-1;M.ok=false;M.gain=0;M.shot=null;
   return M.i>=M.items.length;
 }
-export const miniOver=M=>!!M&&M.i>=M.items.length;
+export const miniOver=M=>!!M&&(M.kind==="memory"?M.found.length>=M.items.length:M.i>=M.items.length);
 export const miniGoals=M=>M.res.filter(Boolean).length;
 export const miniScore=M=>`${miniGoals(M)} : ${M.res.length-miniGoals(M)}`;

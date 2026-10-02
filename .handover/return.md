@@ -2,6 +2,13 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B5: Version 1.6.4 Mini-Spiel Memory (Tag v1.6.4 lokal, kein Schemawechsel)
+- Memory: 10 Karten, 5 Paare aus kurzen Rechenaufgaben (a · b = ?) und Ergebnissen aus den aktiven Rechenthemen des Mixes. Zwei Karten antippen; falsche Paare bleiben offen, bis die nächste Karte angetippt wird (kein Zeitgeber). 10 Punkte je Paar, Gutschrift über `applyMiniPoints` beim letzten Paar.
+- Entscheidung: **kein Eintrag in den Lernstand** (Raten würde viele falsche Erst-Versuche erzeugen und die Frust-Bremse auslösen). Das Memory ist reine Wiederholung. Wenn Marco doch Lernstand will: nur richtige Paare zählen lassen (Vorschlag), nicht umgesetzt.
+- Zählt nur für Rechenthemen. Deutsch-Aufgaben taugen nicht als kurze Kartenpaare, deshalb nicht dabei.
+- Tests: 274 grün (7 neue in `test/v164.test.mjs`). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: Kabine, Mini-Spiele, Memory: Karten haben 5 + 5 Texte. Zwei falsche Karten: bleiben offen mit Hinweis, nächster Tipp deckt zu. Richtiges Paar bleibt grün. Nach 5 Paaren Ergebnis mit Versuchen und 50 Punkten.
+
 ## Nachtrag B4: Version 1.6.3 Mini-Spiel Torwand (Tag v1.6.3 lokal, kein Schemawechsel)
 - Neuer Bereich "Mini-Spiele" in der Kabine (Startseite des Kontos) mit Torwand: 5 Aufgaben aus dem Mix der aktuellen Liga (nur aktive Themen, nur Aufgaben mit Zahl oder Auswahl als Antwort), Antworten auf 4 Löchern, Tipp aufs richtige Loch = Tor. Punkte 10 je Tor (15 ab dem dritten in Folge). Antworten zählen im Lernstand (`applyAnswer`, `trial: true`), kein Spiel, kein Sticker, kein Budgetverbrauch, kein Sichern des laufenden Spiels (5 Aufgaben, kurz).
 - Neu: `app/js/mini.js` (Regeln, wiederverwendbar für B5 bis B7: `newMini`, `miniAnswer`, `miniNext`), `app/js/miniviews.js` (Kabinen-Auswahl `miniPanelHTML`, `miniHTML`), Stil `.wall`/`.hole` in style.css, Steuerung in app.js (`startMini`, `miniShoot`, `view="mini"`, Zustand `MG`).

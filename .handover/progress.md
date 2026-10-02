@@ -1,6 +1,6 @@
 # Fortschritt (Auftrag current.md vom 02.10.2026, Teil B)
 
-Anker (Fortsetzung): Branch preview, Version 1.6.3, Schema 8, Tests 267 grün. Tags v1.6.0 bis v1.6.3 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
+Anker (Fortsetzung): Branch preview, Version 1.6.4, Schema 8, Tests 274 grün. Tags v1.6.0 bis v1.6.4 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
 
 | Paket | Stand | Tests |
 |---|---|---|
@@ -9,8 +9,9 @@ Anker (Fortsetzung): Branch preview, Version 1.6.3, Schema 8, Tests 267 grün. T
 | B2 Themen-Zustände (1.6.1, Schema 8) | fertig, siehe git log, Tag v1.6.1 | 254 |
 | B3 Frust-Bremse (1.6.2) | fertig, Tag v1.6.2 | 260 |
 | B4 Mini-Spiel Torwand (1.6.3) | fertig, Tag v1.6.3 | 267 |
-| B5 Mini-Spiel Memory (1.6.4) | offen, als Nächstes | - |
-| B6 bis B8 | offen | - |
+| B5 Mini-Spiel Memory (1.6.4) | fertig, Tag v1.6.4 | 274 |
+| B6 Dribbel-Parcours (1.6.5) | offen, als Nächstes | - |
+| B7, B8 | offen | - |
 
 B2: zurueck (mit optionalem Datum topicUntil), topicSeen (neue Themen starten zurückgestellt), Migration 7 nach 8, Fixture state-v7.json.
 Für B3: Zustände aus settings.topicMode, Fehlerfolge je Thema aus stats.<Thema>.last (letzte 10 Antworten) ablesbar, kein neues Datenfeld nötig für die Bremse selbst; Eltern-Markierung "schon im Unterricht dran?" braucht evtl. Feld.

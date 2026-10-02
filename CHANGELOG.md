@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.6.4 (Mini-Spiel Memory)
+- **Memory** in den Mini-Spielen der Kabine: Zehn Karten, fünf Aufgaben (kurze Rechenaufgaben wie „7 · 8“) und fünf Ergebnisse (56). Zwei Karten antippen: Passen sie zusammen, bleiben sie offen (+10 Punkte), sonst bleiben beide liegen, bis die nächste Karte angetippt wird (dann werden sie wieder verdeckt). Am Ende steht, wie viele Versuche es waren.
+- Die Karten kommen aus den aktiven Rechenthemen des Mixes (Aufgaben, deren Frage mit „= ?“ endet). Jede Aufgabe und jedes Ergebnis kommt nur einmal vor. Ist kein Rechenthema an, gibt es kein Memory.
+- **Memory zählt nicht im Lernstand** (beim Raten wären fast alle ersten Versuche falsch und würden den Stand verfälschen und die Frust-Bremse auslösen). Es gibt nur die Punkte (`applyMiniPoints`), kein Spiel, keinen Sticker.
+- Kein Schemawechsel (bleibt 8). Version 1.6.4 an allen vier Stellen. Tests: `test/v164.test.mjs`.
+
 ## 1.6.3 (Mini-Spiel Torwand)
 - **Mini-Spiele in der Kabine:** Neuer Bereich „Mini-Spiele“ auf der Startseite des Kontos. Den Anfang macht die **Torwand**: Fünf Aufgaben aus dem Mix der aktuellen Liga (nur aktive Themen), die Antworten stehen als Zahlen oder Wörter auf vier Löchern einer Torwand. Ein Tipp auf das richtige Loch ist ein Tor, ein falsches Loch ein Fehlschuss mit Rückmeldung und Erklärung. Ergebnis wie „4 : 1“, Punkte wie im Elfmeterschießen (10 je Tor, 15 ab dem dritten in Folge).
 - Die Antworten zählen im Lernstand des Themas. Es gibt kein Spiel, keinen Sieg, keinen Sticker und keinen Verbrauch vom Probetraining (wie das Elfmeterschießen). Nicht jede Aufgabe taugt für die Löcher (Zuordnen, Sortieren und Paare fehlen), es werden nur passende Aufgaben gezogen.

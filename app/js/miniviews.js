@@ -16,6 +16,7 @@ const hud=(s,M)=>`<div class="hud"><button class="btn ghost" id="home" style="fo
 export function miniHTML(s,M){
   if(miniOver(M))return miniResultHTML(s,M);
   if(M.kind==="wall")return wallHTML(s,M);
+  if(M.kind==="memory")return memoryHTML(s,M);
   return "";
 }
 // Torwand: vier Löcher, auf jedem steht eine Antwort. Antippen = Schuss auf dieses Loch.
@@ -37,7 +38,23 @@ function wallHTML(s,M){
     <div class="wall" role="group" aria-label="Torwand mit vier Löchern">${holes}</div>${fb}</section>
     <p class="lead small" style="color:#fff">Tippe auf das Loch mit der richtigen Antwort.</p>`;
 }
+// Memory: zehn Karten, Aufgabe und Ergebnis gehören zusammen. Zwei Karten, die nicht passen, bleiben offen, bis die nächste angetippt wird.
+function memoryHTML(s,M){
+  const n=M.items.length,miss=M.open.length===2&&M.cards[M.open[0]].k!==M.cards[M.open[1]].k;
+  const cards=M.cards.map((c,i)=>{
+    const found=M.found.includes(c.k),open=found||M.open.includes(i);
+    return `<button class="mcard ${found?"found":open?"open":""} ${c.side==="a"?"res":"task"}" data-card="${i}" ${found?"disabled":""} aria-label="${open?esc(c.text):"Verdeckte Karte"}"><span>${open?esc(c.text):"⚽"}</span></button>`;
+  }).join("");
+  return `<div class="hud"><button class="btn ghost" id="home" style="font-size:1rem;padding:8px 14px">Kabine</button><div class="score">Memory <em>${M.found.length}</em> von ${n} Paaren</div><div class="dots">${M.items.map((it,k)=>`<i class="${M.found.includes(k)?"ok":""}"></i>`).join("")}</div></div>
+    <section class="card"><div class="tag">Memory · Versuche: ${M.tries}</div>
+    <p class="q">Finde zu jeder Aufgabe das passende Ergebnis. Tippe zwei Karten an.</p>
+    <div class="memory" role="group" aria-label="Memory mit ${n*2} Karten">${cards}</div>
+    ${miss?`<div class="bubble" role="status"><p>Das passt nicht zusammen. Tippe eine Karte an, dann werden beide wieder verdeckt.</p></div>`:""}</section>`;
+}
 export function miniResultHTML(s,M){
+  if(M.kind==="memory")return `<section class="card result"><h2>Alle Paare gefunden!</h2>
+    <p class="q" style="font-size:1.4rem">${M.items.length} Paare in ${M.tries} Versuchen · +${M.pts} Punkte</p>
+    <div class="row" style="justify-content:center"><button class="btn" id="miniAgain" data-mini="memory">Nochmal spielen</button><button class="btn ghost" id="home">Zur Kabine</button></div></section>`;
   const c=miniGoals(M),n=M.res.length,head=c===n?"Alle Löcher getroffen!":c>=3?"Stark geschossen!":"Das üben wir noch";
   return `<section class="card result"><h2>${head}</h2>
     <div class="final"><span class="team">${esc(s.profile.name)}<small>Heim</small></span><span>${miniScore(M)}</span><span class="team">${esc(MINI[M.kind].name)}<small>Mini-Spiel</small></span></div>

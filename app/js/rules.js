@@ -218,6 +218,11 @@ export function applyTopicUntil(s,ctx,topic,date){
   if(Array.isArray(s.settings.topicSeen)&&!s.settings.topicSeen.includes(topic))s.settings.topicSeen=s.settings.topicSeen.concat(topic);
   s.settings.t=ctx.now;touch(s,ctx);return true;
 }
+// Punkte aus einem Mini-Spiel ohne Aufgabenwertung (Memory). Nur das Gerät, das spielt, bekommt sie.
+export function applyMiniPoints(s,ctx,pts){
+  if(!Number.isFinite(pts)||pts<=0)return false;
+  devOf(s,ctx.deviceId).points+=Math.min(1000,Math.round(pts));touch(s,ctx);return true;
+}
 // Fach ganz ein- oder ausschalten (Eltern). Gehört zu den Einstellungen (neuerer Stand gewinnt). Gibt false für ein unbekanntes Fach.
 export function applyFach(s,ctx,fach,on){
   if(!Object.values(FACH_OF).includes(fach))return false;
