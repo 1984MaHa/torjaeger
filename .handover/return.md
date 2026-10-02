@@ -7,15 +7,15 @@ Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus b
 - **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben. Keine Vorschau im Browser geöffnet, keine Screenshots (Marco prüft visuell selbst).
 
 ## Stand je Umgebung
-- Vor der Sitzung: `main`, `preview` und `origin/*` auf `5e51b26`, Live und Vorschau liefen mit 1.5.3 (Angabe aus der letzten Rückübergabe, nicht von mir geprüft).
-- Jetzt: `preview` lokal vor `origin/preview` um die Commits dieser Sitzung (nicht gepusht). `main` unverändert bei `5e51b26`. Die Vorschau auf der NAS läuft weiter mit 1.5.3, bis Marco pusht und `deploy.sh` ausführt.
+- Marco hat nach der Vorschau-Abnahme die Freigabe nach `main` angewiesen (02.10.2026). `main` und `preview` liegen nach dem Release auf demselben Commit und wurden nach `origin` gepusht. Auf der NAS ist **noch nichts** ausgeführt: Live läuft weiter mit 1.5.3, bis Marco im Live-Ordner `sudo sh deploy.sh` ausführt (die Vorschau: im Vorschau-Ordner).
+- Nachträglich auf Marcos Wunsch geändert: Punktebilder bei Teilen mit Rest entfernt (überall), Trainingslager-Schalter im Reiter Konten unter der Konto-Karte statt in den Einstellungen.
 
 ## Anker-Prüfung am Anfang
 Alle fünf Erwartungen stimmten (Branch `preview`, `HEAD` und `main` bei `5e51b26`, Status genau `?? .handover/next.md`, `APP_VERSION` 1.5.3). Erster Commit (`523fa3f`): `next.md` nach `current.md`.
 
 ## Umgesetzt
 1. **Kachel und Ablauf:** Kachel „Trainingslager: Teilen mit Rest“ oben auf der Startseite (nur wenn eingeschaltet), Fortschritt „x von 5 Einheiten“, Abzeichen „Rest-Profi“. Einheit n+1 frei nach Abschluss von n, keine Mindestquote, Wiederholen möglich. Je Einheit 2 Halbzeiten zu 10 Aufgaben, Halbzeitpause (Zwischenstand, Trainer-Satz, „2. Halbzeit anpfeifen“), Abpfiff mit Ergebnis und Bonus wie sonst (Sieg 20, perfekt 30, über beide Halbzeiten gerechnet), danach Nachspielzeit.
-2. **Fünf Einheiten** aus vorhandenen Bausteinen (`mk.rest`, `packOf`) plus eigene Sachaufgaben: 1 Aufwärmen, 2 Erste Reste (Bilder nur in der 1. Halbzeit), 3 Alle Reihen („Da passt noch einer rein!“), 4 Kontroll-Pfiff (je Halbzeit ein Päckchen mit 6 Aufgaben), 5 Spieltag (Busse, Kabinen, Netze, Mannschaften, Kästen). Erklärung mit Rechenweg. Antworten zählen im Lernstand von `m3_rest` und `m3_sach`. Abzeichen plus Jubel-Sticker (falls einer fehlt) am Ende von Einheit 5.
+2. **Fünf Einheiten** aus vorhandenen Bausteinen (`mk.rest`, `packOf`) plus eigene Sachaufgaben: 1 Aufwärmen, 2 Erste Reste (ohne Punktebilder), 3 Alle Reihen („Da passt noch einer rein!“), 4 Kontroll-Pfiff (je Halbzeit ein Päckchen mit 6 Aufgaben), 5 Spieltag (Busse, Kabinen, Netze, Mannschaften, Kästen). Erklärung mit Rechenweg. Antworten zählen im Lernstand von `m3_rest` und `m3_sach`. Abzeichen plus Jubel-Sticker (falls einer fehlt) am Ende von Einheit 5.
 3. **Elfmeterschießen:** 5 Schüsse, `startPenalty(topic, unit, tasks)` nimmt eine Aufgabenliste (für 1.6.0 wiederverwendbar). Neue Torszene mit Torwart (`sceneSVG(look, shot, {keeper:true})`, Schussart `saved`, „Gehalten!“), `prefers-reduced-motion` beachtet. Ergebnis wie „4 : 1“.
 4. **Eltern-Bereich:** Schalter je Konto (Standard aus), Fortschritt je Einheit mit Ergebnis je Halbzeit und Elfmeterschießen, „Trainingslager neu starten“ mit Rückfrage.
 5. **Sichern und Fortsetzen:** Gerät-lokal unter `camp:<Konto>` (kein Schemawechsel dafür). Gesichert bei jeder Antwort, „Kabine“, Hintergrund, Halbzeitpause. Kabine: „Weiterspielen oder Neu anfangen“ mit Halbzeit und Stand. Gilt für Halbzeit, Kontroll-Pfiff-Einheit und Elfmeterschießen.
@@ -47,7 +47,7 @@ Alle fünf Erwartungen stimmten (Branch `preview`, `HEAD` und `main` bei `5e51b2
 - Arbeitsbaum nach dem Commit sauber. Neue Dateien in `app/`: `js/camp.js`, `js/campviews.js` (beide in `FILES` des Service Workers).
 
 ## Prüfliste für Marco (Vorschau auf dem iPad, nach Push und `deploy.sh`)
-1. Eltern-Bereich, Reiter Einstellungen: bei Emil „Trainingslager anzeigen“ auf An. Auf der Startseite erscheint die Kachel mit Einheit 1 frei, 2 bis 5 grau.
+1. Eltern-Bereich, Reiter Konten: bei Emil „Trainingslager anzeigen“ auf An. Auf der Startseite erscheint die Kachel mit Einheit 1 frei, 2 bis 5 grau.
 2. Einheit 1 starten: oben steht „Trainingslager · Einheit 1 · 1. Halbzeit · Aufgabe 1 von 10“. Nach 10 Aufgaben kommt die Halbzeitpause mit Zwischenstand und „2. Halbzeit anpfeifen“.
 3. In der Pause „Kabine“ antippen: Dort steht „Trainingslager weiterspielen?“. Weiterspielen bringt zurück in die Pause.
 4. Mitten in der 2. Halbzeit App schließen und neu öffnen: Weiterspielen setzt an der richtigen Aufgabe mit richtigem Stand fort.
