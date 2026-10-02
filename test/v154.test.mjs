@@ -291,7 +291,7 @@ test("Elfmeterschießen sichern und fortsetzen",()=>{
 
 // ---------- Darstellung ----------
 const clean=h=>assert.ok(!/undefined|NaN|\[object|—|–/.test(h.replace(/data-[a-z]+="[^"]*"/g,"")),"kaputter Wert oder Gedankenstrich");
-const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.5.4"},extra);
+const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.5.5"},extra);
 test("Startseite: Kachel nur mit Schalter, Einheiten gesperrt oder frei, Fortschritt und Abzeichen",()=>{
   const s=migrateProfile(fx("state-v6.json"));
   assert.ok(!homeHTML(s,{},env()).includes("Trainingslager"),"standardmäßig aus");
@@ -346,12 +346,64 @@ test("Eltern-Bereich: Schalter, Fortschritt je Einheit, Neustart mit Rückfrage"
 });
 
 // ---------- Dateien und Versionen ----------
-test("Version 1.5.4 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
+test("Version 1.5.5 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
   const sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
   for(const f of ["camp.js","campviews.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.4"/);assert.match(sw,/VERSION = "1.5.4"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.4"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.4");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.5.5"/);assert.match(sw,/VERSION = "1.5.5"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.5.5"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.5.5");
   for(const f of ["camp.js","campviews.js"])assert.ok(!/[—–]/.test(fs.readFileSync(path.join(ROOT,"app/js",f),"utf8")),f);
   assert.equal(Object.keys(CAMPS).length,1);assert.equal(CAMPS.m3_rest.units.length,5);assert.equal(CAMPS.m3_rest.badge,"Rest-Profi");
+});
+
+// ---------- Fächer ganz ausschalten (Eltern, je Konto) ----------
+import {applyFach,applyTopicMode,topicOn,topicModeOf,topicRawMode,activeTopics,gateTopics,nextTopic,mastered} from "../app/js/rules.js";
+import {LIGEN,FACH_OF,allTopicsOf} from "../app/js/content.js";
+import {adminHTML} from "../app/js/admin.js";
+import {cleanTrainer} from "../app/js/avatar.js";
+test("Fach ausschalten: alle Themen des Fachs sind aus, die Einzeleinstellung bleibt erhalten",()=>{
+  const s=newProfile({id:"k-abc12345",name:"X",deviceId:"d1"});
+  applyTopicMode(s,ctx(1),"d3_ie","wiederholen");
+  assert.equal(topicOn(s,"d3_ie"),true);
+  assert.equal(applyFach(s,ctx(2),"deu",false),true);
+  for(const li of [0,1,2])for(const t of LIGEN[li].deu){assert.equal(topicOn(s,t),false,t);assert.equal(topicModeOf(s,t),"aus");}
+  assert.equal(topicOn(s,"m3_rest"),true,"Mathe bleibt");
+  assert.equal(topicRawMode(s,"d3_ie"),"wiederholen","Einzeleinstellung bleibt");
+  assert.deepEqual(activeTopics(s,LIGEN[1].deu),[]);
+  assert.ok(gateTopics(s,1).every(t=>FACH_OF[t]==="math"));
+  for(let i=0;i<300;i++)assert.equal(FACH_OF[nextTopic(s,LIGEN[1].math.concat(LIGEN[1].deu),null)],"math","nie ein Deutsch-Thema");
+  applyFach(s,ctx(3),"deu",true);
+  assert.equal(topicOn(s,"d3_ie"),true);assert.equal(topicModeOf(s,"d3_ie"),"wiederholen");assert.deepEqual(s.settings.fachOff,{});
+  assert.equal(applyFach(s,ctx(4),"quatsch",false),false);
+});
+test("Nur Mathe: Englisch, Sachkunde und Deutsch aus, der Aufstieg hängt nur an Mathe",()=>{
+  const s=newProfile({id:"k-abc12345",name:"X",deviceId:"d1"});
+  for(const f of ["deu","eng","su"])applyFach(s,ctx(1),f,false);
+  assert.ok(allTopicsOf(1).filter(t=>topicOn(s,t)).every(t=>FACH_OF[t]==="math"));
+  for(const t of LIGEN[1].math)s.stats[t]={tot:{d1:{a:10,c:10}},last:Array.from({length:10},(_,i)=>({t:i+1,ok:1,d:"d1"}))};
+  assert.equal(mastered(s,1),true,"alle Mathe-Themen sicher reicht");
+});
+test("Fach aus: Startseite zeigt das Fach und den Mix nicht mehr, Eltern-Bereich hat die Schalter",()=>{
+  const s=migrateProfile(fx("state-v6.json"));
+  let h=homeHTML(s,{lgOpen:{}},env());
+  assert.ok(h.includes('data-fach="1:deu"')&&h.includes('data-fach="1:math"')&&h.includes('data-play="1:mix"'));
+  applyFach(s,ctx(1),"deu",false);
+  h=homeHTML(s,{lgOpen:{}},env());clean(h);
+  assert.ok(h.includes('data-fach="1:math"')&&!h.includes('data-fach="1:deu"'));
+  assert.ok(h.includes('data-fach="1:eng"'),"Englisch noch an");
+  assert.ok(h.includes('data-play="1:mix"'),"Mix bleibt, solange Mathe an ist");
+  for(const f of ["eng","su","math"])applyFach(s,ctx(2),f,false);
+  h=homeHTML(s,{lgOpen:{}},env());clean(h);
+  assert.ok(h.includes("Zurzeit ist hier nichts angeschaltet")&&!h.includes('data-play="1:mix"'));
+  const A={tab:"settings",accounts:[{id:"k-emil0005",name:"Emil",state:s}],sel:"k-emil0005",tr1:cleanTrainer(defaultTrainer(),1),tr2:cleanTrainer(defaultTrainer2(),2),server:{state:"loading"},schema:{app:7,global:4}};
+  const a=adminHTML(A);clean(a);
+  for(const f of ["math","deu","eng","su"])assert.ok(a.includes(`data-afach="${f}:on"`)&&a.includes(`data-afach="${f}:off"`),f);
+  assert.ok(a.includes("Fächer: Emil")&&a.includes('aria-pressed="true"'));
+});
+test("Fach-Schalter wird beim Zusammenführen wie die Einstellungen behandelt (neuerer Stand gewinnt)",()=>{
+  const a=migrateProfile(fx("state-v6.json")),b=migrateProfile(fx("state-v6.json"));
+  applyFach(a,ctx(a.meta.updatedAt+10),"deu",false);
+  const m=mergeProfile(a,b),m2=mergeProfile(b,a);
+  assert.deepEqual(m.settings.fachOff,{deu:true});assert.equal(canon(m.settings),canon(m2.settings));
+  assert.equal(checkProfileState(m),null);
 });

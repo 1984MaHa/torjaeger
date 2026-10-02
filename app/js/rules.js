@@ -1,7 +1,7 @@
 // Spielregeln auf dem Konto-Stand: Ligen, sichere Themen, Aufstieg, Punkte, Sticker.
 // Alles reine Funktionen auf dem Stand `s` (kein DOM), damit sie getestet werden können.
 // Änderungen laufen über die apply*-Funktionen mit ctx = {deviceId, now}.
-import {LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,LATE_IDS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
+import {FACH_OF,LIGEN,STICKERS,TRIAL,ROUND,PROBE,MASTER_N,MASTER_K,WEAK,BONUS_FIX,EN_LEVELS,LATE_IDS,topicsOf,allTopicsOf,isEng,TOPIC_MODES} from "./content.js";
 import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf,campOf,defaultCamp} from "./model.js";
 import {CAMPS,UNIT_COUNT} from "./camp.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
@@ -14,7 +14,11 @@ export function topicSafe(s,t){
   return l.length>=MASTER_N&&l.reduce((a,x)=>a+x.ok,0)>=MASTER_K;
 }
 // Themensteuerung der Eltern je Konto: aktuell (Vorgabe), wiederholen (seltener) oder aus (ausgeblendet).
-export const topicModeOf=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"?v:"aktuell";};
+// Fächer (Mathe, Deutsch, Englisch, Sachkunde) schalten die Eltern je Konto ganz aus (settings.fachOff = {fach: true}). Die Einstellung je Thema bleibt dabei erhalten.
+export const fachOffOf=(s,f)=>{const o=s.settings&&s.settings.fachOff;return!!(f&&o&&typeof o==="object"&&!Array.isArray(o)&&o[f]===true);};
+export const topicRawMode=(s,t)=>{const m=s.settings&&s.settings.topicMode,v=m&&typeof m==="object"?m[t]:null;return v==="aus"||v==="wiederholen"?v:"aktuell";};
+// wirksame Steuerung: ein ausgeschaltetes Fach schaltet alle seine Themen aus
+export const topicModeOf=(s,t)=>fachOffOf(s,FACH_OF[t])?"aus":topicRawMode(s,t);
 export const topicOn=(s,t)=>topicModeOf(s,t)!=="aus";
 export const activeTopics=(s,list)=>list.filter(t=>topicOn(s,t));
 // Themen, die für den Aufstieg zählen: nur Mathe und Deutsch, und nur die, die nicht "aus" sind.
@@ -164,6 +168,13 @@ export function applyTopicMode(s,ctx,topic,mode){
   const m=Object.assign({},s.settings.topicMode);
   if(mode==="aktuell")delete m[topic];else m[topic]=mode;
   s.settings.topicMode=m;s.settings.t=ctx.now;touch(s,ctx);return true;
+}
+// Fach ganz ein- oder ausschalten (Eltern). Gehört zu den Einstellungen (neuerer Stand gewinnt). Gibt false für ein unbekanntes Fach.
+export function applyFach(s,ctx,fach,on){
+  if(!Object.values(FACH_OF).includes(fach))return false;
+  const o=Object.assign({},s.settings.fachOff);
+  if(on)delete o[fach];else o[fach]=true;
+  s.settings.fachOff=o;s.settings.t=ctx.now;touch(s,ctx);return true;
 }
 export function applyRename(s,ctx,name){
   const n=typeof name==="string"?name.trim().slice(0,40):"";

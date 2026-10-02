@@ -18,6 +18,9 @@ export const TOPICS={
 for(const k of ENG_IDS)TOPICS[k]="Englisch: "+EN_TOPICS[k].name;
 for(const k of SU_IDS)TOPICS[k]=SU_TOPICS[k].name;
 export const FACHER={math:"Mathe",deu:"Deutsch",eng:"Englisch",su:"Sachkunde"};
+// Zu welchem Fach gehört ein Thema? (für den Fächer-Schalter der Eltern)
+export const FACH_OF={};
+for(const L of LIGEN)for(const f of Object.keys(FACHER))for(const t of L[f]||[])FACH_OF[t]=f;
 export const isEng=t=>ENG_IDS.includes(t);
 // Sachkunde-Themen, deren Stoff in der Schule oft noch nicht dran war: kommen seltener, falsche Antworten zählen nicht.
 export const LATE_IDS=SU_IDS.filter(t=>SU_TOPICS[t].late);

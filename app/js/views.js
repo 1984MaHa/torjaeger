@@ -57,9 +57,11 @@ function modeBtns(s,li,UI,small){
   const open=UI&&UI.fach;
   const fb=(fach,label,ic,col)=>`<button class="mode ${open===li+":"+fach?"on":""}" data-fach="${li}:${fach}" aria-expanded="${open===li+":"+fach}"><span class="ic" style="background:${col}">${ic}</span><span><b>${label}</b></span></button>`;
   const panel=open&&open.startsWith(li+":")?fachPanel(s,li,open.split(":")[1]):"";
-  const L=LIGEN[li];
-  return `<div class="modes ${small?"sm":""}">${fb("math","Mathe",ICONS.math,"var(--sky)")}${fb("deu","Deutsch",ICONS.deu,"var(--miss)")}${L.eng?fb("eng","Englisch",ICONS.eng,"#d9480f"):""}${L.su?fb("su","Sachkunde",ICONS.su,"#0f8b6d"):""}
-    <button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">${ICONS.mix}</span><span><b>Mix: Mathe &amp; Deutsch</b></span></button></div>${panel}`;
+  const L=LIGEN[li],show=f=>activeTopics(s,L[f]||[]).length>0; // ein Fach ohne angeschaltetes Thema (oder von den Eltern ausgeschaltet) verschwindet
+  const mixOn=activeTopics(s,L.math.concat(L.deu)).length>0;
+  if(!show("math")&&!show("deu")&&!show("eng")&&!show("su"))return `<p class="note">Zurzeit ist hier nichts angeschaltet. Mama und Papa stellen das im Eltern-Bereich ein.</p>`;
+  return `<div class="modes ${small?"sm":""}">${show("math")?fb("math","Mathe",ICONS.math,"var(--sky)"):""}${show("deu")?fb("deu","Deutsch",ICONS.deu,"var(--miss)"):""}${L.eng&&show("eng")?fb("eng","Englisch",ICONS.eng,"#d9480f"):""}${L.su&&show("su")?fb("su","Sachkunde",ICONS.su,"#0f8b6d"):""}
+    ${mixOn?`<button class="mode" data-play="${li}:mix"><span class="ic" style="background:var(--ink)">${ICONS.mix}</span><span><b>Mix: Mathe &amp; Deutsch</b></span></button>`:""}</div>${panel}`;
 }
 
 // Eigener Fortschritt in Englisch und Sachkunde (zählt nicht für den Aufstieg).
