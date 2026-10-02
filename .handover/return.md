@@ -2,6 +2,12 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B6: Version 1.6.5 Mini-Spiel Dribbel-Parcours (Tag v1.6.5 lokal, kein Schemawechsel)
+- Parcours aus 5 Hindernissen (Hütchen und Gegner im Wechsel, SVG-Strecke), Antworten als vier große Tasten. Richtig = Hindernis weiter, falsch = "Ball verloren", Erklärung, neue Aufgabe am selben Hindernis. Höchstens 12 Aufgaben, danach Ende ohne Tor. Tor: Bonus 20 (ohne Ballverlust) oder 10 über `applyMiniPoints`. Antworten zählen im Lernstand wie bei der Torwand.
+- Entscheidung: Obergrenze 12 Aufgaben, damit ein Spiel nicht endlos wird; Bonus nur bei Tor. Antwortauswahl wie Torwand (nur Aufgaben mit Zahl oder Auswahl als Antwort).
+- Tests: 282 grün (8 neue in `test/v165.test.mjs`). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: Kabine, Mini-Spiele, Dribbel-Parcours: Strecke mit Ball links, vier Antworttasten. Richtig: Ball springt zum nächsten Hindernis. Falsch: "Ball verloren", neue Aufgabe. Nach 5 richtigen: "Tor!" mit Bonus.
+
 ## Nachtrag B5: Version 1.6.4 Mini-Spiel Memory (Tag v1.6.4 lokal, kein Schemawechsel)
 - Memory: 10 Karten, 5 Paare aus kurzen Rechenaufgaben (a · b = ?) und Ergebnissen aus den aktiven Rechenthemen des Mixes. Zwei Karten antippen; falsche Paare bleiben offen, bis die nächste Karte angetippt wird (kein Zeitgeber). 10 Punkte je Paar, Gutschrift über `applyMiniPoints` beim letzten Paar.
 - Entscheidung: **kein Eintrag in den Lernstand** (Raten würde viele falsche Erst-Versuche erzeugen und die Frust-Bremse auslösen). Das Memory ist reine Wiederholung. Wenn Marco doch Lernstand will: nur richtige Paare zählen lassen (Vorschlag), nicht umgesetzt.

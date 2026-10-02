@@ -1,5 +1,10 @@
 # Änderungen
 
+## 1.6.5 (Mini-Spiel Dribbel-Parcours)
+- **Dribbel-Parcours** in den Mini-Spielen der Kabine: Eine Strecke mit fünf Hindernissen (Hütchen und Gegner im Wechsel) und dem Tor am Ende. Jede **richtige Antwort** (vier Antworten zum Antippen) bringt den Spieler an einem Hindernis vorbei (10 Punkte, 15 ab der dritten in Folge). Bei einer **falschen Antwort ist der Ball verloren**: Erklärung, dann eine neue Aufgabe am selben Hindernis. Nach dem fünften Hindernis fällt das Tor: Bonus 20 Punkte ohne verlorenen Ball, sonst 10.
+- Es gibt höchstens zwölf Aufgaben je Spiel. Wer bis dahin nicht durch ist, bekommt das Ergebnis „bis Hindernis x von 5“ (kein Bonus). Aufgaben wie bei der Torwand aus dem Mix der aktiven Themen, die Antworten zählen im Lernstand (ohne Spiel, Sticker und Probetraining-Verbrauch).
+- Kein Schemawechsel (bleibt 8). Version 1.6.5 an allen vier Stellen. Tests: `test/v165.test.mjs`.
+
 ## 1.6.4 (Mini-Spiel Memory)
 - **Memory** in den Mini-Spielen der Kabine: Zehn Karten, fünf Aufgaben (kurze Rechenaufgaben wie „7 · 8“) und fünf Ergebnisse (56). Zwei Karten antippen: Passen sie zusammen, bleiben sie offen (+10 Punkte), sonst bleiben beide liegen, bis die nächste Karte angetippt wird (dann werden sie wieder verdeckt). Am Ende steht, wie viele Versuche es waren.
 - Die Karten kommen aus den aktiven Rechenthemen des Mixes (Aufgaben, deren Frage mit „= ?“ endet). Jede Aufgabe und jedes Ergebnis kommt nur einmal vor. Ist kein Rechenthema an, gibt es kein Memory.

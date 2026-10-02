@@ -400,3 +400,9 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .mcard.open{background:#fff;color:var(--ink)}
 .mcard.found{background:var(--goal);color:var(--ink);border-color:var(--ink);opacity:.9}
 .mcard.res.open{background:var(--gold)}
+.track{display:block;width:100%;max-width:640px;margin:6px auto 10px}
+.dopts{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px;margin:12px auto}
+.dopt{min-height:72px;border-radius:16px;border:3px solid var(--ink);background:#fff;color:var(--ink);font-family:var(--display);font-size:clamp(1.3rem,5vw,2rem);cursor:pointer;padding:8px;overflow-wrap:anywhere}
+.dopt.right{background:var(--goal)}
+.dopt.wrong{background:#f5b4b6}
+.dopt:disabled{cursor:default}

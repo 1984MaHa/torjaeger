@@ -9,8 +9,11 @@ import {activeTopics,nextTopic,currentLeague} from "./rules.js";
 export const MINI_LEN=5;
 export const MINI={
   wall:{id:"wall",name:"Torwand",text:"Schieße auf das Loch mit der richtigen Antwort."},
-  memory:{id:"memory",name:"Memory",text:"Finde zu jeder Aufgabe das passende Ergebnis."}
+  memory:{id:"memory",name:"Memory",text:"Finde zu jeder Aufgabe das passende Ergebnis."},
+  dribble:{id:"dribble",name:"Dribbel-Parcours",text:"Jede richtige Antwort bringt dich an einem Hindernis vorbei."}
 };
+export const DRIBBLE_STATIONS=5; // Hindernisse im Parcours
+export const DRIBBLE_TRIES=12;   // so viele Aufgaben gibt es höchstens, dann ist Schluss
 export const MEM_PAIRS=5; // Kartenpaare im Memory
 export const MINI_IDS=Object.keys(MINI);
 
@@ -85,6 +88,11 @@ export function memoryFlip(M,idx){
 export function newMini(kind,s,rnd=Math.random){
   if(!MINI[kind])return null;
   if(kind==="memory")return newMemory(s,rnd);
+  if(kind==="dribble"){
+    const li=currentLeague(s),items=miniTasks(s,li,DRIBBLE_TRIES,rnd);
+    if(items.length<DRIBBLE_STATIONS)return null;
+    return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null,pos:0,stations:DRIBBLE_STATIONS,lost:0,fin:false,bonusPaid:false};
+  }
   const li=currentLeague(s),items=miniTasks(s,li,MINI_LEN,rnd);
   if(items.length<MINI_LEN)return null;
   return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null};
@@ -96,14 +104,21 @@ export function miniAnswer(M,idx,shot=null){
   const val=it.opts[idx].val,ok=isRight(it.T,val);
   M.done=true;M.pick=idx;M.ok=ok;M.shot=shot;M.res.push(ok);
   if(ok){M.streak++;M.gain=10+(M.streak>=3?5:0);M.pts+=M.gain;}else{M.streak=0;M.gain=0;}
+  if(M.kind==="dribble"){if(ok)M.pos++;else M.lost++;} // Dribbel-Parcours: richtig = ein Hindernis weiter, falsch = Ball verloren, neue Aufgabe
   return{topic:it.T.topic,ok,gain:M.gain,val,T:it.T};
 }
 // Nächste Aufgabe. Gibt true zurück, wenn das Spiel zu Ende ist.
 export function miniNext(M){
   if(!M||!M.done)return false;
   M.i++;M.done=false;M.pick=-1;M.ok=false;M.gain=0;M.shot=null;
+  if(M.kind==="dribble"){M.fin=M.pos>=M.stations||M.i>=M.items.length;return M.fin;}
   return M.i>=M.items.length;
 }
-export const miniOver=M=>!!M&&(M.kind==="memory"?M.found.length>=M.items.length:M.i>=M.items.length);
+// Dribbel-Parcours: Bonus fürs Tor am Ende (10, ohne verlorenen Ball 20). Gibt die Punkte einmal zurück, danach 0.
+export function miniBonus(M){
+  if(!M||M.kind!=="dribble"||!M.fin||M.bonusPaid||M.pos<M.stations)return 0;
+  M.bonusPaid=true;const b=M.lost===0?20:10;M.pts+=b;return b;
+}
+export const miniOver=M=>!!M&&(M.kind==="memory"?M.found.length>=M.items.length:M.kind==="dribble"?M.fin:M.i>=M.items.length);
 export const miniGoals=M=>M.res.filter(Boolean).length;
 export const miniScore=M=>`${miniGoals(M)} : ${M.res.length-miniGoals(M)}`;

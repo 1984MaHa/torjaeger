@@ -19,7 +19,7 @@ import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
 import {tone} from "./audio.js";
 import {boardHTML,homeHTML,accountsHTML,playHTML,resultHTML,rightText,bandHTML,saveWarnHTML,updateBannerHTML} from "./views.js";
-import {newMini,miniAnswer,miniNext,miniOver,memoryFlip} from "./mini.js";
+import {newMini,miniAnswer,miniNext,miniOver,memoryFlip,miniBonus} from "./mini.js";
 import {miniHTML} from "./miniviews.js";
 import {APP_VERSION} from "./version.js";
 
@@ -721,7 +721,7 @@ function bind(){
   document.querySelectorAll("[data-mini]").forEach(b=>b.onclick=()=>startMini(b.dataset.mini));
   document.querySelectorAll("[data-hole]").forEach(b=>b.onclick=()=>miniShoot(Number(b.dataset.hole)));
   document.querySelectorAll("[data-card]").forEach(b=>b.onclick=()=>memoryTap(Number(b.dataset.card)));
-  if($("miniNext"))$("miniNext").onclick=()=>{miniNext(MG);render();window.scrollTo(0,0);if(miniOver(MG))scheduleSync(0);};
+  if($("miniNext"))$("miniNext").onclick=()=>{miniNext(MG);const b=miniBonus(MG);if(b)commit((s,c)=>applyMiniPoints(s,c,b));render();window.scrollTo(0,0);if(miniOver(MG))scheduleSync(0);};
   if($("again"))$("again").onclick=()=>{UI.celebrate="";startRound(G.li,G.mode,false,G.topic);};
   if($("ovl"))$("ovl").onclick=next;
   // „Warum stimmt das?“: hält das automatische Weiter an und zeigt die Erklärung, bis das Kind „Weiter“ tippt
