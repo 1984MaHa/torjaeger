@@ -172,7 +172,7 @@ Die Figuren sind Bilder von Marco (Emil vorn und hinten, Trainerteam). Sie liege
 - **Trainer und Trainerin:** In jeder Aufgabe die Taste „Hilfe vom Trainer“ (Tipp vom Trainer, dann Erklärung von der Trainerin). Im Eltern-Bereich unter Einstellungen ändert man Name und Kleidungsfarben beider (Polo, Hose, Stutzen). Vorgaben „Trainer“ und „Trainerin“.
 
 ## Trainingslager (ab 1.5.4)
-- **Einschalten:** Eltern-Bereich, Reiter „Einstellungen“, Abschnitt „Trainingslager: Teilen mit Rest“, Schalter An. Standard ist Aus. Dort stehen auch der Fortschritt je Einheit und „Trainingslager neu starten“ (mit Rückfrage, Punkte und Sticker bleiben).
+- **Einschalten:** Eltern-Bereich, Reiter „Konten“, unter der Karte des Kontos der Abschnitt „Trainingslager: Teilen mit Rest“, Schalter An (gilt nur für dieses Konto). Standard ist Aus. Dort stehen auch der Fortschritt je Einheit und „Trainingslager neu starten“ (mit Rückfrage, Punkte und Sticker bleiben).
 - **Ablauf für das Kind:** Auf der Startseite erscheint oben eine Kachel mit fünf Einheiten. Jede Einheit hat zwei Halbzeiten (je 10 Aufgaben) mit Halbzeitpause, danach als Belohnung das Elfmeterschießen mit fünf Aufgaben. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Nach Einheit 5 gibt es das Abzeichen „Rest-Profi“ und, falls noch einer fehlt, einen Jubel-Sticker.
 - **Unterbrechen:** Ein laufendes Spiel wird auf dem Gerät gesichert. In der Kabine steht dann „Trainingslager weiterspielen?“ (Weiterspielen oder Neu anfangen).
 - Die Aufgaben zählen wie normales Üben im Lernstand von „Teilen mit Rest“ und „Sachaufgaben mit Rest“.

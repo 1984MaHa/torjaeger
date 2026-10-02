@@ -338,7 +338,7 @@ test("Eltern-Bereich: Schalter, Fortschritt je Einheit, Neustart mit Rückfrage"
   const seg=(attr,opts,cur)=>opts.map(([v,l])=>`<b ${attr}="${v}" ${v===cur?"on":""}>${l}</b>`).join("");
   const a={id:"k-emil0005",name:"Emil",state:s};
   let h=campAdminHTML({confirm:null},a,seg);clean(h);
-  assert.ok(h.includes("Trainingslager: Teilen mit Rest")&&h.includes('data-acamp="m3_rest:on"')&&h.includes('data-acamp="m3_rest:off"')&&h.includes('data-aask="campreset:k-emil0005:m3_rest"'));
+  assert.ok(h.includes("Trainingslager: Teilen mit Rest")&&h.includes('data-acamp="m3_rest:on:k-emil0005"')&&h.includes('data-acamp="m3_rest:off:k-emil0005"')&&h.includes('data-aask="campreset:k-emil0005:m3_rest"'));
   assert.ok(h.includes("noch nicht gespielt")&&h.includes("noch gesperrt")&&!h.includes("data-ado"));
   applyCampOn(s,ctx(1),TOP,true);applyCampUnit(s,ctx(2),{topic:TOP,unit:1,h1:{c:7,n:10},h2:{c:8,n:10}});
   h=campAdminHTML({confirm:"campreset:k-emil0005:m3_rest"},a,seg);

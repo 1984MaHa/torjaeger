@@ -101,9 +101,8 @@ test("Ende zu Ende 1.5.4: Trainingslager von den Eltern bis zum Elfmeterschieße
     await clickId("switch");await until(()=>has("Wer spielt?"),"Wer spielt?");
     await clickId("adminOpen");byId("adminPin").value="1234";await clickId("adminGo",150);
     await until(()=>has("Eltern-Bereich"),"Eltern-Bereich");
-    await clickData("atab","settings");
-    assert.ok(has("Trainingslager: Teilen mit Rest")&&has("Trainingslager neu starten")&&has("0 von 5 Einheiten"));
-    await clickData("acamp","m3_rest:on");
+    assert.ok(!has("data-atab=\"x\"")&&has("Trainingslager: Teilen mit Rest")&&has("Trainingslager neu starten")&&has("0 von 5 Einheiten"));
+    await clickData("acamp","m3_rest:on:"+id);
     assert.ok(has('aria-pressed="true"'));
     await clickData("aclose");await until(()=>has("Wer spielt?"),"zurück");
     await clickData("acct",id);await until(()=>has("Hallo Emil"),"Kabine 2");
@@ -232,7 +231,6 @@ test("Ende zu Ende 1.5.4: Trainingslager von den Eltern bis zum Elfmeterschieße
     await clickId("switch");await until(()=>has("Wer spielt?"),"Wer spielt?");
     await clickId("adminOpen");byId("adminPin").value="1234";await clickId("adminGo",150);
     await until(()=>has("Eltern-Bereich"),"Eltern-Bereich 2");
-    await clickData("atab","settings");
     assert.ok(has("5 von 5 Einheiten")&&has("Abzeichen Rest-Profi erreicht"));
     await clickData("aask","campreset:"+id+":m3_rest");
     assert.ok(has("wirklich neu starten"));

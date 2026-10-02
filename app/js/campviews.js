@@ -81,8 +81,8 @@ export function campAdminHTML(A,a,seg){
     }).join("");
     const ask=`campreset:${a.id}:${t}`;
     return `<section class="panel"><h3>${esc(C.title)}: ${esc(a.name)}</h3>
-      <p class="note">Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Auf der Startseite erscheint eine eigene Kachel, solange der Schalter an ist.</p>
-      <div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on`,"An"],[`${t}:off`,"Aus"]],`${t}:${on?"on":"off"}`)}</div>
+      <p class="note">Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Der Schalter gilt nur für dieses Konto. Auf der Startseite des Kontos erscheint eine eigene Kachel, solange er an ist.</p>
+      <div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on:${a.id}`,"An"],[`${t}:off:${a.id}`,"Aus"]],`${t}:${on?"on":"off"}:${a.id}`)}</div>
       <p class="small">Fortschritt: ${done} von ${nU} Einheiten${campBadge(s,t)?`, Abzeichen ${esc(C.badge)} erreicht`:""}.</p>${rows}
       <div class="row"><button class="btn warn" data-aask="${esc(ask)}">Trainingslager neu starten</button></div>
       ${A.confirm===ask?`<div class="confirm"><p>Das Trainingslager von <b>${esc(a.name)}</b> wirklich neu starten? Alle Einheiten und das Abzeichen werden gelöscht. Schon verdiente Punkte und Sticker bleiben.</p><div class="row"><button class="btn warn" data-ado>Ja, neu starten</button><button class="btn ghost" data-acancel>Abbrechen</button></div></div>`:""}</section>`;

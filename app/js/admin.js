@@ -53,7 +53,7 @@ export function kidPinRow(s,id){
   return `<div class="pin"><span class="k">PIN des Kindes: <b>${code?esc(code):"keine"}</b></span><input id="kpin-${id}" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="neue PIN" aria-label="Neue PIN des Kindes" style="letter-spacing:0;width:110px"><button class="btn sm" data-akpin="${id}">${code?"Ändern":"Setzen"}</button>${code?`<button class="btn ghost sm" data-akpindel="${id}">Entfernen</button>`:""}</div>`;
 }
 function accountsTab(A){
-  const cards=A.accounts.map(a=>accountCard(A,a)).join("");
+  const cards=A.accounts.map(a=>accountCard(A,a)+(a.state?campAdminHTML(A,a,seg):"")).join(""); // Trainingslager gehört zum Konto, nicht zu den allgemeinen Einstellungen
   return `${cards||`<p class="lead">Es gibt noch kein Konto.</p>`}
   <section class="panel"><h3>Neues Konto</h3><div class="pin"><input id="aNewName" type="text" maxlength="20" autocomplete="off" placeholder="Name" aria-label="Name des neuen Kontos" style="letter-spacing:0;width:190px"><button class="btn sm" data-anew>Konto anlegen</button></div>
     <p class="small">Die Eltern-PIN gilt weiter für alle Konten. Gelöschte Konten liegen im Papierkorb.</p></section>`;
@@ -130,7 +130,7 @@ function settingsTab(A){
     <div class="setrow"><span>Tipp-Zeit: der Trainer meldet sich nach</span>${seg("data-aset",HINT_CHOICES.map(([n,l])=>[`hintAfter:${n}`,l]),`hintAfter:${st.hintAfter}`)}</div>
     <p class="small">Die Tipp-Zeit gilt, wenn bei einer Aufgabe so lange nichts angetippt wird. „Aus“ heißt: Der Trainer meldet sich nicht von selbst. Die Hilfe-Taste bleibt immer da.</p></section>`
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
-  const topics=a?campAdminHTML(A,a,seg)+topicControl(a):"";
+  const topics=a?topicControl(a):"";
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
   return `${acct}${topics}${trainerPanelHTML(A.tr1,1)}${trainerPanelHTML(A.tr2,2)}${pin}`;

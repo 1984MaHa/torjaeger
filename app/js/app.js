@@ -631,8 +631,8 @@ function bindAdmin($){
     const kv=b.dataset.aset.split(":"),k=kv[0],v=kv[1];
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
   document.querySelectorAll("[data-acamp]").forEach(b=>b.onclick=()=>{
-    const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
-    const [t,v]=b.dataset.acamp.split(":");commitOn(a.rec,(s,c)=>applyCampOn(s,c,t,v==="on"));render();});
+    const [t,v,id]=b.dataset.acamp.split(":"),a=accounts.find(x=>x.id===id&&x.rec.state);if(!a)return; // gilt für das Konto, an dessen Karte der Schalter steht
+    commitOn(a.rec,(s,c)=>applyCampOn(s,c,t,v==="on"));render();});
   document.querySelectorAll("[data-atopic]").forEach(b=>b.onclick=()=>{
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const [t,m]=b.dataset.atopic.split(":");commitOn(a.rec,(s,c)=>applyTopicMode(s,c,t,m));render();});
