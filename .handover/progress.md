@@ -1,6 +1,6 @@
 # Fortschritt (Auftrag current.md vom 02.10.2026, Teil B)
 
-Anker (Fortsetzung): Branch preview, Version 1.6.6, Schema 8, Tests 287 grün. Tags v1.6.0 bis v1.6.6 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
+Anker (Fortsetzung): Branch preview, Version 1.6.7, Schema 8, Tests 295 grün. Tags v1.6.0 bis v1.6.7 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
 
 | Paket | Stand | Tests |
 |---|---|---|
@@ -12,7 +12,9 @@ Anker (Fortsetzung): Branch preview, Version 1.6.6, Schema 8, Tests 287 grün. T
 | B5 Mini-Spiel Memory (1.6.4) | fertig, Tag v1.6.4 | 274 |
 | B6 Dribbel-Parcours (1.6.5) | fertig, Tag v1.6.5 | 282 |
 | B7 Überraschungsspiel (1.6.6) | fertig, Tag v1.6.6 | 287 |
-| B8 Liga-Freigaben serverseitig (1.6.7) | offen, als Nächstes | - |
+| B8 Liga-Freigaben serverseitig (1.6.7) | fertig, Tag v1.6.7 | 295 |
+
+Alle Pakete A0 und B1 bis B8 sind fertig. Offen: Abschluss-Rückübergabe (return.md Kopf) und Marcos Schritte (Push, Vorschau, Prüfung, Live).
 
 B2: zurueck (mit optionalem Datum topicUntil), topicSeen (neue Themen starten zurückgestellt), Migration 7 nach 8, Fixture state-v7.json.
 Für B3: Zustände aus settings.topicMode, Fehlerfolge je Thema aus stats.<Thema>.last (letzte 10 Antworten) ablesbar, kein neues Datenfeld nötig für die Bremse selbst; Eltern-Markierung "schon im Unterricht dran?" braucht evtl. Feld.

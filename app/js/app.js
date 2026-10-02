@@ -86,7 +86,7 @@ async function useAccount(id,unlocked=false){
   cur={rec:a.rec};await store.put("current",id);
   await loadSavedPack();
   await loadSavedCamp();
-  view="home";UI.parent=false;UI.pinMsg="";UI.celebrate="";
+  view="home";UI.parent=false;UI.parentPin="";UI.pinMsg="";UI.celebrate="";
   if(!maybeOfferAvatar())render();
   scheduleSync(0);
 }
@@ -557,6 +557,15 @@ function adminModel(){
 }
 const adminRec=id=>{const a=accounts.find(x=>x.id===id);return a&&a.rec.state?a.rec:null;};
 function adminSay(t,text){UI.admin.msg={t,text};}
+// Liga freigeben oder sperren: erst der Server (Eltern-PIN, ein Weg für alle Geräte), dann dieser Stand. Gibt "" bei Erfolg, sonst eine Meldung.
+async function setLeague(rec,pin,li,open){
+  if(!rec||!rec.state)return"Das geht nur mit einem Konto.";
+  if(!pin)return"Bitte die PIN noch einmal eingeben.";
+  const r=await adminApi.league(pin,rec.id,li,open);
+  if(!r.ok)return r.status===0?"Freigeben und Sperren geht nur mit Verbindung zum Server.":adminError(r);
+  commitOn(rec,(s,c)=>open?applyOpen(s,c,li):applyLock(s,c,li));
+  return"";
+}
 function adminReset(){const A=UI.admin;A.msg=null;A.confirm=null;A.renaming=null;A.renamingDevice=null;}
 async function openAdmin(pin){
   if(!globalRec.state.pin){UI.adminMsg="Es ist noch keine Eltern-PIN festgelegt. Sie wird beim ersten Konto festgelegt.";render();return;}
@@ -650,8 +659,8 @@ function bindAdmin($){
   document.querySelectorAll("[data-arenameok]").forEach(b=>b.onclick=()=>{const rec=adminRec(b.dataset.arenameok),n=$("renameIn").value;
     if(!rec||!validName(n)){adminSay("err","Bitte einen Namen eingeben.");render();return;}
     commitOn(rec,(s,c)=>applyRename(s,c,n));const a=accounts.find(x=>x.id===rec.id);a.name=rec.state.profile.name;adminReset();adminSay("ok","Umbenannt.");render();});
-  document.querySelectorAll("[data-aopen]").forEach(b=>b.onclick=()=>{const [id,li]=b.dataset.aopen.split(":"),rec=adminRec(id);if(rec){commitOn(rec,(s,c)=>applyOpen(s,c,Number(li)));render();}});
-  document.querySelectorAll("[data-alock]").forEach(b=>b.onclick=()=>{const [id,li]=b.dataset.alock.split(":"),rec=adminRec(id);if(rec){commitOn(rec,(s,c)=>applyLock(s,c,Number(li)));render();}});
+  document.querySelectorAll("[data-aopen]").forEach(b=>b.onclick=async()=>{const [id,li]=b.dataset.aopen.split(":"),rec=adminRec(id);if(rec){const m=await setLeague(rec,A.pin,Number(li),true);if(m)adminSay("err",m);render();}});
+  document.querySelectorAll("[data-alock]").forEach(b=>b.onclick=async()=>{const [id,li]=b.dataset.alock.split(":"),rec=adminRec(id);if(rec){const m=await setLeague(rec,A.pin,Number(li),false);if(m)adminSay("err",m);render();}});
   document.querySelectorAll("[data-anew]").forEach(b=>b.onclick=async()=>{const n=$("aNewName").value.trim();
     if(!validName(n)){adminSay("err","Bitte einen Namen eingeben.");render();return;}
     await makeAccount(n);adminReset();adminSay("ok","Konto angelegt.");render();});
@@ -717,7 +726,7 @@ function bind(){
   document.querySelectorAll("[data-trial]").forEach(b=>b.onclick=()=>startRound(Number(b.dataset.trial),"mix",true));
   if($("snd"))$("snd").onclick=()=>{commit((s,c)=>applySound(s,c,!s.settings.sound));render();};
   document.querySelectorAll("[data-bank]").forEach(d=>{d.ontoggle=()=>{UI.bankOpen=!!d.open;};}); // Trainerbank merkt sich nur, solange man sie selbst aufgeklappt hat
-  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")saveGame();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;render();window.scrollTo(0,0);};
+  if($("home"))$("home").onclick=()=>{clearTimeout(idleT);clearTimeout(autoT);if(view==="play")saveGame();view="home";UI.celebrate="";UI.bankOpen=false;UI.parent=false;UI.parentPin="";render();window.scrollTo(0,0);};
   document.querySelectorAll("[data-mini]").forEach(b=>b.onclick=()=>startMini(b.dataset.mini));
   document.querySelectorAll("[data-hole]").forEach(b=>b.onclick=()=>miniShoot(Number(b.dataset.hole)));
   document.querySelectorAll("[data-card]").forEach(b=>b.onclick=()=>memoryTap(Number(b.dataset.card)));
@@ -762,16 +771,17 @@ function bind(){
   if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";UI.acctName="";render();};
   if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";UI.acctName="";render();};
   if($("acctCreate"))$("acctCreate").onclick=createAccount;
-  if($("switch"))$("switch").onclick=()=>{view="accounts";UI.parent=false;UI.newAcct=false;UI.adminAsk=false;render();};
+  if($("switch"))$("switch").onclick=()=>{view="accounts";UI.parent=false;UI.parentPin="";UI.newAcct=false;UI.adminAsk=false;render();};
   if($("upd"))$("upd").onclick=()=>updateApp(false);
   // Eltern
   if($("pinSet"))$("pinSet").onclick=async()=>{const v=$("pinNew").value.trim();if(!validPin(v)){UI.pinMsg="Bitte genau 4 Ziffern eingeben.";render();return;}
-    await setGlobalPin(await makePin(v));UI.parent=true;UI.pinMsg="";render();};
+    await setGlobalPin(await makePin(v));UI.parent=true;UI.parentPin=v;UI.pinMsg="";render();};
   if($("pinOk"))$("pinOk").onclick=async()=>{const r=await checkPin($("pinIn").value.trim(),globalRec.state.pin);
-    if(r.ok){if(r.upgrade)await setGlobalPin(r.upgrade);UI.parent=true;UI.pinMsg="";}else UI.pinMsg="Die PIN stimmt nicht.";render();};
-  if($("pinClose"))$("pinClose").onclick=()=>{UI.parent=false;render();};
-  document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{commit((s,c)=>applyOpen(s,c,Number(b.dataset.open)));render();});
-  document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{commit((s,c)=>applyLock(s,c,Number(b.dataset.lock)));render();});
+    if(r.ok){if(r.upgrade)await setGlobalPin(r.upgrade);UI.parent=true;UI.parentPin=$("pinIn").value.trim();UI.pinMsg="";}else UI.pinMsg="Die PIN stimmt nicht.";render();};
+  if($("pinClose"))$("pinClose").onclick=()=>{UI.parent=false;UI.parentPin="";render();};
+  // Ligafreigaben laufen über den Server mit Eltern-PIN (ab 1.6.7), erst danach gilt die Änderung auch auf diesem Gerät
+  document.querySelectorAll("[data-open]").forEach(b=>b.onclick=async()=>{UI.pinMsg=await setLeague(cur.rec,UI.parentPin,Number(b.dataset.open),true);render();});
+  document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=async()=>{UI.pinMsg=await setLeague(cur.rec,UI.parentPin,Number(b.dataset.lock),false);render();});
 }
 // Jede Eingabe schiebt das Angebot des Trainers nach hinten
 for(const ev of ["pointerdown","keydown"])document.addEventListener(ev,()=>{if(view==="play"&&G&&!G.done&&!G.offer)armIdle();},true);

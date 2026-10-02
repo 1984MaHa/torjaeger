@@ -2,6 +2,13 @@
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
+## Nachtrag B8: Version 1.6.7 Liga-Freigaben serverseitig (Tag v1.6.7 lokal, kein Schemawechsel)
+- Neu: `POST /api/admin/profiles/<id>/league` (PIN, `li`, `open`). Freigeben/Sperren in der Trainerbank (PIN wird dafür bis zum Schließen im Speicher gehalten, `UI.parentPin`) und im Eltern-Bereich (`A.pin`) laufen zuerst über den Server, danach lokal. Offline: Meldung, kein lokales Freigeben mehr.
+- `PUT .../state` behält den gespeicherten `open`-Wert (`rules.guardLeagues`), meldet festgehaltene Werte als `lg` zurück, `sync.js` übernimmt sie. Ausnahme: ist noch kein Stand gespeichert (Konto wird angelegt), gilt der erste Stand. Probetraining bleibt unberührt.
+- Entscheidungen: (1) Nur online freigeben, weil die PIN serverseitig geprüft wird. (2) Konto-Neuanlage übernimmt die mitgebrachten Freigaben (sonst verlören alte lokale Konten sie). Das heißt: Ein Kind könnte mit einem **neu angelegten Konto** und verändertem Client Ligen setzen; eine geprüfte Neuanlage müsste das Konto-Anlegen selbst an die PIN binden (nicht umgesetzt, nicht im Auftrag). (3) Geräte mit App bis 1.6.6 geben lokal frei, der Server ignoriert das; die Geräte gleichen sich nach dem nächsten Abgleich an.
+- Tests: 295 grün (8 neue in `test/v167.test.mjs`, `sync.test.mjs` angepasst). Nicht ausgeführt: Push, Merge, Deploy.
+- Prüfliste iPad: Trainerbank (PIN eingeben), "Ganz freigeben" bei Bezirksliga/Kreisliga: Liga wird frei. Zweites Gerät nach Abgleich: ebenfalls frei. Im Flugmodus "Ganz freigeben": Meldung "nur mit Verbindung". Eltern-Bereich (Konten): Freigeben/Sperren je Konto wirkt ebenso. Alle Geräte vorher auf 1.6.7 laden.
+
 ## Nachtrag B7: Version 1.6.6 Überraschungsspiel (Tag v1.6.6 lokal, kein Schemawechsel)
 - Neue Taste "Überraschungsspiel" im Bereich Mini-Spiele der Kabine: lost Torwand, Memory oder Dribbel-Parcours (`newSurprise`). Letzte Art wird vermieden, nicht spielbare Arten ausgelassen. Nach dem Spiel "Noch eine Überraschung". Auswahl durch Emil selbst bleibt (die einzelnen Tasten).
 - Neu: `UI.miniMsg` für freundliche Hinweise, wenn ein Spiel nicht startet (kein Fach/Thema passend).

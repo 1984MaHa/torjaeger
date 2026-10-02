@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.6.7 (Liga-Freigaben gehören dem Server)
+- **Freigeben und Sperren nur mit Eltern-PIN, über den Server:** Neuer Aufruf `POST /api/admin/profiles/<id>/league` (`{pin, li, open}`). Die Trainerbank in der Kabine und der Eltern-Bereich („Ganz freigeben“, „Wieder sperren“) rufen ihn auf; erst wenn der Server ja sagt, gilt die Änderung auch auf dem Gerät. Ohne Verbindung zum Server gibt es eine freundliche Meldung („geht nur mit Verbindung“).
+- **Der normale Abgleich ändert keine Freigabe mehr:** Beim Speichern eines Kontos (`PUT .../state`) behält der Server den gespeicherten Wert von `progress.lg.<Liga>.open` (`guardLeagues` in `rules.js`). Ein älterer oder veränderter Stand kann also weder eine Liga freigeben noch eine Freigabe aufheben. Die Antwort nennt, was der Server festgehalten hat (`lg`), und die App gleicht sich an. Wird ein Konto neu angelegt (noch kein Stand auf dem Server), gilt der erste Stand, damit alte lokale Konten ihre Freigaben mitbringen.
+- Probetraining (`probe`, `spent`) ist davon nicht betroffen: Es entsteht weiter durch das Spielen. Kein Schemawechsel (bleibt 8). Version 1.6.7 an allen vier Stellen. Tests: `test/v167.test.mjs` (der Test „Freigabe am einen Gerät“ in `sync.test.mjs` geht jetzt über den Eltern-Weg).
+- **Wichtig beim Einspielen:** Ältere App-Versionen (bis 1.6.6) geben lokal frei und gleichen ab; der Server ignoriert das für die Freigabe. Bitte alle Geräte auf 1.6.7 bringen (Hinweis „Jetzt laden“).
+
 ## 1.6.6 (Überraschungsspiel)
 - **Überraschungsspiel** in den Mini-Spielen der Kabine: Ein Tipp, und die App lost eines der Mini-Spiele (Torwand, Memory, Dribbel-Parcours) aus. Die zuletzt gespielte Art kommt nicht gleich wieder, solange es eine andere gibt. Nach dem Spiel gibt es „Noch eine Überraschung“. Wer lieber selbst wählt, tippt weiterhin auf das Mini-Spiel seiner Wahl.
 - Arten ohne passende Aufgaben (zum Beispiel Memory, wenn alle Rechenthemen aus sind) werden nicht gelost. Gibt es gar kein spielbares Mini-Spiel, steht in der Kabine ein freundlicher Hinweis statt eines Fehlers. Das gilt auch für die einzelnen Mini-Spiele.

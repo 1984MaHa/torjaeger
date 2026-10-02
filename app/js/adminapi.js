@@ -18,6 +18,7 @@ export function createAdminApi({base="",fetchFn,deviceId=""}={}){
     renameDevice:(pin,dev,name)=>post(`/devices/${id(dev)}/rename`,pin,{name}),
     remove:(pin,profileId)=>post(`/profiles/${id(profileId)}/delete`,pin),
     reset:(pin,profileId)=>post(`/profiles/${id(profileId)}/reset`,pin),
+    league:(pin,profileId,li,open)=>post(`/profiles/${id(profileId)}/league`,pin,{li,open:!!open}),
     restore:(pin,key)=>post("/restore",pin,{key}),
     changePin:(pin,newPin)=>post("/pin",pin,{newPin}),
     async config(){
@@ -34,6 +35,7 @@ export function adminError(r){
   if(r.error==="no_pin")return"Es ist noch keine Eltern-PIN festgelegt.";
   if(r.error==="bad_new_pin")return"Die neue PIN braucht genau 4 Ziffern.";
   if(r.error==="exists")return"Ein Konto mit dieser Kennung gibt es schon.";
+  if(r.error==="bad_league")return"Diese Liga gibt es nicht.";
   if(r.error==="no_state")return"Dieses Konto hat noch keinen Spielstand.";
   if(r.error==="unknown_backup"||r.error==="unknown_profile")return"Das gibt es auf dem Server nicht mehr.";
   return"Das hat nicht geklappt ("+(r.error||r.status)+").";

@@ -12,7 +12,7 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 const { createAdmin } = require("./admin");
 
-const SERVER_VERSION = "1.6.6";
+const SERVER_VERSION = "1.6.7";
 const MAX_BODY = 2 * 1024 * 1024;
 const KEEP_BACKUPS = 30;
 const ID_RE = /^[a-z0-9][a-z0-9-]{2,39}$/; // Konto-ID: streng, keine Punkte, keine Schrägstriche
@@ -108,7 +108,9 @@ function createServer(opts = {}) {
     }
     if (body.baseRev !== cur.rev) return send(res, 409, { error: "conflict", reason: "rev", current: cur });
     const next = save(cur.rev + 1);
-    return send(res, 200, { rev: next.rev, savedAt: next.savedAt });
+    const body200 = { rev: next.rev, savedAt: next.savedAt };
+    if (next.lg && Object.keys(next.lg).length) body200.lg = next.lg; // Liga-Freigaben, die der Server festgehalten hat (siehe guardLeagues)
+    return send(res, 200, body200);
   }
   // Handler mit async-Teil: Fehler dürfen die Anfrage nie hängen lassen.
   const guarded = (res, fn) => async body => {
@@ -180,14 +182,15 @@ function createServer(opts = {}) {
         return send(res, 200, { rev: cur.rev, savedAt: cur.savedAt, schemaVersion: cur.schemaVersion, state: cur.state });
       }
       if (m === "PUT") return readBody(req, res, guarded(res, async body => {
-        const { model } = await loadModel();
+        const { model, rules } = await loadModel();
         const cur = readJson(profileFile(id)); // erst jetzt lesen, direkt vor Prüfen und Schreiben
         if (!cur) return gone();
         return putDoc(res, cur, body, body.state, profileSchema(body.state), model.checkProfileState, rev => {
+          const held = rules.guardLeagues(cur.state, body.state); // Ligafreigaben ändert nur der Eltern-Weg mit PIN
           const name = body.state.profile && typeof body.state.profile.name === "string" ? body.state.profile.name.trim().slice(0, 40) : cur.name;
           const next = { id, name: name || cur.name, rev, savedAt: new Date().toISOString(), device: String(body.device || ""), schemaVersion: body.state.meta.schemaVersion, state: body.state };
           next.state.meta.rev = rev;
-          writeJson(profileFile(id), next, "profile-" + id); return next;
+          writeJson(profileFile(id), next, "profile-" + id); return Object.assign({ lg: held }, next);
         });
       }));
       return send(res, 405, { error: "method_not_allowed" });

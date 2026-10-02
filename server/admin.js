@@ -195,6 +195,24 @@ function createAdmin(env) {
     return send(res, 200, { ok: true, rev, safety: saved });
   }
 
+  // Liga ganz freigeben oder wieder sperren (Eltern-PIN, ab 1.6.7). Das ist der einzige Weg, die Freigabe auf dem Server zu ändern.
+  async function league(res, id, body) {
+    const cur = readJson(profileFile(id));
+    if (!cur) return send(res, 404, { error: "unknown_profile" });
+    if (!cur.state) return send(res, 409, { error: "no_state" });
+    const { model, rules } = await loadModel();
+    const li = body.li;
+    if (!Number.isInteger(li) || li < 1 || li >= rules.LEAGUE_COUNT || typeof body.open !== "boolean") return send(res, 400, { error: "bad_league" });
+    let st;
+    try { st = model.migrateProfile(clone(cur.state), { id }); } catch (e) { return send(res, 409, { error: "bad_state", detail: String(e.message) }); }
+    const ts = Date.now(), rev = cur.rev + 1, ctx = { deviceId: "server", now: ts };
+    if (body.open) rules.applyOpen(st, ctx, li); else rules.applyLock(st, ctx, li);
+    st.meta.rev = rev; st.meta.updatedAt = ts;
+    const next = { id, name: cur.name, rev, savedAt: new Date(ts).toISOString(), device: "admin", schemaVersion: st.meta.schemaVersion, state: st };
+    writeJson(profileFile(id), next, "profile-" + id);
+    return send(res, 200, { ok: true, rev });
+  }
+
   function remove(res, id) {
     const file = profileFile(id);
     if (!fs.existsSync(file)) return send(res, 404, { error: "unknown_profile" });
@@ -233,7 +251,7 @@ function createAdmin(env) {
     else if (p === "/api/admin/devices") action = "devices";
     else if (p === "/api/admin/restore") action = "restore";
     else if (p === "/api/admin/pin") action = "pin";
-    else if ((mm = /^\/api\/admin\/profiles\/([^/]+)\/(delete|reset)$/.exec(p))) { action = mm[2]; id = decodeURIComponent(mm[1]); if (!ID_RE.test(id)) return send(res, 400, { error: "bad_id" }); }
+    else if ((mm = /^\/api\/admin\/profiles\/([^/]+)\/(delete|reset|league)$/.exec(p))) { action = mm[2]; id = decodeURIComponent(mm[1]); if (!ID_RE.test(id)) return send(res, 400, { error: "bad_id" }); }
     else if ((mm = /^\/api\/admin\/devices\/([^/]+)\/rename$/.exec(p))) { action = "rename"; id = decodeURIComponent(mm[1]); if (!/^[A-Za-z0-9_-]{3,40}$/.test(id)) return send(res, 400, { error: "bad_id" }); }
     else return send(res, 404, { error: "not_found" });
     return readBody(req, res, async body => {
@@ -246,6 +264,7 @@ function createAdmin(env) {
         if (action === "restore") return await restore(res, body.key);
         if (action === "reset") return await reset(res, id);
         if (action === "delete") return remove(res, id);
+        if (action === "league") return await league(res, id, body);
         if (action === "pin") return changePin(res, body);
       } catch (e) {
         console.error("Admin-Fehler:", e);

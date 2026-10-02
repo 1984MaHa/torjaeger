@@ -182,6 +182,26 @@ export function applyRoundEnd(s,ctx,{li,mode,trial,c,n,pts,bonus,dur,topic,pk}){
   touch(s,ctx);
   return{newSticker,celebrate:msg};
 }
+// ---------- Liga-Freigaben gehören dem Server (ab 1.6.7) ----------
+// Ob eine Liga ganz freigegeben ist (progress.lg.<Liga>.open), ändert nur der Eltern-Weg mit PIN (POST /api/admin/profiles/<id>/league).
+// Beim normalen Abgleich (PUT des Kontos) behält der Server den gespeicherten Wert: Eine Freigabe kann nicht durch einen älteren oder
+// veränderten Stand verschwinden, und eine Sperre kann nicht durch ihn aufgehoben werden. Verändert incoming und gibt zurück,
+// welche Werte der Server festgehalten hat ({Liga: true|false}), damit die App ihren Stand angleicht.
+export const LEAGUE_COUNT=LIGEN.length;
+export function guardLeagues(stored,incoming){
+  const out={};
+  const obj=v=>v&&typeof v==="object"&&!Array.isArray(v);
+  if(!stored||!obj(stored.progress))return out; // noch kein gespeicherter Stand: das Konto wird gerade angelegt, der erste Stand gilt
+  const slg=obj(stored.progress.lg)?stored.progress.lg:{};
+  if(!incoming||!obj(incoming.progress)||!obj(incoming.progress.lg))return out;
+  const ilg=incoming.progress.lg;
+  for(const id of new Set([...Object.keys(slg),...Object.keys(ilg)])){
+    const keep=!!(obj(slg[id])&&slg[id].open===true);
+    if(obj(ilg[id])){if((ilg[id].open===true)!==keep){ilg[id].open=keep;out[id]=keep;}}
+    else if(keep){ilg[id]=Object.assign(defaultLg(),slg[id]);out[id]=true;}
+  }
+  return out;
+}
 export function applyOpen(s,ctx,li){const l=lgOf(s,LIGEN[li].id);l.open=true;l.t=ctx.now;touch(s,ctx);}
 export function applyLock(s,ctx,li){const l=lgOf(s,LIGEN[li].id);l.open=false;l.probe=false;l.spent=0;l.t=ctx.now;touch(s,ctx);}
 export function applySound(s,ctx,on){s.settings.sound=!!on;s.settings.t=ctx.now;touch(s,ctx);}

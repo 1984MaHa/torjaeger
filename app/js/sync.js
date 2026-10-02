@@ -95,6 +95,8 @@ export function createSync({store,deviceId,fetchFn,base="",now=()=>Date.now()}){
           rec.baseRev=p.json.rev;rec.state.meta.rev=p.json.rev;rec.lastSync=now();
           // Hat die App inzwischen weitergespielt, bleibt der Stand dirty und geht beim nächsten Abgleich raus.
           rec.dirty=!same(rec.state,payload,"profile");
+          // Ligafreigaben ändert nur der Eltern-Weg mit PIN: Was der Server festgehalten hat, gilt auch hier (ohne den Stand neu zu senden).
+          if(p.json.lg&&typeof p.json.lg==="object"&&rec.state.progress&&rec.state.progress.lg){for(const k in p.json.lg){const l=rec.state.progress.lg[k];if(l&&typeof l==="object")l.open=p.json.lg[k]===true;}}
           await store.put("profile:"+rec.id,rec);
           return{ok:true,pushed:true};
         }

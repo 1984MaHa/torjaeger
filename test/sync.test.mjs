@@ -115,7 +115,10 @@ test("Freigabe am einen Gerät wirkt auf dem anderen",async()=>{
   const recA={id,state:newProfile({id,name:"Tom",deviceId:"gerat-a",now:1000}),baseRev:null,dirty:true,lastSync:null};
   await A.sync.syncProfile(recA);
   const recB={id,state:null,baseRev:null,dirty:false,lastSync:null};await B.sync.syncProfile(recB);
-  applyOpen(recB.state,B.ctx(5000),1);recB.dirty=true;await B.sync.syncProfile(recB);
+  // Freigaben laufen über den Eltern-Weg mit PIN (ab 1.6.7), nicht über den normalen Abgleich
+  const g={id:"global",state:newGlobal(1000),baseRev:null,dirty:true,lastSync:null};g.state.pin=await makePin("4711",2000);g.state.updatedAt=2000;
+  assert.equal((await A.sync.syncGlobal(g)).ok,true);
+  assert.equal((await api(S.base,"POST",`/api/admin/profiles/${id}/league`,{pin:"4711",li:1,open:true})).status,200);
   await A.sync.syncProfile(recA);
   assert.equal(recA.state.progress.lg.L2.open,true);
 });

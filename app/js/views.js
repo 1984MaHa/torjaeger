@@ -107,7 +107,7 @@ function parentHTML(s,UI,hasPin){
   const rows=LIGEN.slice(1).map((L,k)=>{const i=k+1,st=leagueState(s,i);
     const txt=st==="open"?"ganz frei":st==="probe"?`Probetraining (noch ${budgetOf(s,i)})`:st==="wait"?"Probetraining fertig, wartet auf euch":"gesperrt";
     return `<div class="prow"><span><b>${L.name}</b> (${L.klasse}): ${txt}</span><span class="row">${st!=="open"?`<button class="btn sm" data-open="${i}">Ganz freigeben</button>`:""}${st!=="locked"?`<button class="btn ghost sm" data-lock="${i}">Wieder sperren</button>`:""}</span></div>`;}).join("");
-  return `<div class="parent">${rows}<p class="small">Zurücksetzen, Umbenennen, Löschen, Sicherungen und alle Einstellungen gibt es im Eltern-Bereich auf der Seite „Wer spielt?“.</p><div class="row"><button class="btn ghost sm" id="pinClose">Schließen</button></div></div>`;
+  return `<div class="parent">${msg}${rows}<p class="small">Zurücksetzen, Umbenennen, Löschen, Sicherungen und alle Einstellungen gibt es im Eltern-Bereich auf der Seite „Wer spielt?“.</p><div class="row"><button class="btn ghost sm" id="pinClose">Schließen</button></div></div>`;
 }
 
 export function homeHTML(s,UI,env){
