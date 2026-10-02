@@ -1,59 +1,67 @@
-# Rückübergabe Claude Code nach Cowork, 01.10.2026 (Version 1.5.3)
+# Rückübergabe Claude Code nach Cowork, 02.10.2026 (Version 1.5.4)
 
-Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.3 auf `preview`: sieben Sofort-Korrekturen aus der Bewertung vom 01.10.2026 plus sieben leichte Übernahmen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
+Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen). Version 1.5.4 auf `preview`: Trainingslager „Teilen mit Rest“ mit Elfmeterschießen. Leitbild: Freude vor Perfektion, kein didaktischer Umbau, Spielfluss bleibt.
 
 ## Was Marco in dieser Sitzung selbst ausgeführt oder angewiesen hat
 - Marco hat die Sitzung gestartet, den Anker prüfen lassen und mit „ja“ den Start der Arbeit freigegeben.
-- **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben.
+- **Nicht ausgeführt** (weder von Marco noch von mir): Push nach `origin`, Merge nach `main`, `deploy.sh preview` auf der NAS, Test auf iPad oder iPhone. Kein Live-Deploy. Nichts im Vault geschrieben. Keine Vorschau im Browser geöffnet, keine Screenshots (Marco prüft visuell selbst).
 
-## Stand je Umgebung (Stand nach Live-Deploy)
-- **Live und Vorschau laufen beide mit 1.5.3** (Marco hat `deploy.sh` im Live-Ordner ausgeführt und beide Versionen am Gerät geprüft). Gemeldet von Marco, nicht von mir geprüft.
-- `main`, `preview`, `origin/main` und `origin/preview` liegen auf demselben Commit (zuletzt der Commit mit dieser Datei).
-- Die Vorschau hat Marco vorher auf dem iPad abgenommen: i/ie korrekt. Das iPad zeigte anfangs noch die alte App, Marco musste den Browser-Cache zurücksetzen.
-- Nicht geprüft: ob Emils Live-Konto nach dem Update unverändert ist (Punkte, Sticker) und ob die PIN auf beiden Geräten weiter passt.
+## Stand je Umgebung
+- Vor der Sitzung: `main`, `preview` und `origin/*` auf `5e51b26`, Live und Vorschau liefen mit 1.5.3 (Angabe aus der letzten Rückübergabe, nicht von mir geprüft).
+- Jetzt: `preview` lokal vor `origin/preview` um die Commits dieser Sitzung (nicht gepusht). `main` unverändert bei `5e51b26`. Die Vorschau auf der NAS läuft weiter mit 1.5.3, bis Marco pusht und `deploy.sh` ausführt.
 
 ## Anker-Prüfung am Anfang
-Alle Erwartungen aus dem Auftrag stimmten: Branch `preview`, `HEAD` und `main` bei `4f872de`, Status genau die drei erwarteten Dateien, `APP_VERSION` 1.5.2. `.git/index.lock` gab es nicht mehr. Erster Commit (`e60678a`): Bewertungs-Rückübergabe und Review so wie sie waren, `next.md` nach `current.md` verschoben.
+Alle fünf Erwartungen stimmten (Branch `preview`, `HEAD` und `main` bei `5e51b26`, Status genau `?? .handover/next.md`, `APP_VERSION` 1.5.3). Erster Commit (`523fa3f`): `next.md` nach `current.md`.
 
-## Umgesetzt (Teil 1, jeweils mit Regressionstest)
-1. **i/ie:** Die Lücke wird aus dem Zielwort abgeleitet (`ieGap`), „Lieed“ und Co. sind weg. „Lied“ ist raus (mit i wäre „Lid“ auch ein Wort, die Frage wäre nicht eindeutig), dafür „Fliege“. Test über alle Rechtschreib-Listen (i/ie, Verlängern, doppelt oder einfach) gegen eine eigene Liste richtiger Wörter, auch dass die falsche Wahl kein richtiges Wort ergibt. Listen sind als `SPELL_LISTS` exportiert.
-2. **Netze:** Erklärung nennt den echten Rest („Im letzten Netz liegen nur 3 Bälle“), Test über 4000 Zufallsaufgaben.
-3. **Gleichzeitiges Speichern:** `server.js` liest den Stand jetzt nach dem Einlesen der Anfrage und prüft und schreibt ohne `await` dazwischen (kein eigenes Sperr-Objekt nötig). Verlierer bekommt 409. Gilt für Konten und Einstellungen. Tests mit parallelen und mit gestückelten Anfragen (letztere schlagen auf dem alten Server nachweislich fehl). Zusätzlich: der Verlierer führt zusammen, beide Zuwächse bleiben.
-4. **Mindeststruktur:** `checkProfileState` und `checkGlobalState` in `model.js` (Pflichtfelder in SPEC.md), Server antwortet 400 `bad_state` mit `detail`. Unbekannte Zusatzfelder bleiben erlaubt. Die App prüft vor dem Senden mit derselben Funktion (Grund `invalid`, eigener Text in der Trainerbank). Fixtures Schema 1 bis 5 werden angenommen.
-5. **Päckchen sichern:** Auf dem Gerät unter `pack:<Konto>` (kein Schemawechsel, nicht im Abgleich). Gesichert bei jeder Antwort, Probe, „Kabine“ und beim Wechsel in den Hintergrund. Kabine zeigt „Päckchen weiterspielen?“ mit Weiterspielen und Neu anfangen (dasselbe Thema, frisch). Gelöscht bei Abgabe. Verworfen, wenn Thema aus oder Liga gesperrt. Reguläre Runden werden nicht gesichert (beantwortete Aufgaben zählen schon).
-6. **Lokales Speichern:** `withRetry` in `store.js`: 3 Wiederholungen, dann alle 8 Sekunden mit dem neuesten Stand; roter Hinweis oben („Das Speichern klappt gerade nicht …“), verschwindet nach Erfolg. Test mit simuliertem Fehler.
-7. **PIN-Schutz:** `PUT /api/settings` behält eine gesetzte PIN immer (auch bei `pin: null`), erste Einrichtung bleibt über den Abgleich möglich. Ändern nur über `/api/admin/pin`. Die App übernimmt in `syncGlobal` immer die PIN des Servers, damit kein Dauer-Abgleich entsteht. Alt-Hash des Prototyps wird vom Server bei der ersten richtigen Admin-Eingabe aufgewertet (`upgradeLegacyPin`). Die neue PIN kommt auf allen Geräten an (Test mit zwei Geräten). „PIN merken“ der Kinder-PIN unberührt.
-
-## Umgesetzt (Teil 2)
-8. **Warum stimmt das?** Taste im Tor-Overlay (nur wenn die Aufgabe `ex` hat). Antippen hält das Auto-Weiter an und zeigt die Erklärung bis „Weiter“. Ohne Antippen läuft es unverändert nach 1,8 s weiter.
-9. Taste heißt „Mix: Mathe & Deutsch“. 10. Hilfetaste mindestens 44 px, `cardtop` und mini-Coach dürfen umbrechen. 11. Zuordnen: Nummer an beiden Partnern zusätzlich zur Farbe. 12. Kontoanlage: Name bleibt stehen, fehlerhaftes Feld bekommt den Fokus. 13. Trainerbank und Eltern-Lernstand: „zuletzt sicher geübt“; Emils Häkchen und „x von y Themen sicher“ für das Kind bleiben.
-14. **Englisch-Bilder:** `CONFUSE` in `content-en.js` (Mund/Zunge/Zahn, Fuß/Bein, Hand/Arm, Schuhe/Stiefel, Hose/kurze Hose, Mutter/Oma, Vater/Opa, Freund/Schwester/Bruder, Stift/Bleistift, Schule/Lehrer, Vogel/Ente, Musik/Gitarre, Sonne/heiß/Sommer, Schnee/kalt/Winter, Regen/Gewitter/Wolke) kommen nie zusammen in eine Bildauswahl oder Hör-Aufgabe. Neue Motive: Mutter und Vater mit Baby-Fläschchen (Unicode 13), Frühling mit Kirschblüte statt Tulpe. `docs/Inhalte-Englisch-Sachkunde.md` neu erzeugt.
+## Umgesetzt
+1. **Kachel und Ablauf:** Kachel „Trainingslager: Teilen mit Rest“ oben auf der Startseite (nur wenn eingeschaltet), Fortschritt „x von 5 Einheiten“, Abzeichen „Rest-Profi“. Einheit n+1 frei nach Abschluss von n, keine Mindestquote, Wiederholen möglich. Je Einheit 2 Halbzeiten zu 10 Aufgaben, Halbzeitpause (Zwischenstand, Trainer-Satz, „2. Halbzeit anpfeifen“), Abpfiff mit Ergebnis und Bonus wie sonst (Sieg 20, perfekt 30, über beide Halbzeiten gerechnet), danach Nachspielzeit.
+2. **Fünf Einheiten** aus vorhandenen Bausteinen (`mk.rest`, `packOf`) plus eigene Sachaufgaben: 1 Aufwärmen, 2 Erste Reste (Bilder nur in der 1. Halbzeit), 3 Alle Reihen („Da passt noch einer rein!“), 4 Kontroll-Pfiff (je Halbzeit ein Päckchen mit 6 Aufgaben), 5 Spieltag (Busse, Kabinen, Netze, Mannschaften, Kästen). Erklärung mit Rechenweg. Antworten zählen im Lernstand von `m3_rest` und `m3_sach`. Abzeichen plus Jubel-Sticker (falls einer fehlt) am Ende von Einheit 5.
+3. **Elfmeterschießen:** 5 Schüsse, `startPenalty(topic, unit, tasks)` nimmt eine Aufgabenliste (für 1.6.0 wiederverwendbar). Neue Torszene mit Torwart (`sceneSVG(look, shot, {keeper:true})`, Schussart `saved`, „Gehalten!“), `prefers-reduced-motion` beachtet. Ergebnis wie „4 : 1“.
+4. **Eltern-Bereich:** Schalter je Konto (Standard aus), Fortschritt je Einheit mit Ergebnis je Halbzeit und Elfmeterschießen, „Trainingslager neu starten“ mit Rückfrage.
+5. **Sichern und Fortsetzen:** Gerät-lokal unter `camp:<Konto>` (kein Schemawechsel dafür). Gesichert bei jeder Antwort, „Kabine“, Hintergrund, Halbzeitpause. Kabine: „Weiterspielen oder Neu anfangen“ mit Halbzeit und Stand. Gilt für Halbzeit, Kontroll-Pfiff-Einheit und Elfmeterschießen.
+6. **Datenmodell Schema 7:** `camps.<Thema> = {on, t, rs, units:{"1".."5":{h1,h2,pen?,t,runs}}, badge}`. Migration 6 nach 7 ergänzt `camps: {}`. Mindeststruktur: `camps` freiwillig, sonst Objektform, Zusatzfelder erlaubt. Zusammenführen (`mergeCamps`): Schalter neuerer Stand, Neustart (`rs`) gewinnt, sonst je Einheit der neuere Stand, Abzeichen der frühere Zeitpunkt. Struktur ist je Thema, 1.6.0 kann darauf aufbauen.
+7. Version 1.5.4 an den vier Stellen, `js/camp.js` und `js/campviews.js` in `FILES`. README, SPEC.md, CHANGELOG.md, CLAUDE.md (Schema 7) aktualisiert.
 
 ## Entscheidungen und Abweichungen
-- **Keine Sperre je Konto im Server:** Reicht, weil Node die Abschnitte nacheinander ausführt und zwischen Lesen und Schreiben kein `await` liegt. Technik war dem Auftrag freigestellt.
-- **Keine Rückfrage vor dem Verlassen eines Päckchens:** Durch das Sichern geht nichts verloren, die Rückfrage hätte genervt. Der Auftrag ließ beides offen.
-- **Päckchen nur auf dem Gerät, nicht im Spielstand:** vermeidet einen Schemawechsel (Auftrag: „falls ein Feld dazukommt“). Folge: Ein Päckchen lässt sich nicht auf einem anderen Gerät fortsetzen.
-- **Server ist bei der PIN maßgeblich** (Abgleich übernimmt immer dessen PIN). Das ist strenger als „neuere PIN gewinnt“ im reinen Zusammenführen (`mergeGlobal` ist unverändert, damit die bestehenden Merge-Tests gelten). Dadurch gibt es keine Dauer-Revisionen, wenn ein Gerät eine abweichende PIN hat.
-- **Alt-Hash-Aufwertung** zog vom Client zum Server um (sonst wäre sie am PIN-Schutz gescheitert).
-- **„Lied“ aus der i/ie-Liste genommen** (Lid wäre ebenfalls ein Wort). Grundregel „Fragen müssen eindeutig sein“.
-- **Nicht umgesetzt, weil nicht beauftragt:** serverseitiger Schutz der Liga-Freigaben (laut Bericht „geschützte Elternfreigaben ebenfalls serverseitig kontrollieren“). Sie liegen im Konto-Stand und gleichen sich wie dieser ab. In SPEC.md als Grenze vermerkt. Ebenso nicht: Tastatur-/Fokusbedienung, Lernstandanzeige mit Hilfe-/Erstversuchsangaben, Mini-Spiele (1.6.0).
-- Keine Vorschau im Browser geöffnet und kein Screenshot gemacht (Marco prüft visuell selbst).
+- **Elfmeterschießen nur nach dem Abpfiff** (nicht nach der Halbzeit), Marco hatte das offengelassen. Es kommt direkt im Anschluss an das Ergebnis. Wer das Ergebnis über „Zur Kabine“ verlässt, bekommt es erst bei einer Wiederholung der Einheit. Ein unterbrochenes Elfmeterschießen lässt sich fortsetzen.
+- **Einheit 4 hat 12 statt 20 Aufgaben:** Jede Halbzeit ist ein Päckchen mit 6 Aufgaben (Höchstlänge des bestehenden Päckchens), wie der Auftrag („Umfang so wählen, dass es 2 Halbzeiten ergibt“) es zuließ. Elfmeterschießen dort mit normalen Rest-Aufgaben.
+- **Punkte im Elfmeterschießen:** 10 je Tor (Serienbonus wie sonst), kein Spielzähler, kein Sticker. Die Zahlen waren nicht vorgegeben.
+- **Probetraining:** Antworten im Trainingslager verbrauchen es nicht (`applyAnswer` mit `trial: true`). Das Trainingslager ist an keine Liga-Freigabe gebunden, nur an den Schalter der Eltern.
+- **Wiederholen** ersetzt das Ergebnis der Einheit (kein Bestwert). Das Elfmeterschießen-Ergebnis wird dabei gelöscht, bis neu gespielt.
+- **Neustart** löscht Einheiten und Abzeichen, Punkte und Sticker bleiben. Zurücksetzen des ganzen Kontos behält den Schalter.
+- **Erste Hinweise ohne Zahlen:** Die Tipps der Einheit 1 nennen keine Zahlen, damit sie nie die Lösung verraten (Regel aus CLAUDE.md).
+- **Kontroll-Pfiff im Trainingslager** zählt in der Kontroll-Statistik wie sonst, die Päckchen-Sicherung `pack:<Konto>` bleibt davon unberührt.
+- Nicht umgesetzt (laut Nicht-Zielen): weitere Mini-Spiele, Trainingslager für andere Themen, Zustand „zurückgestellt“, Frust-Bremse.
 
 ## Tests
-`node --test`: **203 Tests, alle grün** (173 bisherige, davon drei an neue Texte angepasst: „Mix: Mathe & Deutsch“, „zuletzt sicher geübt“, Versionsnummer; plus 30 neue in `test/v153.test.mjs`, `v153-server.test.mjs`, `v153-client.test.mjs`, `v153-e2e.test.mjs`). Die Regressionstests zum Speicherwettlauf und zur PIN schlagen gegen den alten Server fehl, wie vorgesehen. Fake-DOM-Tests ersetzen keine Prüfung auf Safari/iPad.
+`node --test`: **232 Tests, alle grün** (203 bisherige, davon einige auf Schema 7 und Version 1.5.4 angepasst, `SHOT_TEXT` kennt jetzt „Gehalten!“; plus 28 neue in `test/v154.test.mjs` und 1 Ende-zu-Ende-Test in `test/v154-e2e.test.mjs`). Neue Tests decken: Migration Schema 6 auf 7 mit Fixture `state-v6.json` (Format 1.5.3), Mindeststruktur mit und ohne Trainingslager, Server nimmt Schema 7 an, Generatoren je Einheit (Rest kleiner als Teiler, Probe stimmt, Zahlenbereiche, Sachaufgaben eindeutig, keine doppelten Fragen, Tipps ohne Lösung), Halbzeit-Ablauf (10 plus 10, Pause, Abpfiff), Sichern und Fortsetzen mitten in der 2. Halbzeit, im Kontroll-Pfiff und im Elfmeterschießen, Elfmeterschießen-Ergebnis, Freischalten der Einheiten, Abzeichen und Sticker genau einmal, Abgleich zwischen zwei Geräten (auch Neustart), Eltern-Bereich. Fake-DOM-Tests ersetzen keine Prüfung auf Safari/iPad.
 
 ## Restposten
 - **Echter Blocker:** keiner.
-- **Bewusst offen:** iPad-Abnahme der Vorschau, Prüfung von `docs/Inhalte-Englisch-Sachkunde.md` durch Marco (neue Motive Mutter, Vater, Frühling), Hyper Backup, Testrunden in Emils Konto, Apple-Geräteprüfung und beobachteter Nutzungstest laut Bericht. Danach Auftrag 1.6.0 (Plan Abschnitt K).
-- **Zu beobachten:** Das iPad hat die neue Vorschau erst nach manuellem Cache-Reset geladen. Ob das Banner „Jetzt laden“ erschien, ist offen. Vor dem Live-Deploy beim nächsten Update darauf achten.
-- **Kosmetisch / zu beobachten:** Rote Speicherwarnung und „Warum stimmt das?“ nur im Fake-DOM geprüft, Optik auf dem iPad offen. Das Emoji „Frau mit Fläschchen“ braucht iOS 14 oder neuer (Unicode 13). Die Zuordnungs-Nummer nutzt die Paarfarben, bei Orange ist der weiße Ziffernkontrast knapp.
+- **Bewusst offen:** serverseitiger Schutz der Liga-Freigaben (1.6.0), Prüfung `docs/Inhalte-Englisch-Sachkunde.md`, Testrunden in Emils Konto, Hyper Backup, Auftrag 1.6.0 (Plan K, verallgemeinert das Trainingslager zum Sondertraining).
+- **Zu beobachten auf dem iPad:** Optik der Kachel, der Halbzeitpause und der Torwart-Szene (Emoji-freie SVG-Grafik, nur im Test auf Struktur geprüft), Länge einer Einheit (20 Aufgaben plus 5) für Emil, ob das Elfmeterschießen verloren geht, wenn man das Ergebnis verlässt (bei Bedarf in 1.6.0 anders lösen).
+- **Kosmetisch:** Die Einheiten-Liste zeigt bei gesperrten Einheiten „Erst Einheit n zu Ende spielen.“
 
 ## Anker
-- Branch `preview`, Version 1.5.3 (`version.js`, `sw.js`, `SERVER_VERSION`, `package.json`). Code-Commit `725466b`, davor `e60678a`; der Commit mit dieser Datei folgt direkt darauf. `main` bei `4f872de`.
-- Arbeitsbaum nach dem Commit sauber. Keine neuen Dateien in `app/`, `FILES` in `sw.js` unverändert.
+- Branch `preview`, Version 1.5.4 (`version.js`, `sw.js`, `SERVER_VERSION`, `package.json`). Code-Commit `bd83083`, der Commit mit dieser Datei folgt direkt darauf. `main` bei `5e51b26`.
+- Arbeitsbaum nach dem Commit sauber. Neue Dateien in `app/`: `js/camp.js`, `js/campviews.js` (beide in `FILES` des Service Workers).
+
+## Prüfliste für Marco (Vorschau auf dem iPad, nach Push und `deploy.sh`)
+1. Eltern-Bereich, Reiter Einstellungen: bei Emil „Trainingslager anzeigen“ auf An. Auf der Startseite erscheint die Kachel mit Einheit 1 frei, 2 bis 5 grau.
+2. Einheit 1 starten: oben steht „Trainingslager · Einheit 1 · 1. Halbzeit · Aufgabe 1 von 10“. Nach 10 Aufgaben kommt die Halbzeitpause mit Zwischenstand und „2. Halbzeit anpfeifen“.
+3. In der Pause „Kabine“ antippen: Dort steht „Trainingslager weiterspielen?“. Weiterspielen bringt zurück in die Pause.
+4. Mitten in der 2. Halbzeit App schließen und neu öffnen: Weiterspielen setzt an der richtigen Aufgabe mit richtigem Stand fort.
+5. Nach dem Abpfiff „Nachspielzeit: Elfmeterschießen“: fünf Schüsse, bei einer falschen Antwort hält der Torwart. Ergebnis wie „4 : 1“.
+6. Einheit 2 ist danach frei. Einheit 3: eine Aufgabe mit zu großem Rest absichtlich falsch beantworten, es muss „Da passt noch einer rein!“ erscheinen.
+7. Einheit 4: Päckchen mit Kontroll-Pfiff, Probe zeigt „Teiler · Ergebnis + Rest“.
+8. Einheit 5 abschließen: Abzeichen „Rest-Profi“ und Jubel-Sticker.
+9. Eltern-Bereich: „Trainingslager neu starten“ fragt nach, danach steht die Kachel wieder auf Einheit 1.
+10. Zweites Gerät (iPhone): Nach dem Abgleich zeigt die Kachel denselben Fortschritt.
+11. Emils bisheriger Stand (Punkte, Sticker, Päckchen) muss unverändert sein.
 
 ## Nächste Schritte für Marco
-1. Live kurz prüfen: Emils Konto öffnen, Punkte und Sticker müssen unverändert sein, eine Aufgabe spielen.
-2. Prüfliste aus dem Abschnitt Umgesetzt im Alltag beobachten (Päckchen weiterspielen, Warum stimmt das?, Englisch-Bilder). Auffälliges an Cowork zurückmelden.
-3. Beim nächsten Update darauf achten, ob das Banner „Jetzt laden“ erscheint, ohne dass der Cache zurückgesetzt werden muss.
-4. Offene Folgearbeit: Auftrag 1.6.0 (Plan Abschnitt K), Prüfung von `docs/Inhalte-Englisch-Sachkunde.md`, Hyper Backup, beobachteter Nutzungstest mit Emil.
+1. Änderungen ansehen und auf Wunsch pushen: `git push origin preview`
+2. Vorschau auf der NAS aktualisieren: im Vorschau-Ordner `./deploy.sh` ausführen (wie bei 1.5.3).
+3. Prüfliste oben durchgehen, Auffälliges an Cowork melden.
+4. Erst nach Abnahme: Merge nach `main` und Live-Deploy, auf ausdrückliche Anweisung.
+5. Danach Auftrag 1.6.0 (Plan K).
