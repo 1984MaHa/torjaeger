@@ -1,6 +1,7 @@
 // Darstellung: baut das HTML für jede Ansicht. Kennt weder Speicher noch Netz.
 import {LIGEN,TOPICS,STICKERS,PROBE,MASTER_N,MASTER_K,BONUS_FIX,FACHER,EN_LEVELS,topicsOf,allTopicsOf,isEng} from "./content.js";
 import {newInputHTML,NEW_TYPES} from "./inputs.js";
+import {slotsHTML} from "./slots.js";
 import {tileHTML} from "./tasks.js";
 import {ICONS} from "./icons.js";
 import {speakBtn} from "./speech.js";
@@ -160,6 +161,7 @@ function padHTML(label="Schuss!"){return `<div class="pad">${[1,2,3,"del",4,5,6,
 function inputHTML(T,G){
   if(NEW_TYPES.includes(T.type))return newInputHTML(T,G);
   const label=G.pack&&G.phase==="solve"?"Eintragen":G.pack&&G.phase==="edit"?"Ändern":"Schuss!";
+  if(T.type==="slots"){let h=slotsHTML(T,G);if(!G.done){const more=G.inp.some((v,j)=>j!==G.act&&v==="");h+=padHTML(more?"Weiter":label);}return h;}
   if(T.type==="num"){let h=`<div class="ans" aria-live="polite">${G.done?G.given:(G.input||"&nbsp;")}</div>`;if(!G.done)h+=padHTML(label);return h;}
   if(T.type==="pair"){const v=G.done?G.given:G.inp;let h=`<div class="pairrow"><span class="ans ${!G.done&&G.act===0?"act":""}" data-slot="0" role="button" aria-label="${T.labels[0]}">${v[0]||"&nbsp;"}</span><span>Rest</span><span class="ans ${!G.done&&G.act===1?"act":""}" data-slot="1" role="button" aria-label="${T.labels[1]}">${v[1]||"&nbsp;"}</span></div>`;
     if(!G.done)h+=padHTML(label);return h;}
@@ -170,6 +172,7 @@ function inputHTML(T,G){
 
 // Antwort im Kontroll-Pfiff: bei Bildern das Bild selbst (Farbkasten, Emoji, Ziffer), sonst Text
 function givenHTML(T,val){
+  if(T.type==="slots")return esc(givenText(T,val));
   if(T.type==="pic"&&T.tiles[val]&&T.tiles[val].k!=="dir")return `${tileHTML(T.tiles[val],false)} ${esc(T.tiles[val].name||"")}`;
   return esc(givenText(T,val));
 }

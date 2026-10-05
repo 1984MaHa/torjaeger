@@ -1,5 +1,16 @@
 # Änderungen
 
+## 1.7.2 (Aufgaben zur Reihe: Ballsäcke, Passkette, Rechenkreis, Päckchen)
+- **Anlass:** Emils Hausaufgabe „Die 9er Reihe“. Die Aufgabenarten des Arbeitsblatts gibt es jetzt als Spiel, für jede Reihe von 1 bis 10 (die Reihe kommt aus der Einmaleins-Grenze des Kontos, `rowtasks.js`):
+  - **Ballsäcke:** Bild mit 1 bis 10 Säcken, auf jedem Sack steht gut sichtbar die Zahl der Bälle. Das Kind schreibt die Malaufgabe: Anzahl der Säcke und Ergebnis (zwei Felder, die Zahl auf dem Sack steht schon da).
+  - **Passkette:** zehn Spieler im Kreis, in jeden Kreis kommt die nächste Zahl der Reihe, ein oder zwei Werte sind vorgegeben. Hin und wieder beginnt die Kette mit der 0 (nur mit „Auch mal 0“).
+  - **Rechenkreis vorwärts:** Zielscheibe mit „· k“ in der Mitte, acht Zahlen im inneren Ring, die Ergebnisse kommen in den äußeren Ring.
+  - **Rechenkreis rückwärts:** die Ergebnisse stehen außen, der Faktor im inneren Ring wird gesucht (Vorstufe zum Teilen).
+  - **Päckchen Reihe:** 12 bis 16 gemischte Aufgaben der Reihe, mit Tauschaufgaben, mal 1, mal 10, mal 0 (nur mit Schalter) und einigen Geteilt-Aufgaben, jede nur einmal; im Päckchen-Ablauf mit Kontroll-Pfiff.
+- **Neue Aufgabenart `slots`** (mehrere Zahlenfelder): jedes Feld ist antippbar (Kreis in der Zeichnung, `data-slot`), der Zahlenblock gilt für das aktive Feld, die Taste heißt „Weiter“, bis alle Felder gefüllt sind. Ein schon gefülltes Feld wird beim Antippen neu geschrieben. Nach der Antwort zeigen die Felder richtig oder falsch. Prüfung, Lösungstext, Kontroll-Pfiff und Ändern gehen wie bei den anderen Arten (`isRight`, `givenText`, `rightText`). Tipp und Probe enthalten keine Zahlen, verraten also nie die Lösung.
+- **Im normalen Üben:** Das Thema Einmaleins (`m3_1x1`) wechselt ab (jede vierte Aufgabe eine der vier Einzelaufgaben mit einer Reihe aus der Grenze des Kontos, jeder vierte Themenblock ein Reihen-Päckchen). Mini-Spiele, Trainingslager und Mix-Torwand nehmen weiter nur die klassischen Zahlenaufgaben (`GEN.m3_1x1()` ohne Option). Kein neues Thema (kein Eingriff in Aufstieg und Themenliste). Im Baukasten (1.7.3) sind alle Arten wählbar.
+- Kein Schemawechsel (bleibt 9). Version 1.7.2 an allen vier Stellen, neue Dateien `rowtasks.js` und `slots.js` in `FILES`. Tests: `test/v172.test.mjs`. Die Ende-zu-Ende-Tests warten jetzt auf den ersten Abgleich mit dem Server (liefen unter Last gelegentlich zu früh).
+
 ## 1.7.1 (Einmaleins-Grenze je Konto)
 - **Eltern-Bereich, Einstellungen, je Konto:** „Einmaleins“ mit den Reihen 1 bis 10 zum An- und Ausschalten (Standard alle, mindestens eine bleibt) und dem Schalter „Auch mal 0“ (Standard an). Das Ergebnis ist immer höchstens 100, jeder Faktor höchstens 10 (fest).
 - **Gilt für alle Aufgaben mit Mal und Geteilt im kleinen Einmaleins:** Einmaleins (die Reihe ist ein Faktor, die andere Zahl 1 bis 10, hin und wieder 0 und 1), Teilen mit Rest (Teiler aus den Reihen, Ergebnis höchstens 10, Rest kleiner als der Teiler), Sachaufgaben mit Rest, Malaufgaben zum Bild (Klasse 2), Päckchen und Kontroll-Pfiff, Trainingslager (alle fünf Einheiten und die Nachspielzeit), Sondertraining, Mini-Spiele und Mix (sie ziehen aus denselben Generatoren). Ein Lager kann nur noch enger machen, nie erweitern. Die Antwortvorschläge der Malaufgaben zum Bild bleiben ebenfalls bei Faktor 10 oder kleiner.

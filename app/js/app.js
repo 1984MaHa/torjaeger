@@ -317,7 +317,7 @@ function startRound(li,mode,trial,topic){
   armIdle(); // erst jetzt ist die Ansicht "play": sonst bekäme die erste Aufgabe einer Runde nie ein Angebot
 }
 function setTask(T){
-  G.task=T;G.input="";G.inp=["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;G.note="";
+  G.task=T;G.input="";G.inp=T.type==="slots"?T.a.map(()=>""):["",""];G.act=0;G.done=false;G.helpLevel=0;G.helpEx="";G.offer=false;G.offerDone=false;G.shot=null;G.pickIdx=-1;G.given=null;G.fixedNow=false;G.why=false;G.note="";
   G.pairs=T.type==="match"?T.left.map(()=>-1):null;G.msel=-1;G.sortA=T.type==="sort"?T.cards.map(()=>-1):null;G.ssel=-1;G.ord=[];
   if(T.type==="choice"&&!T.fixed)T.choices=shuffle(T.choices);
   if(G.offerNext){G.offerNext=false;G.offer=true;G.offerDone=true;} // Frust-Bremse: der Trainer bietet einen Tipp an
@@ -335,7 +335,7 @@ function nextTask(){
   setTask(T);
 }
 // Englisch: die Aufgaben folgen der Stufe des Kindes in diesem Thema.
-const levelOpts=t=>isEng(t)?{level:lvOf(S(),t)}:undefined;
+const levelOpts=t=>isEng(t)?{level:lvOf(S(),t)}:t==="m3_1x1"?{variety:true,rowPack:Math.random()<.25}:undefined; // Einmaleins: Abwechslung mit den Reihen-Aufgaben (ab 1.7.2)
 // Themenblock: ein Päckchen zusammenhängender Aufgaben. Keine Rückmeldung, bis der Kontroll-Pfiff vorbei ist.
 function startPack(li,topic){
   let tasks=packOf(topic,undefined,levelOpts(topic));
@@ -433,6 +433,7 @@ function editAnswer(i){
 // Beim Ändern steht die bisherige Antwort schon da (Zuordnen, Sortieren, Reihenfolge).
 function prefill(T,val){
   if(!Array.isArray(val))return;
+  if(T.type==="slots"&&val.length===T.a.length)G.inp=val.map(String);
   if(T.type==="match"&&val.length===T.left.length)G.pairs=val.slice();
   else if(T.type==="sort"&&val.length===T.cards.length)G.sortA=val.slice();
   else if(T.type==="order")G.ord=val.slice();
@@ -494,7 +495,8 @@ function render(){
     :view==="home"?homeHTML(S(),UI,env()):view==="admin"?adminHTML(adminModel()):view==="avatar"?avatarBuilderHTML(UI.av):view==="play"?playHTML(S(),G,trainers()):view==="mini"?miniHTML(S(),MG):resultHTML(S(),G,UI));
   bind();
 }
-function typeDigit(k){const T=G.task;if(T.type==="pair"){const v=G.inp[G.act];if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
+function typeDigit(k){const T=G.task;if(T.type==="pair"||T.type==="slots"){let v=G.inp[G.act];if(T.type==="slots"&&G.fresh===G.act){v="";G.fresh=-1;} // ein angetipptes, schon gefülltes Feld wird neu geschrieben
+    if(v.length<3)G.inp[G.act]=(v==="0"?"":v)+k;}else if(G.input.length<6)G.input=(G.input==="0"?"":G.input)+k;render();}
 // ----- neue Aufgabenarten: Zuordnen, Bild wählen, Sortieren, Reihenfolge (nur Antippen) -----
 function tapMatchLeft(i){if(G.done)return;if(G.pairs[i]>=0){G.pairs[i]=-1;G.msel=-1;}else G.msel=G.msel===i?-1:i;render();}
 function tapMatchRight(j){if(G.done)return;const owner=G.pairs.indexOf(j);
@@ -518,8 +520,12 @@ function watchVoices(){
     if(!typing&&(view==="home"||(view==="play"&&G&&!G.done)))render();};
   hadVoice=canSpeak();ss.addEventListener("voiceschanged",check);
 }
-function del(){if(G.task.type==="pair")G.inp[G.act]=G.inp[G.act].slice(0,-1);else G.input=G.input.slice(0,-1);render();}
-function ok(){const T=G.task;if(T.type==="pair"){if(G.act===0&&G.inp[0]!==""&&G.inp[1]===""){G.act=1;render();return;}if(G.inp[0]!==""&&G.inp[1]!=="")answer(G.inp.slice());return;}if(G.input!=="")answer(G.input);}
+function del(){if(G.task.type==="pair"||G.task.type==="slots")G.inp[G.act]=G.inp[G.act].slice(0,-1);else G.input=G.input.slice(0,-1);render();}
+function ok(){const T=G.task;
+  if(T.type==="slots"){ // erst das aktive Feld füllen, dann zum nächsten leeren Feld, am Ende abgeben
+    if(G.inp[G.act]==="")return;const n=G.inp.length;let nx=-1;for(let d=1;d<n;d++){const j=(G.act+d)%n;if(G.inp[j]===""){nx=j;break;}}
+    if(nx>=0){G.act=nx;render();return;}answer(G.inp.slice());return;}
+  if(T.type==="pair"){if(G.act===0&&G.inp[0]!==""&&G.inp[1]===""){G.act=1;render();return;}if(G.inp[0]!==""&&G.inp[1]!=="")answer(G.inp.slice());return;}if(G.input!=="")answer(G.input);}
 
 async function setGlobalPin(pin){
   globalRec.state.pin=pin;globalRec.state.updatedAt=Date.now();globalRec.dirty=true;
@@ -748,7 +754,7 @@ function bind(){
   if($("next"))$("next").onclick=next;
   if($("tapok"))$("tapok").onclick=()=>{if(G.pickIdx>=0)answer(G.pickIdx);};
   document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==="del")del();else if(k==="ok")ok();else typeDigit(k);});
-  document.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{if(!G.done){G.act=Number(b.dataset.slot);render();}});
+  document.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{if(!G.done){G.act=Number(b.dataset.slot);G.fresh=G.act;render();}});
   document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>answer(b.dataset.c));
   document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{G.pickIdx=Number(b.dataset.w);render();});
   document.querySelectorAll("[data-ml]").forEach(b=>b.onclick=()=>tapMatchLeft(Number(b.dataset.ml)));
@@ -797,7 +803,7 @@ document.addEventListener("keydown",e=>{if(view!=="play"||!G)return;if(e.target&
   if(G.pack&&G.phase==="check")return;
   if(G.camp&&G.camp.brk)return;
   if(G.done&&(e.key==="Enter"||e.key===" ")){e.preventDefault();next();return;}if(G.done)return;
-  const T=G.task;if(T.type!=="num"&&T.type!=="pair")return;
+  const T=G.task;if(T.type!=="num"&&T.type!=="pair"&&T.type!=="slots")return;
   if(/^[0-9]$/.test(e.key))typeDigit(e.key);else if(e.key==="Backspace")del();else if(e.key==="Enter")ok();});
 
 // ================= Start =================

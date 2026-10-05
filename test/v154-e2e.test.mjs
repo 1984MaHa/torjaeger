@@ -99,6 +99,8 @@ test("Ende zu Ende 1.5.4: Trainingslager von den Eltern bis zum Elfmeterschieße
 
     // ----- Eltern schalten das Trainingslager ein -----
     await clickId("switch");await until(()=>has("Wer spielt?"),"Wer spielt?");
+    // erst warten, bis der Server die PIN kennt (erster Abgleich), sonst ist unter Last lokal noch nichts festgelegt
+    for(let n=0;n<400;n++){const s=(await get("/api/settings")).settings;if(s&&s.pin)break;await sleep(25);}
     await clickId("adminOpen");byId("adminPin").value="1234";await clickId("adminGo",150);
     await until(()=>has("Eltern-Bereich"),"Eltern-Bereich");
     assert.ok(!has("data-atab=\"x\"")&&has("Trainingslager: Teilen mit Rest")&&has("Trainingslager neu starten")&&has("0 von 5 Einheiten"));

@@ -4,6 +4,7 @@
 import {GEN,mk} from "./generators.js";
 import {R,pick,esc} from "./util.js";
 import {pickRow,getMul} from "./mul.js";
+import {rowPackTasks} from "./rowtasks.js";
 import {BONUS_FIX,ENG_IDS,SU_IDS} from "./content.js";
 
 export const PACK_MIN=3,PACK_MAX=6,DEFAULT_PACK=5;
@@ -46,6 +47,7 @@ function independent(t,n,opts){
   return out;
 }
 export function packOf(topic,n=packLen(topic),opts){
+  if(topic==="m3_1x1"&&opts&&opts.rowPack)return rowPackTasks(opts.row).map(T=>Object.assign({topic},T)); // Päckchen der Reihe mit 12 bis 16 Aufgaben (ab 1.7.2)
   n=Math.max(PACK_MIN,Math.min(PACK_MAX,n|0));
   const make=PACKS[topic];
   return (make?make(n):independent(topic,n,opts)).map(T=>Object.assign({topic},T));
@@ -106,6 +108,7 @@ export function isRight(T,val){
   if(T.type==="match"||T.type==="sort"||T.type==="order")return sameList(val,T.a);
   if(T.type==="num")return Number(val)===T.a;
   if(T.type==="pair")return Array.isArray(val)&&Number(val[0])===T.a[0]&&Number(val[1])===T.a[1];
+  if(T.type==="slots")return Array.isArray(val)&&val.length===T.a.length&&val.every((x,i)=>x!==""&&Number(x)===T.a[i]);
   return val===T.a;
 }
 export function gradePack({tasks,answers,finals,checked}){
@@ -134,6 +137,7 @@ export function givenText(T,val){
   if(T.type==="order")return Array.isArray(val)?val.map(i=>T.cards[i]?T.cards[i].t:"?").join(" → "):"-";
   if(T.type==="pic")return T.tiles[val]?(T.tiles[val].k==="dir"?T.tiles[val].name:T.tiles[val].k==="col"||T.tiles[val].k==="num"||T.tiles[val].k==="emo"?(T.tiles[val].name||T.tiles[val].t):T.tiles[val].t):"-";
   if(T.type==="pair")return Array.isArray(val)?`${val[0]} Rest ${val[1]}`:"-";
+  if(T.type==="slots")return Array.isArray(val)?(T.kind==="sacks"?`${val[0]===""?"?":val[0]} · ${T.sacks.k} = ${val[1]===""?"?":val[1]}`:val.map(v=>v===""?"?":v).join(", ")):"-";
   if(T.type==="tap")return T.words[val]!==undefined?T.words[val]:"-";
   return String(val);
 }

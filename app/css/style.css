@@ -415,3 +415,13 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .infobar .btn{min-width:48px;min-height:48px}
 .infoscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 8px 12px}
 .infoscroll img{display:block;max-width:none;height:auto;margin:0 auto;border-radius:10px;background:#fff}
+
+/* Aufgabenart "slots": Ballsäcke, Passkette, Rechenkreis (ab 1.7.2) */
+.slotvis{display:flex;justify-content:center;padding:6px}
+.slotvis svg{touch-action:manipulation}
+.slotvis [data-slot]:focus-visible circle{stroke:var(--gold);stroke-width:6}
+.slotsrow{margin-top:6px}
+.slotsrow .slotbox{min-width:92px;min-height:70px}
+.slotsrow .fixbox{min-width:70px;text-align:center}
+.slotbox.right{background:#d7f5df}
+.slotbox.wrong{background:#ffd9d4}

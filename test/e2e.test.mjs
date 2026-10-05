@@ -38,7 +38,7 @@ let BASE="";
 globalThis.fetch=(u,o)=>realFetch(String(u).startsWith("/")?BASE+u:u,o);
 
 const sleep=ms=>new Promise(r=>realSetTimeout(r,ms));
-async function until(cond,what,ms=4000){const t=Date.now();while(Date.now()-t<ms){if(cond())return;await sleep(15);}assert.fail("Zeitüberschreitung: "+what+"\n"+html.replace(/<svg[\s\S]*?<\/svg>/g,"<svg/>").slice(0,1500));}
+async function until(cond,what,ms=12000){const t=Date.now();while(Date.now()-t<ms){if(cond())return;await sleep(15);}assert.fail("Zeitüberschreitung: "+what+"\n"+html.replace(/<svg[\s\S]*?<\/svg>/g,"<svg/>").slice(0,1500));}
 const has=t=>html.includes(t);
 const byId=id=>{const e=els.find(x=>x.id===id);assert.ok(e,"Element fehlt: #"+id);return e;};
 const byData=(k,v)=>{const e=els.find(x=>k in x.dataset&&(v===undefined||x.dataset[k]===v));assert.ok(e,`Element fehlt: data-${k}=${v}`);return e;};

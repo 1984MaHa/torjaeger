@@ -3,6 +3,7 @@ import {R,pick,shuffle,fmt} from "./util.js";
 import {blocksSVG,stwSVG,fieldSVG,groupsSVG} from "./svg.js";
 import {TASKGEN} from "./tasks.js";
 import {pickRow,otherFactor,rowsOnly} from "./mul.js";
+import {varietyTask} from "./rowtasks.js";
 
 const NOMEN=[["BALL","der Ball"],["TOR","das Tor"],["TRAINER","der Trainer"],["WIESE","die Wiese"],["TRIKOT","das Trikot"],["SCHUH","der Schuh"],["PFIFF","der Pfiff"],["SONNE","die Sonne"],["SCHAF","das Schaf"],["HUND","der Hund"],["BLUME","die Blume"],["NETZ","das Netz"],["MANNSCHAFT","die Mannschaft"],["KATZE","die Katze"]];
 const VERBEN=[["LAUFEN","ich laufe"],["SPRINGT","er springt"],["SCHIESST","er schießt"],["LIEGT","es liegt"],["KICKT","sie kickt"],["JUBELN","wir jubeln"],["RENNT","er rennt"],["SPIELEN","wir spielen"],["LACHT","sie lacht"],["FÄNGT","er fängt"],["WIRFT","sie wirft"],["PFEIFT","er pfeift"]];
@@ -71,7 +72,8 @@ export const GEN={
       hint:"Lies laut. Wo deine Stimme nach unten geht, ist der Satz zu Ende. Nach dem Punkt geht es groß weiter.",tapLabel:"Punkt setzen!",mark:true};},
   // ---- Klasse 3 ----
   m3_rest(){const b=pickRow(2,9,2),q=R(1,9),r=Math.random()<.8?R(1,b-1):0;return mk.rest(b*q+r,b);},
-  m3_1x1(){const a=pickRow(1,10),b=otherFactor(),swap=b>0&&Math.random()<.5; // a = Reihe, b = andere Zahl (kann 0 sein); beim Teilen nie durch 0
+  m3_1x1(opts){if(opts&&opts.variety&&Math.random()<.25)return varietyTask(); // Ballsäcke, Passkette, Rechenkreis (ab 1.7.2)
+    const a=pickRow(1,10),b=otherFactor(),swap=b>0&&Math.random()<.5; // a = Reihe, b = andere Zahl (kann 0 sein); beim Teilen nie durch 0
     return swap?mk.einmaleins(a,b,Math.random()>=.5):mk.einmaleins(b,a,Math.random()>=.5);},
   m3_htz(){const n=R(101,999),H=Math.floor(n/100),Z=Math.floor(n/10)%10,E=n%10,t=R(0,2);
     if(t===2)return{type:"num",q:`${H} <mark>H</mark> + ${Z} <mark>Z</mark> + ${E} <mark>E</mark> = ?`,a:n,ex:`${H} Hunderter, ${Z} Zehner und ${E} Einer sind ${n}.`};
@@ -126,7 +128,7 @@ const HINTS={
   m3_plus:"Rechne Stelle für Stelle. Erst die Hunderter, dann die Zehner, dann die Einer.",
   d4_steigern:"Steigern heißt: warm, wärmer, am wärmsten. Sprich es laut. Welche Form klingt richtig?"
 };
-for(const t of Object.keys(HINTS)){const f=GEN[t];GEN[t]=()=>{const T=f();if(!T.hint)T.hint=HINTS[t];return T;};}
+for(const t of Object.keys(HINTS)){const f=GEN[t];GEN[t]=o=>{const T=f(o);if(!T.hint)T.hint=HINTS[t];return T;};}
 
 // Englisch und Sachkunde (neue Aufgabenarten): GEN[thema]({level}) , siehe tasks.js
 Object.assign(GEN,TASKGEN);

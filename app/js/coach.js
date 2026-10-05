@@ -8,6 +8,7 @@ import {esc} from "./util.js";
 export function rightText(T){
   if(T.type==="tap")return T.words[T.a];
   if(T.type==="pair")return `${T.a[0]} Rest ${T.a[1]}`;
+  if(T.type==="slots")return T.kind==="sacks"?`${T.a[0]} · ${T.sacks.k} = ${T.a[1]}`:T.a.join(", ");
   if(T.type==="match")return T.left.map((l,i)=>`${l.k==="txt"||l.k==="emo"?l.t:"Farbe"} = ${T.right[T.a[i]].t}`).join("; ");
   if(T.type==="sort")return T.baskets.map((b,j)=>`${b.t}: ${T.cards.filter((_,i)=>T.a[i]===j).map(c=>c.t).join(", ")||"nichts"}`).join("; ");
   if(T.type==="order")return T.a.map(i=>T.cards[i].t).join(" → ");

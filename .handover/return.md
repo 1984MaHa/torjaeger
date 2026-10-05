@@ -1,6 +1,6 @@
 # Rückübergabe Claude Code nach Cowork, 02.10.2026 (Versionen 1.6.0 bis 1.6.7)
 
-> **Laufender Auftrag C0 bis C4 (ab 05.10.2026):** Stand siehe `.handover/progress.md`. C0 (1.7.0, Info-Grafik) und C1 (1.7.1, Einmaleins-Grenze, Schema 9) sind fertig auf `preview`, Tags v1.7.0 und v1.7.1, 322 Tests. Nichts gepusht, `main` und `origin` bei e0cd3e5. Die Rückübergabe unten gilt für 1.6.0 bis 1.6.7 und bleibt gültig.
+> **Laufender Auftrag C0 bis C4 (ab 05.10.2026):** Stand siehe `.handover/progress.md`. C0 (1.7.0, Info-Grafik), C1 (1.7.1, Einmaleins-Grenze, Schema 9) und C2 (1.7.2, Aufgaben zur Reihe) sind fertig auf `preview`, Tags v1.7.0 bis v1.7.2, 331 Tests. Nichts gepusht, `main` und `origin` bei e0cd3e5. Die Rückübergabe unten gilt für 1.6.0 bis 1.6.7 und bleibt gültig.
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen, Budget-Modus). Pakete A0 und B1 bis B8 sind **alle fertig**, je Paket ein Commit und ein lokaler Tag. Darunter stehen die Nachträge je Paket (neueste zuerst) und danach die Rückübergabe der früheren 1.5.4-Sitzung.
 

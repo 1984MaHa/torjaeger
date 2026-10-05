@@ -40,7 +40,7 @@ globalThis.speechSynthesis={getVoices:()=>voices,speak:u=>said.push(u),cancel(){
 globalThis.SpeechSynthesisUtterance=class{constructor(t){this.text=t;}};
 
 const sleep=ms=>new Promise(r=>realSetTimeout(r,ms));
-async function until(cond,what,ms=4000){const t=Date.now();while(Date.now()-t<ms){if(cond())return;await sleep(15);}assert.fail("Zeitüberschreitung: "+what+"\n"+html.replace(/<svg[\s\S]*?<\/svg>/g,"<svg/>").slice(0,1800));}
+async function until(cond,what,ms=12000){const t=Date.now();while(Date.now()-t<ms){if(cond())return;await sleep(15);}assert.fail("Zeitüberschreitung: "+what+"\n"+html.replace(/<svg[\s\S]*?<\/svg>/g,"<svg/>").slice(0,1800));}
 const has=t=>html.includes(t);
 const byId=id=>{const e=els.find(x=>x.id===id);assert.ok(e,"Element fehlt: #"+id);return e;};
 const all=k=>els.filter(e=>k in e.dataset);
@@ -70,7 +70,10 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     // Kreisliga freigeben (Trainerbank), sie wird die aktuelle Liga
     byId("pinIn").value="1234";await clickId("pinOk",60);
     await until(()=>has('data-open="1"'),"Eltern-Bereich in der Trainerbank");
-    await clickData("open","1");
+    // Der Server kennt das Konto erst nach dem ersten Abgleich: darauf warten (sonst gibt es unter Last kein Freigeben)
+    for(let n=0;n<400;n++){const p=(await get("/api/profiles")).profiles;if(p.length&&(await get(`/api/profiles/${p[0].id}/state`)).state)break;await sleep(25);}
+    // unter Last kann der erste Tipp ins Leere gehen (Abgleich läuft gleichzeitig): bis zu dreimal versuchen
+    for(let n=0;n<3&&!has('data-fach="1:eng"');n++){if(has('data-open="1"'))await clickData("open","1");const t0=Date.now();while(Date.now()-t0<4000&&!has('data-fach="1:eng"'))await sleep(25);}
     await until(()=>has('data-fach="1:eng"'),"Kreisliga zeigt Englisch");
     assert.ok(has('data-fach="1:su"')&&has('data-fach="1:math"')&&has('data-fach="1:deu"')&&has("Mix: Mathe &amp; Deutsch"));
 

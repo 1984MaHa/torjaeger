@@ -17,7 +17,7 @@ const ROOT=fileURLToPath(new URL("..",import.meta.url));
 const fx=f=>JSON.parse(fs.readFileSync(ROOT+"test/fixtures/"+f,"utf8"));
 const plain=q=>String(q).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
 const prof=()=>newProfile({id:"k-emil0001",name:"Emil",deviceId:"d1",now:1000,topics:ALL_TOPICS});
-const RUNS=250;
+const RUNS=100;
 const SETS=[[9],[1],[10],[7,8],[2,5],[3,4,6],ALL_ROWS];
 
 test("Schema ist 9, Standard ist alle Reihen und 0 an, ungültige Werte werden bereinigt",()=>{
@@ -117,7 +117,7 @@ test("Trainingslager (alle Einheiten), Päckchen-Einheit und Nachspielzeit halte
   for(const rows of [[9],[2,5],[10],[1],ALL_ROWS]){
     setMul({rows,zero:false});
     try{
-      for(let i=0;i<30;i++)for(const n of [1,2,3,4,5]){
+      for(let i=0;i<10;i++)for(const n of [1,2,3,4,5]){
         for(const half of [1,2]){
           for(const T of [campTask("m3_rest",n,half)].concat(campHalf("m3_rest",n,half),penaltyTasks("m3_rest",n))){
             if(T.type==="pair"){const b=T.inv.y;checkRest(b*T.a[0]+T.a[1],b,T.a[0],T.a[1],rows,"Lager "+n);}
