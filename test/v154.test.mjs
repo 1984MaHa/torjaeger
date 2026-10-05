@@ -29,16 +29,16 @@ test("Schema 7: Migration von 6 nach 7 aus dem Format 1.5.3 verliert nichts",()=
   assert.equal(old.meta.schemaVersion,6);assert.equal(checkProfileState(old),null);
   const s=migrateProfile(old);
   assert.deepEqual(old,copy,"die Eingabe bleibt unverändert");
-  assert.equal(SCHEMA_VERSION,9);assert.equal(s.meta.schemaVersion,9);assert.deepEqual(s.camps,{});
+  assert.equal(SCHEMA_VERSION,10);assert.equal(s.meta.schemaVersion,10);assert.deepEqual(s.camps,{});
   const a=JSON.parse(JSON.stringify(s)),b=JSON.parse(JSON.stringify(old));
   delete a.camps;a.meta.schemaVersion=6;
   delete a.settings.topicSeen;delete a.settings.mul;assert.deepEqual(a,b,"alles andere ist gleich");
   assert.equal(s.zusatzfeld.bleibt,true);assert.equal(s.profile.pin.code,"4711");
   assert.equal(checkProfileState(s),null);
   for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json","state-v5.json"]){
-    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,9,f);assert.equal(checkProfileState(m),null,f);
+    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,10,f);assert.equal(checkProfileState(m),null,f);
   }
-  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=10;
+  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=11;
   assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
 });
 test("Mindeststruktur: mit und ohne Trainingslager, unbekannte Felder erlaubt",()=>{
@@ -66,7 +66,7 @@ test("Der Server nimmt Schema 7 mit Trainingslager an und lehnt kaputtes camps a
     const ok=await api(S.base,"PUT","/api/profiles/k-camp0001/state",{baseRev:0,device:"d1",state:st});
     assert.equal(ok.status,200);
     const back=(await api(S.base,"GET","/api/profiles/k-camp0001/state")).json;
-    assert.equal(back.schemaVersion,9);assert.equal(back.state.camps.m3_rest.on,true);
+    assert.equal(back.schemaVersion,10);assert.equal(back.state.camps.m3_rest.on,true);
     const bad=JSON.parse(JSON.stringify(st));bad.camps=5;
     const r=await api(S.base,"PUT","/api/profiles/k-camp0001/state",{baseRev:ok.json.rev,device:"d1",state:bad});
     assert.equal(r.status,400);assert.equal(r.json.error,"bad_state");
@@ -215,7 +215,7 @@ test("mergeProfile: Trainingslager aus beiden Ständen, unbekannte Felder im Tra
   applyCampOn(a,ctx(a.meta.updatedAt+1),TOP,true);applyCampUnit(a,ctx(a.meta.updatedAt+2),{topic:TOP,unit:1,h1:{c:5,n:10},h2:{c:6,n:10}});
   b.camps={m3_rest:{on:true,t:1,rs:0,units:{},badge:0,extra:"bleibt"}};
   const m=mergeProfile(a,b),m2=mergeProfile(b,a);
-  assert.ok(unitDone(m,TOP,1));assert.equal(m.camps.m3_rest.extra,"bleibt");assert.equal(m.meta.schemaVersion,9);
+  assert.ok(unitDone(m,TOP,1));assert.equal(m.camps.m3_rest.extra,"bleibt");assert.equal(m.meta.schemaVersion,10);
   assert.equal(canon(m.camps),canon(m2.camps));
 });
 test("Abgleich zwischen zwei Geräten: Fortschritt kommt an, Neustart auch",async()=>{
@@ -291,7 +291,7 @@ test("Elfmeterschießen sichern und fortsetzen",()=>{
 
 // ---------- Darstellung ----------
 const clean=h=>assert.ok(!/undefined|NaN|\[object|—|–/.test(h.replace(/data-[a-z]+="[^"]*"/g,"")),"kaputter Wert oder Gedankenstrich");
-const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.7.2"},extra);
+const env=(extra={})=>Object.assign({pack:null,camp:null,hasPin:true,syncText:"",updateReady:false,persistent:true,version:"1.7.3"},extra);
 test("Startseite: Kachel nur mit Schalter, Einheiten gesperrt oder frei, Fortschritt und Abzeichen",()=>{
   const s=migrateProfile(fx("state-v6.json"));
   assert.ok(!homeHTML(s,{},env()).includes("Trainingslager"),"standardmäßig aus");
@@ -346,12 +346,12 @@ test("Eltern-Bereich: Schalter, Fortschritt je Einheit, Neustart mit Rückfrage"
 });
 
 // ---------- Dateien und Versionen ----------
-test("Version 1.7.2 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
+test("Version 1.7.3 an allen vier Stellen, neue Dateien im Service Worker, Texte ohne Gedankenstriche",()=>{
   const sw=fs.readFileSync(path.join(ROOT,"app/sw.js"),"utf8");
   for(const f of ["camp.js","campviews.js"])assert.ok(sw.includes(`"js/${f}"`),f);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.7.2"/);assert.match(sw,/VERSION = "1.7.2"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.7.2"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.7.2");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.7.3"/);assert.match(sw,/VERSION = "1.7.3"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.7.3"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.7.3");
   for(const f of ["camp.js","campviews.js"])assert.ok(!/[—–]/.test(fs.readFileSync(path.join(ROOT,"app/js",f),"utf8")),f);
   assert.equal(CAMPS.m3_rest.units.length,5);assert.equal(CAMPS.m3_rest.badge,"Rest-Profi");
 });

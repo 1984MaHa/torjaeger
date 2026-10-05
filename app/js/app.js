@@ -3,11 +3,12 @@ import {setMul,mulOf} from "./mul.js";
 import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng,ALL_TOPICS} from "./content.js";
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
-import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume} from "./camp.js";
+import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume,syncCustomCamps} from "./camp.js";
+import {customTask,saveTemplate,copyTemplate,deleteTemplate,findTemplate,draftOf,newDraft,templateOfDraft,ITEM_IDS} from "./custom.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyMulRow,applyMulZero,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {currentLeague,leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyMulRow,applyMulZero,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -32,7 +33,7 @@ let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null,MG=null; // MG: laufendes Mini-Spiel
 const UI={saveFail:false,savedPack:null,savedCamp:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
-const S=()=>{const s=cur.rec.state;setMul(mulOf(s));return s;}; // setMul: Einmaleins-Grenze des Kontos für alle Generatoren
+const S=()=>{const s=cur.rec.state;setMul(mulOf(s));if(globalRec&&globalRec.state)syncCustomCamps(globalRec.state,s.camps,currentLeague(s));return s;}; // setMul: Einmaleins-Grenze des Kontos für alle Generatoren
 
 // ================= Speicher =================
 async function loadAll(){
@@ -162,7 +163,7 @@ function campFinalCommit(){
   const C=G.camp,hs=C.halves,c=hs.reduce((a,h)=>a+h.c,0),n=hs.reduce((a,h)=>a+h.n,0),pts=hs.reduce((a,h)=>a+h.pts,0);
   const bonus=(c/n>=.6?20:0)+(c===n&&n>=5?30:0);
   const r=commit((s,cx)=>applyRoundEnd(s,cx,{li:G.li,mode:"camp",trial:false,c,n,pts:pts+bonus,bonus,dur:(Date.now()-G.t0)/1000,topic:C.topic}));
-  const u=commit((s,cx)=>applyCampUnit(s,cx,{topic:C.topic,unit:C.unit,h1:hs[0],h2:hs[1]}));
+  const u=commit((s,cx)=>applyCampUnit(s,cx,{topic:C.topic,unit:C.unit,h1:hs[0],h2:hs[1],def:CAMPS[C.topic].custom?CAMPS[C.topic].def:undefined}));
   C.final={c,n,pts:pts+bonus,bonus,res:[].concat(...hs.map(h=>h.res)),newSticker:r.newSticker,celebrate:r.celebrate,badgeNew:u.badgeNew,badgeSticker:u.sticker};
   dropCamp();
 }
@@ -345,8 +346,9 @@ function startPack(li,topic){
   setTask(tasks[0]);view="play";render();window.scrollTo(0,0);armIdle();
 }
 // ----- Mini-Spiele (Torwand): fünf Aufgaben, die Antworten zählen im Lernstand, kein Spiel, kein Sticker, kein Probetraining-Budget -----
-function startMini(kind){
-  const M=kind==="surprise"?newSurprise(S(),Math.random,MG&&MG.kind):newMini(kind,S());
+function startMini(kind,src=null){ // src: Aufgaben aus einem eigenen Trainingslager (Nachspielzeit), sonst der Mix
+  let M=kind==="surprise"?newSurprise(S(),Math.random,MG&&MG.kind,src):newMini(kind,S(),Math.random,src);
+  if(!M&&src)M=kind==="surprise"?newSurprise(S(),Math.random,MG&&MG.kind):newMini(kind,S());
   if(!M){UI.miniMsg=kind==="surprise"?"Gerade gibt es kein Mini-Spiel mit passenden Aufgaben.":"Dafür gibt es gerade keine passenden Aufgaben. Probier ein anderes Mini-Spiel.";if(view==="home")render();return;}
   UI.miniMsg="";MG=M;view="mini";render();window.scrollTo(0,0);
 }
@@ -559,7 +561,9 @@ const validName=n=>typeof n==="string"&&n.trim().length>0;
 function adminModel(){
   const A=UI.admin;
   const list=accounts.map(a=>({id:a.id,name:a.rec.state?a.rec.state.profile.name:a.name,state:a.rec.state})).sort((x,y)=>String(x.name).localeCompare(String(y.name),"de"));
-  return{tr1:A.tr1,tr2:A.tr2,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
+  const sel=A.sel||(list.find(a=>a.state)||{}).id,sa=list.find(a=>a.id===sel&&a.state);
+  if(sa){setMul(mulOf(sa.state));syncCustomCamps(globalRec.state,sa.state.camps,currentLeague(sa.state));} // Liste der Lager für das gewählte Konto
+  return{g:globalRec.state,tpl:A.tpl,tr1:A.tr1,tr2:A.tr2,tab:A.tab,msg:A.msg,accounts:list,sel:A.sel||(list.find(a=>a.state)||{}).id,renaming:A.renaming,renamingDevice:A.renamingDevice,confirm:A.confirm,moreDaily:A.moreDaily,
     server:A.server,deviceId,appVersion:APP_VERSION,persistent:store.persistent,previewLabel:UI.preview,schema:{app:SCHEMA_VERSION,global:GLOBAL_SCHEMA_VERSION}};
 }
 const adminRec=id=>{const a=accounts.find(x=>x.id===id);return a&&a.rec.state?a.rec:null;};
@@ -611,8 +615,10 @@ async function adminDo(){
     const a=accounts.find(x=>x.id===arg);if(a)await sync.syncProfile(a.rec); // holt den geleerten Stand, er gewinnt beim Zusammenführen
     adminSay("ok","Der Spielstand ist zurückgesetzt. Der alte Stand liegt als Sicherung auf dem Server.");
   }else if(kind==="campreset"){
-    const [id,t]=arg.split(":"),rec=adminRec(id);
+    const k=arg.indexOf(":"),id=arg.slice(0,k),t=arg.slice(k+1),rec=adminRec(id); // die Lager-Nummer eigener Lager enthält selbst einen Doppelpunkt
     if(rec){commitOn(rec,(s,c)=>applyCampReset(s,c,t));adminSay("ok","Das Trainingslager ist neu gestartet.");}
+  }else if(kind==="tpldel"){
+    if(deleteTemplate(globalRec.state,ctx(),arg)){globalRec.dirty=true;await store.put("global",globalRec);scheduleSync(300);adminSay("ok","Die Vorlage ist gelöscht. Das gilt für alle Konten.");}
   }else if(kind==="delete"){
     const r=await adminApi.remove(A.pin,arg);
     if(!r.ok){adminSay("err",adminError(r));render();return;}
@@ -678,6 +684,23 @@ function bindAdmin($){
   document.querySelectorAll("[data-amul]").forEach(b=>b.onclick=()=>{
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const [k,x,y]=b.dataset.amul.split(":");commitOn(a.rec,(s,c)=>k==="row"?applyMulRow(s,c,Number(x),y==="on"):applyMulZero(s,c,x==="on"));render();});
+  // Baukasten: Vorlagen (global) und Schalter je Konto
+  const A1=()=>UI.admin,saveG=async()=>{globalRec.dirty=true;await store.put("global",globalRec);scheduleSync(300);};
+  const grabTpl=()=>{const i=$("tplName"),A=A1();if(i&&A.tpl)A.tpl.name=i.value;};
+  document.querySelectorAll("[data-atplnew]").forEach(b=>b.onclick=()=>{adminReset();A1().tpl=newDraft();render();});
+  document.querySelectorAll("[data-atpledit]").forEach(b=>b.onclick=()=>{const t=findTemplate(globalRec.state,b.dataset.atpledit);if(t&&!t.builtin){adminReset();A1().tpl=draftOf(t);render();window.scrollTo(0,0);}});
+  document.querySelectorAll("[data-atplcopy]").forEach(b=>b.onclick=async()=>{const n=copyTemplate(globalRec.state,ctx(),b.dataset.atplcopy);if(!n)return;await saveG();adminReset();A1().tpl=draftOf(findTemplate(globalRec.state,n.id));adminSay("ok","Kopie angelegt. Prüft den Namen und die Auswahl, dann speichern.");render();window.scrollTo(0,0);});
+  document.querySelectorAll("[data-atplitem]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,id=b.dataset.atplitem;if(!d||!ITEM_IDS.has(id))return;d.items=d.items.includes(id)?d.items.filter(x=>x!==id):d.items.concat(id);d.plan=null;render();});
+  document.querySelectorAll("[data-atplrow]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,r=Number(b.dataset.atplrow);if(!d)return;d.rows=d.rows.includes(r)?d.rows.filter(x=>x!==r):d.rows.concat(r).sort((p,q)=>p-q);render();});
+  document.querySelectorAll("[data-atplset]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl;if(!d)return;const k=b.dataset.atplset.indexOf(":"),key=b.dataset.atplset.slice(0,k),v=b.dataset.atplset.slice(k+1);
+    if(key==="units"){d.units=Number(v);d.plan=null;}else if(key==="half")d.half=Number(v);else if(key==="bonus")d.bonus=v;else if(key==="zero")d.zero=v==="off"?"off":"inherit";render();});
+  document.querySelectorAll("[data-atplsave]").forEach(b=>b.onclick=async()=>{grabTpl();const d=A1().tpl;if(!d)return;
+    if(!String(d.name).trim()){adminSay("err","Bitte einen Namen eingeben.");render();return;}
+    if(!d.items.length){adminSay("err","Bitte mindestens ein Thema oder eine Aufgabenart wählen.");render();return;}
+    const n=saveTemplate(globalRec.state,ctx(),templateOfDraft(d));if(!n){adminSay("err","Mitgelieferte Vorlagen lassen sich nicht ändern. Bitte kopieren.");render();return;}
+    await saveG();A1().tpl=null;adminSay("ok","Die Vorlage ist gespeichert. Das gilt für alle Konten. Schon begonnene Lager laufen unverändert weiter, bis ihr sie neu startet.");render();window.scrollTo(0,0);});
+  document.querySelectorAll("[data-atplcancel]").forEach(b=>b.onclick=()=>{A1().tpl=null;render();});
+  document.querySelectorAll("[data-atplon]").forEach(b=>b.onclick=()=>{const [id,camp,v]=b.dataset.atplon.split("|"),rec=adminRec(id);if(!rec)return;commitOn(rec,(s,c)=>applyCampOn(s,c,camp,v==="on"));render();});
   document.querySelectorAll("[data-acamp]").forEach(b=>b.onclick=()=>{
     const [t,v,id]=b.dataset.acamp.split(":"),a=accounts.find(x=>x.id===id&&x.rec.state);if(!a)return; // gilt für das Konto, an dessen Karte der Schalter steht
     commitOn(a.rec,(s,c)=>applyCampOn(s,c,t,v==="on"));render();});
@@ -723,10 +746,12 @@ function bind(){
   document.querySelectorAll("[data-cur]").forEach(b=>b.onclick=()=>{const li=Number(b.dataset.cur);commit((s,c)=>applyCurrent(s,c,li));UI.fach=null;UI.lgOpen={};render();window.scrollTo(0,0);});
   document.querySelectorAll("[data-probe]").forEach(b=>b.onclick=()=>probeToggle(Number(b.dataset.probe)));
   document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editAnswer(Number(b.dataset.edit)));
-  document.querySelectorAll("[data-camp]").forEach(b=>b.onclick=()=>{const [t,u]=b.dataset.camp.split(":");startCamp(t,Number(u));});
+  document.querySelectorAll("[data-camp]").forEach(b=>b.onclick=()=>{const k=b.dataset.camp.lastIndexOf(":"); // die Lager-Nummer eigener Lager enthält selbst einen Doppelpunkt
+    startCamp(b.dataset.camp.slice(0,k),Number(b.dataset.camp.slice(k+1)));});
   if($("campResume"))$("campResume").onclick=resumeCamp;
   if($("campDrop"))$("campDrop").onclick=()=>{const k=UI.savedCamp;dropCamp();if(k&&k.pen)startPenalty(k.topic,k.unit,penaltyTasks(k.topic,k.unit));else if(k)startCamp(k.topic,k.unit);else render();}; // neu anfangen: dieselbe Einheit, frische Aufgaben
   if($("halfGo"))$("halfGo").onclick=halfGo;
+  document.querySelectorAll("[data-campmini]").forEach(b=>b.onclick=()=>{const C=G&&G.camp;if(!C)return;const T=CAMPS[C.topic],def=T&&T.def;startMini(b.dataset.campmini,def?()=>customTask(def,C.unit):null);});
   if($("penGo"))$("penGo").onclick=()=>startPenalty(G.camp.topic,G.camp.unit,G.camp.sets.pen,G.camp.sets);
   if($("packResume"))$("packResume").onclick=resumePack;
   if($("packDrop"))$("packDrop").onclick=()=>{const sn=UI.savedPack;dropPack();if(sn)startRound(sn.li,"topic",false,sn.topic);else render();}; // neu anfangen: dasselbe Thema, frisches Päckchen

@@ -10,6 +10,7 @@ import {trainerPanelHTML} from "./avatarui.js";
 import {campAdminHTML} from "./campviews.js";
 import {CAMPS} from "./camp.js";
 import {mulOf,ALL_ROWS} from "./mul.js";
+import {tplPanelHTML} from "./tplviews.js";
 
 export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings","Einstellungen"],["system","Sicherungen und System"]];
 export const ROUND_CHOICES=[6,8,10];
@@ -146,7 +147,7 @@ function settingsTab(A){
     <div class="setrow"><span>Tipp-Zeit: der Trainer meldet sich nach</span>${seg("data-aset",HINT_CHOICES.map(([n,l])=>[`hintAfter:${n}`,l]),`hintAfter:${st.hintAfter}`)}</div>
     <p class="small">Die Tipp-Zeit gilt, wenn bei einer Aufgabe so lange nichts angetippt wird. „Aus“ heißt: Der Trainer meldet sich nicht von selbst. Die Hilfe-Taste bleibt immer da.</p></section>`
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
-  const topics=a?mulPanel(a)+topicControl(a):"";
+  const topics=a?mulPanel(a)+(A.g?tplPanelHTML(A,a,A.g,seg):"")+topicControl(a):"";
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
   return `${acct}${topics}${trainerPanelHTML(A.tr1,1)}${trainerPanelHTML(A.tr2,2)}${pin}`;

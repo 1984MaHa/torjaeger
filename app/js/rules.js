@@ -320,11 +320,12 @@ export function applyCampOn(s,ctx,topic,on){
 }
 // Eine Einheit ist zu Ende (Abpfiff): Ergebnis beider Halbzeiten {c, n}. Beim ersten Abschluss der letzten Einheit gibt es das Abzeichen
 // und, falls noch ein Sticker fehlt, einen Jubel-Sticker. Gibt {badgeNew, sticker} zurück (sticker = Nummer oder null).
-export function applyCampUnit(s,ctx,{topic,unit,h1,h2}){
+export function applyCampUnit(s,ctx,{topic,unit,h1,h2,def}){
   if(!CAMPS[topic]||!Number.isInteger(unit)||unit<1||unit>UNIT_COUNT(topic))return{badgeNew:false,sticker:null};
   const c=campRec(s,topic),prev=c.units[String(unit)]||{};
   const half=h=>({c:Math.max(0,h.c|0),n:Math.max(0,h.n|0)});
   c.units[String(unit)]={h1:half(h1),h2:half(h2),t:ctx.now,runs:(prev.runs||0)+1};
+  if(def&&typeof def==="object"&&!c.def)c.def=JSON.parse(JSON.stringify(def)); // eigenes Lager: die Vorlage einfrieren (ab 1.7.3)
   let badgeNew=false,sticker=null;
   if(campDone(s,topic)===UNIT_COUNT(topic)&&!(c.badge>0)){
     c.badge=ctx.now;badgeNew=true;
@@ -343,7 +344,7 @@ export function applyCampPen(s,ctx,{topic,unit,c,n}){
 // Bereits vergebene Punkte und Sticker bleiben (sie stehen in den Zählern).
 export function applyCampReset(s,ctx,topic){
   if(!CAMPS[topic])return false;
-  const c=campRec(s,topic);c.units={};c.badge=0;c.rs=ctx.now;touch(s,ctx);return true;
+  const c=campRec(s,topic);c.units={};c.badge=0;c.rs=ctx.now;delete c.def;touch(s,ctx);return true; // ohne eingefrorene Vorlage: es gilt wieder die aktuelle
 }
 
 // Zurücksetzen: Spielstand leer, Name und Einstellungen bleiben. resetAt sorgt dafür, dass der leere

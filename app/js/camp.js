@@ -6,6 +6,7 @@ import {packOf,keyOf} from "./check.js";
 import {R,pick,shuffle} from "./util.js";
 import {pickRow} from "./mul.js";
 import {LIGEN,TOPICS} from "./content.js";
+import {buildCamp,customHalf,customPen,customTask,allTemplates,defOf,normTemplate,campIdOf,isCustomId,tplIdOfCamp} from "./custom.js";
 
 export const HALF_LEN=10;   // Aufgaben je Halbzeit
 export const PEN_LEN=5;     // Schüsse im Elfmeterschießen
@@ -40,7 +41,7 @@ export const campOfTopic=t=>CAMPS[t]||null;
 export const unitOf=(topic,n)=>{const c=CAMPS[topic];return c&&c.units.find(u=>u.n===n)||null;};
 export const UNIT_COUNT=topic=>CAMPS[topic]?CAMPS[topic].units.length:0;
 // Einheit 4 besteht aus Päckchen mit Kontroll-Pfiff (Halbzeit = ein Päckchen mit 6 Aufgaben), alle anderen aus 10 einzelnen Aufgaben.
-export const isPackUnit=(topic,n)=>topic==="m3_rest"&&n===4;
+export const isPackUnit=(topic,n)=>(topic==="m3_rest"&&n===4)||!!(CAMPS[topic]&&CAMPS[topic].custom&&CAMPS[topic].packUnits.includes(n));
 export const halfLenOf=(topic,n)=>isPackUnit(topic,n)?6:HALF_LEN;
 
 // ---------- Aufgaben je Einheit ----------
@@ -88,6 +89,7 @@ function sachTask(){
 // Eine Aufgabe der Einheit n in Halbzeit half (1 oder 2).
 export function campTask(topic,n,half){
   if(!CAMPS[topic])throw new Error("Unbekanntes Trainingslager: "+topic);
+  if(CAMPS[topic].custom)return customTask(CAMPS[topic].def,n);
   if(CAMPS[topic].generic)return Object.assign({topic},GEN[topic]());
   let T;
   if(n===1)T=warmTask();
@@ -99,6 +101,7 @@ export function campTask(topic,n,half){
 }
 // Eine Halbzeit: 10 Aufgaben (Einheit 4: ein Päckchen mit 6 Aufgaben). seen enthält die schon benutzten Aufgaben der Einheit (keine Frage doppelt).
 export function campHalf(topic,n,half,seen=new Set()){
+  if(CAMPS[topic]&&CAMPS[topic].custom)return customHalf(CAMPS[topic].def,n,seen);
   if(isPackUnit(topic,n)){
     for(let tries=0;tries<30;tries++){
       const tasks=packOf("m3_rest",6).map(withWay);
@@ -116,6 +119,7 @@ export function campHalf(topic,n,half,seen=new Set()){
 }
 // Nachspielzeit: 5 neue Aufgaben derselben Einheit (nie dieselben wie in den Halbzeiten).
 export function penaltyTasks(topic,n,seen=new Set()){
+  if(CAMPS[topic]&&CAMPS[topic].custom)return customPen(CAMPS[topic].def,n,seen);
   const out=[];
   for(let tries=0;out.length<PEN_LEN&&tries<400;tries++){
     const T=campTask(topic,n,2),k=keyOf(T);
@@ -123,6 +127,26 @@ export function penaltyTasks(topic,n,seen=new Set()){
   }
   while(out.length<PEN_LEN)out.push(campTask(topic,n,2));
   return out;
+}
+// Eigene Trainingslager (Baukasten, ab 1.7.3) stehen als "c:<Vorlagen-Nr>" in CAMPS. Die Liste wird neu gebaut, wenn sich Vorlagen, eingefrorene Beschreibungen
+// oder die Liga ändern. Hat das Konto schon eine Einheit gespielt, gilt seine eingefrorene Beschreibung (camps[...].def), sonst die aktuelle Vorlage.
+let CUSTOM_SIG="";
+export function syncCustomCamps(g,camps,li){
+  const cur=new Map(allTemplates(g).map(t=>[campIdOf(t),defOf(t)])),ids=new Set(cur.keys()),cm=camps&&typeof camps==="object"?camps:{};
+  for(const id of Object.keys(cm))if(isCustomId(id)&&cm[id]&&typeof cm[id].def==="object"&&cm[id].def)ids.add(id);
+  const entries=[];
+  for(const id of ids){
+    const played=!!(cm[id]&&cm[id].units&&typeof cm[id].units==="object"&&Object.keys(cm[id].units).length);
+    const def=played&&cm[id].def?normTemplate(cm[id].def):cur.get(id)||(cm[id]&&cm[id].def?normTemplate(cm[id].def):null);
+    if(!def)continue;
+    def.id=tplIdOfCamp(id);entries.push([id,def]);
+  }
+  const sig=JSON.stringify([li,entries]);
+  if(sig===CUSTOM_SIG)return false;
+  CUSTOM_SIG=sig;
+  for(const k of Object.keys(CAMPS))if(CAMPS[k].custom)delete CAMPS[k];
+  for(const [id,def] of entries)CAMPS[id]=buildCamp(def,li,id);
+  return true;
 }
 // Alle Aufgaben einer Einheit auf einmal (zum Testen): zwei Halbzeiten und die Nachspielzeit, ohne Doppelte.
 export function campUnit(topic,n){

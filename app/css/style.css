@@ -425,3 +425,11 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .slotsrow .fixbox{min-width:70px;text-align:center}
 .slotbox.right{background:#d7f5df}
 .slotbox.wrong{background:#ffd9d4}
+
+/* Baukasten "Eigenes Trainingslager" (ab 1.7.3) */
+.wrapseg{flex-wrap:wrap;gap:6px}
+.tplrow{border-top:2px solid #e4ece6;padding:10px 0;display:flex;flex-direction:column;gap:6px}
+.tplrow:first-of-type{border-top:0}
+.tplhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.tplhead .k{font-size:.9rem;color:var(--muted)}
+.tpleditor .segb{min-height:44px}

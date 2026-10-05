@@ -78,9 +78,12 @@ function mergeCamp(a,b){
     const w=newerBy(p,u);units[k]=Object.assign(clone(w),{runs:Math.max(p.runs||0,u.runs||0)});
   }
   const bd=[a,b].filter(usable).map(x=>x.badge||0).filter(v=>v>0);
+  const defs=[a,b].filter(usable).map(x=>x.def).filter(isObj);
   const [lo,wi]=ra!==rb?(ra>rb?[b,a]:[a,b]):(canon(a)>=canon(b)?[b,a]:[a,b]); // unbekannte Felder: der Stand vom letzten Neustart gewinnt
   const out=Object.assign({},clone(lo),clone(wi));
   out.on=!!onSrc.on;out.t=Math.max(a.t||0,b.t||0);out.rs=rs;out.units=units;out.badge=bd.length?Math.min(...bd):0;
+  // eingefrorene Vorlage (ab 1.7.3): nur aus Ständen vom letzten Neustart, die neuere (t, dann Textform) gewinnt; nach einem Neustart gibt es keine
+  if(defs.length)out.def=clone(defs.reduce((p,q)=>newerBy(p,q)));else delete out.def;
   return out;
 }
 export function mergeCamps(a,b){
@@ -139,6 +142,15 @@ export function mergeProfile(local,remote){
   return out;
 }
 
+// Vorlagen des Baukastens (global): je Nummer gewinnt der neuere Eintrag (t), auch eine Löschmarke; nichts geht beim Abgleich verloren.
+export function mergeTemplates(a,b){
+  const m=new Map();
+  for(const x of [...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])]){
+    if(!isObj(x)||typeof x.id!=="string"||!x.id)continue;
+    const p=m.get(x.id);m.set(x.id,p?clone(newerBy(p,x)):clone(x));
+  }
+  return [...m.values()].sort((p,q)=>String(p.id).localeCompare(String(q.id)));
+}
 export function mergeGlobal(local,remote){
   const lt=local.pin?local.pin.t||0:-1,rt=remote.pin?remote.pin.t||0:-1;
   const aNewer=(local.updatedAt||0)>=(remote.updatedAt||0);
@@ -148,6 +160,7 @@ export function mergeGlobal(local,remote){
   out.pin=clone(lt>=rt?local.pin:remote.pin);
   out.trainer=clone(newerBy(local.trainer||defaultTrainer(),remote.trainer||defaultTrainer()));
   out.trainer2=clone(newerBy(local.trainer2||defaultTrainer2(),remote.trainer2||defaultTrainer2()));
+  out.templates=mergeTemplates(local.templates,remote.templates);
   out.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
   return out;
 }

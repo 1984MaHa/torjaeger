@@ -30,17 +30,17 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 9 (Konto) und 4 (global), Version 1.7.2 an allen vier Stellen",()=>{
-  assert.equal(SCHEMA_VERSION,9);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.7.2"/);assert.match(sw,/VERSION = "1.7.2"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.7.2"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.7.2");
+test("Schema ist 10 (Konto) und 5 (global), Version 1.7.3 an allen vier Stellen",()=>{
+  assert.equal(SCHEMA_VERSION,10);assert.equal(GLOBAL_SCHEMA_VERSION,5);
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.7.3"/);assert.match(sw,/VERSION = "1.7.3"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.7.3"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.7.3");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{
   const old=fx("state-v5.json"),before=JSON.stringify(old),s=migrateProfile(old);
   assert.equal(old.meta.schemaVersion,5);assert.equal(JSON.stringify(old),before,"Eingabe bleibt unverändert");
-  assert.equal(s.meta.schemaVersion,9);
+  assert.equal(s.meta.schemaVersion,10);
   for(const k of ["progress","stats","history","settings","zusatz","futureField"])assert.deepEqual(k==="settings"?(({topicSeen,mul,...r})=>r)(s[k]):s[k],old[k],k);
   assert.equal(total(s,"points"),total(old,"points"));
   assert.deepEqual({...s.profile,avatar:0},{...old.profile,avatar:0});
@@ -52,13 +52,13 @@ test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Num
   // ohne Avatar, zweimal migrieren, ältere Fixtures, neuere Version
   const n=clone(old);n.profile.avatar=null;assert.equal(migrateProfile(n).profile.avatar,null);
   assert.deepEqual(migrateProfile(clone(s)),s);
-  for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,9,f);
-  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=10;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
+  for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json"])assert.equal(migrateProfile(fx(f)).meta.schemaVersion,10,f);
+  const neu=newProfile({id:"k-abc12345",name:"X",deviceId:"d"});neu.meta.schemaVersion=11;assert.throws(()=>migrateProfile(neu),UnsupportedSchema);
 });
 
 test("Stand aus Emils Konto im Format 1.2.1 geht über alle Stufen, der Avatar bleibt lesbar und trägt die alten Farben",()=>{
   const old=fx("state-v3.json"),s=migrateProfile(old),a=s.profile.avatar,o=old.profile.avatar;
-  assert.equal(s.meta.schemaVersion,9);assert.equal(a.t,o.t);assert.equal(a.hair,"zoepfe","alte Frisur als Schlüssel, bleibt im Stand");
+  assert.equal(s.meta.schemaVersion,10);assert.equal(a.t,o.t);assert.equal(a.hair,"zoepfe","alte Frisur als Schlüssel, bleibt im Stand");
   assert.equal(a.kit.trikot,o.shirt);assert.equal(a.number,o.number);assert.equal(a.shirtName,o.shirtName);assert.equal(a.team,o.team);
   const l=lookOf(s.profile);clean(avatarSVG(l,{view:"back",px:190}),"Rücken");clean(avatarSVG(l,{crop:"bust",px:90}),"Brustbild");
 });
@@ -74,14 +74,14 @@ test("Alte Frisuren-Indizes (Junge und Mädchen, 0 bis 9) werden beim Überführ
 test("Globale Migration 3 nach 4: Trainer tragen Farben, Name und Zeitstempel bleiben, die frühere Jacke wird zum Polo",()=>{
   const old=fx("global-v3.json"),before=JSON.stringify(old),g=migrateGlobal(clone(old));
   assert.equal(JSON.stringify(old),before);
-  assert.equal(g.schemaVersion,4);assert.equal(g.trainer.name,"Coach Kai");assert.equal(g.trainer.t,old.trainer.t);assert.equal(g.extra,"bleibt");assert.deepEqual(g.pin,old.pin);
+  assert.equal(g.schemaVersion,5);assert.equal(g.trainer.name,"Coach Kai");assert.equal(g.trainer.t,old.trainer.t);assert.equal(g.extra,"bleibt");assert.deepEqual(g.pin,old.pin);
   const l=g.trainer.look;
   assert.equal(l.v,4);assert.equal(l.polo,old.trainer.look.jacket);assert.equal(l.hose,defaultTrainer().look.hose);assert.equal(l.stutzen,defaultTrainer().look.stutzen);
   for(const k of Object.keys(old.trainer.look))if(k!=="v")assert.deepEqual(l[k],old.trainer.look[k],"altes Feld bleibt: "+k);
   assert.deepEqual(g.trainer2,defaultTrainer2(),"nie geändert (t 0): aktuelle Vorgabe");
   assert.deepEqual(migrateGlobal(clone(g)),g);assert.deepEqual(newGlobal().trainer,defaultTrainer());
-  for(const f of ["global-v2.json"])assert.equal(migrateGlobal(fx(f)).schemaVersion,4);
-  assert.throws(()=>migrateGlobal({schemaVersion:5}),UnsupportedSchema);
+  for(const f of ["global-v2.json"])assert.equal(migrateGlobal(fx(f)).schemaVersion,5);
+  assert.throws(()=>migrateGlobal({schemaVersion:6}),UnsupportedSchema);
 });
 
 test("Abgleich: das Aussehen mit dem neueren Zeitstempel gewinnt samt Farben, Trainerfarben ebenso, Zurücksetzen behält das Aussehen",()=>{

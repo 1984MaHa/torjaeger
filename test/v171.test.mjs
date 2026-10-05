@@ -20,8 +20,8 @@ const prof=()=>newProfile({id:"k-emil0001",name:"Emil",deviceId:"d1",now:1000,to
 const RUNS=100;
 const SETS=[[9],[1],[10],[7,8],[2,5],[3,4,6],ALL_ROWS];
 
-test("Schema ist 9, Standard ist alle Reihen und 0 an, ungültige Werte werden bereinigt",()=>{
-  assert.equal(SCHEMA_VERSION,9);
+test("Schema ab 9 hat die Einmaleins-Grenze, Standard ist alle Reihen und 0 an, ungültige Werte werden bereinigt",()=>{
+  assert.ok(SCHEMA_VERSION>=9);
   assert.deepEqual(defaultMul(),{rows:ALL_ROWS,zero:true});
   assert.deepEqual(normMul(undefined),defaultMul());
   assert.deepEqual(normMul({rows:[],zero:false}),{rows:ALL_ROWS,zero:false});
@@ -34,16 +34,16 @@ test("Migration 8 nach 9 aus dem Format 1.6.7 verliert nichts, setzt die Vorgabe
   const old=fx("state-v8.json"),copy=JSON.parse(JSON.stringify(old));
   const s=migrateProfile(old);
   assert.deepEqual(old,copy,"Eingabe unverändert");
-  assert.equal(s.meta.schemaVersion,9);assert.deepEqual(s.settings.mul,defaultMul());assert.equal(checkProfileState(s),null);
+  assert.equal(s.meta.schemaVersion,SCHEMA_VERSION);assert.deepEqual(s.settings.mul,defaultMul());assert.equal(checkProfileState(s),null);
   const a=JSON.parse(JSON.stringify(s));delete a.settings.mul;a.meta.schemaVersion=8;
   assert.deepEqual(a,copy,"alles andere bleibt gleich");
   assert.deepEqual(migrateProfile(s),s,"zweimal migrieren ändert nichts");
   const o2=JSON.parse(JSON.stringify(copy));o2.settings.mul={rows:[9],zero:false};o2.settings.extra="bleibt";
   const m2=migrateProfile(o2);assert.deepEqual(m2.settings.mul,{rows:[9],zero:false});assert.equal(m2.settings.extra,"bleibt");
 });
-test("Alle älteren Fixtures gehen bis Schema 9 durch",()=>{
+test("Alle älteren Fixtures gehen bis zum heutigen Schema durch",()=>{
   for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json","state-v5.json","state-v6.json","state-v7.json","state-v8.json"]){
-    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,9,f);assert.deepEqual(m.settings.mul,defaultMul(),f);assert.equal(checkProfileState(m),null,f);
+    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,SCHEMA_VERSION,f);assert.deepEqual(m.settings.mul,defaultMul(),f);assert.equal(checkProfileState(m),null,f);
   }
 });
 test("Der Server-Check lehnt eine kaputte Einstellung ab",()=>{

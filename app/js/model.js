@@ -1,6 +1,6 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 9):
+// Konto (profile-Stand, schemaVersion 10):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
 //   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
@@ -11,7 +11,9 @@
 //             topicUntil (ab Schema 8: je zurückgestelltem Thema optional das Datum "JJJJ-MM-TT", an dem es wieder aktuell wird), topicSeen (ab Schema 8: Themen, die das Konto schon kennt; ein Thema, das fehlt und nicht in topicMode steht, ist neu und startet zurückgestellt)
 //   settings.mul (ab Schema 9, App 1.7.1) Einmaleins-Grenze: {rows: Reihen 1 bis 10, zero: auch mal 0}; fehlt sie, gelten alle Reihen und 0 an
 //   camps     (ab Schema 7, App 1.5.4) Trainingslager je Thema: {m3_rest: {on, t (Schalter), rs (Neustart), units: {"1": {h1, h2, pen?, t, runs}}, badge (Zeitpunkt oder 0)}}
-// Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
+//             ab Schema 10 (App 1.7.3) auch eigene Lager aus dem Baukasten: Schlüssel "c:<Vorlagen-Nr>", dazu def (die beim ersten Abschluss einer Einheit eingefrorene Vorlage; ein Neustart löscht sie)
+// Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t) und templates
+// (ab Schema 5, App 1.7.3: Vorlagen des Baukastens für eigene Trainingslager, siehe custom.js; gelöschte bleiben als Löschmarke del).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
 // Schemaversion 2 (bis App 1.1.5) hatte weder progress.cur noch stats.ctl noch topic und pk im Verlauf.
 // Schemaversion 3 (App 1.2.x) hatte das alte Aussehen (Frisur als Zahl je Junge/Mädchen, Trainer mit v 2). Ab 4 (App 1.3.0): Frisur als Schlüssel,
@@ -25,8 +27,8 @@ import {PROBE} from "./content.js";
 import {clone} from "./util.js";
 import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer,upgradeOldHair} from "./avatar.js";
 
-export const SCHEMA_VERSION=9;        // Konto-Stand
-export const GLOBAL_SCHEMA_VERSION=4; // globale Einstellungen
+export const SCHEMA_VERSION=10;        // Konto-Stand
+export const GLOBAL_SCHEMA_VERSION=5; // globale Einstellungen (ab 5 mit templates)
 
 const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
 export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neuere Schemaversion "+v);this.schemaVersion=v;}}
@@ -49,7 +51,7 @@ export function newProfile({id,name,deviceId,now=Date.now(),topics=null}){
     camps:{}
   };
 }
-export function newGlobal(now=Date.now()){return{schemaVersion:GLOBAL_SCHEMA_VERSION,pin:null,updatedAt:now,trainer:defaultTrainer(),trainer2:defaultTrainer2()};}
+export function newGlobal(now=Date.now()){return{schemaVersion:GLOBAL_SCHEMA_VERSION,pin:null,updatedAt:now,trainer:defaultTrainer(),trainer2:defaultTrainer2(),templates:[]};}
 
 export const defaultLg=()=>({probe:false,spent:0,open:false,trial:"",t:0});
 export function lgOf(s,id){return s.progress.lg[id]||(s.progress.lg[id]=defaultLg());}
@@ -129,6 +131,12 @@ const PROFILE_MIGRATIONS=[
     if(!isObj(s.settings.mul))s.settings.mul=defaultSettings().mul;
     s.meta.schemaVersion=9;
     return s;
+  }},
+  // 9 -> 10 (App 1.7.3): eigene Trainingslager (camps["c:..."] mit def). Es gibt noch keine, der Stand bleibt, wie er ist. Alles Vorhandene bleibt, Unbekanntes auch.
+  {from:9,to:10,run:s=>{
+    if(!isObj(s.camps))s.camps={};
+    s.meta.schemaVersion=10;
+    return s;
   }}
 ];
 export function migrateProfile(state,opts={}){
@@ -153,6 +161,8 @@ export function migrateGlobal(g){
   if(!g.trainer2||typeof g.trainer2!=="object"||g.trainer2.t===0)g.trainer2=defaultTrainer2();
   // 3 -> 4 (App 1.5.0): Trainer tragen Farben (Polo, Hose, Stutzen) statt Baukasten-Merkmale. Die frühere Jacke wird zur Polo-Farbe, alles Alte bleibt.
   if(v<4){g.trainer=cleanTrainer(g.trainer,1);g.trainer2=cleanTrainer(g.trainer2,2);}
+  // 4 -> 5 (App 1.7.3): Vorlagen des Baukastens (noch keine). Eine vorhandene Liste bleibt.
+  if(!Array.isArray(g.templates))g.templates=[];
   return g;
 }
 
@@ -185,6 +195,7 @@ export function checkProfileState(s){
     for(const k in s.camps){
       if(!isObj(s.camps[k]))return"camps."+k+" ist kein Objekt";
       if(s.camps[k].units!==undefined&&!isObj(s.camps[k].units))return"camps."+k+".units ist kein Objekt";
+      if(s.camps[k].def!==undefined&&!isObj(s.camps[k].def))return"camps."+k+".def ist kein Objekt";
     }
   }
   return null;
@@ -198,6 +209,10 @@ export function checkGlobalState(g){
     if(g.pin.algo!=="legacy-djb2"&&(typeof g.pin.salt!=="string"||!g.pin.salt))return"pin ist unvollständig";
   }
   for(const k of ["trainer","trainer2"])if(g[k]!==undefined&&!isObj(g[k]))return k+" ist kein Objekt";
+  if(g.templates!==undefined){
+    if(!Array.isArray(g.templates))return"templates ist keine Liste";
+    if(!g.templates.every(x=>isObj(x)&&typeof x.id==="string"&&x.id))return"templates enthält einen ungültigen Eintrag";
+  }
   return null;
 }
 

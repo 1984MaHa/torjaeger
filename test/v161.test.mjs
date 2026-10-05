@@ -19,7 +19,7 @@ test("Schema 8: Migration 7 nach 8 aus dem Format 1.6.0 verliert nichts und stel
   assert.equal(old.meta.schemaVersion,7);assert.equal(checkProfileState(old),null);
   const s=migrateProfile(old);
   assert.deepEqual(old,copy,"die Eingabe bleibt unverändert");
-  assert.equal(SCHEMA_VERSION,9);assert.equal(s.meta.schemaVersion,9);
+  assert.equal(SCHEMA_VERSION,10);assert.equal(s.meta.schemaVersion,10);
   const a=JSON.parse(JSON.stringify(s));delete a.settings.topicSeen;delete a.settings.mul;a.meta.schemaVersion=7;
   assert.deepEqual(a,copy,"alles andere ist gleich (Schwerpunkt, Aus, Trainingslager bleiben)");
   assert.deepEqual(s.settings.topicSeen,TOPICS_AT_8);assert.equal(checkProfileState(s),null);
@@ -27,7 +27,7 @@ test("Schema 8: Migration 7 nach 8 aus dem Format 1.6.0 verliert nichts und stel
   assert.equal(topicModeOf(s,"m3_1x1"),"schwerpunkt");assert.equal(topicModeOf(s,"su_wasser"),"aus");
   // ältere Stände wandern in einem Zug durch
   for(const f of ["state-v1.json","state-v2.json","state-v3.json","state-v4.json","state-v5.json","state-v6.json"]){
-    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,9,f);assert.equal(checkProfileState(m),null,f);
+    const m=migrateProfile(fx(f));assert.equal(m.meta.schemaVersion,10,f);assert.equal(checkProfileState(m),null,f);
   }
 });
 test("TOPICS_AT_8 ist eine feste Liste und deckt alle heutigen Themen ab",()=>{

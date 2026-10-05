@@ -39,13 +39,14 @@ export function wallOptions(T,rnd=Math.random){
   return null;
 }
 // Aufgaben für ein Mini-Spiel aus den aktiven Themen des Mixes der Liga. Keine Frage doppelt. Leer, wenn kein Thema an ist.
-export function miniTasks(s,li,n=MINI_LEN,rnd=Math.random,make=wallOptions){
-  const pool=activeTopics(s,poolOf(li,"mix"));
+// src (ab 1.7.3, optional): eine Funktion, die eine Aufgabe liefert (zum Beispiel aus einem eigenen Trainingslager) statt des Mixes.
+export function miniTasks(s,li,n=MINI_LEN,rnd=Math.random,make=wallOptions,src=null){
+  const pool=src?[]:activeTopics(s,poolOf(li,"mix"));
   const out=[],seen=new Set();let last=null;
-  if(!pool.length)return out;
+  if(!pool.length&&!src)return out;
   for(let tries=0;out.length<n&&tries<400;tries++){
-    const t=nextTopic(s,pool,last,rnd);last=t;
-    const T=Object.assign({topic:t},GEN[t]()),k=keyOf(T),qk="q|"+String(T.q).replace(/<[^>]+>/g,"");
+    let T;if(src)T=src();else{const t=nextTopic(s,pool,last,rnd);last=t;T=Object.assign({topic:t},GEN[t]());}
+    const k=keyOf(T),qk="q|"+String(T.q).replace(/<[^>]+>/g,"");
     if(seen.has(k)||seen.has(qk))continue; // weder dieselbe Aufgabe noch dieselbe Frage zweimal
     const w=make(T,rnd);if(!w)continue;
     seen.add(k);seen.add(qk);out.push(Object.assign({T},w));
@@ -59,8 +60,8 @@ export function memoryPair(T){
   const m=/^(.{1,16}?)\s*=\s*\?$/.exec(plain(T.q));
   return m?{front:m[1].trim(),back:String(T.a)}:null;
 }
-function newMemory(s,rnd){
-  const li=currentLeague(s),found=miniTasks(s,li,16,rnd,memoryPair),items=[],fronts=new Set(),backs=new Set();
+function newMemory(s,rnd,src=null){
+  const li=currentLeague(s),found=miniTasks(s,li,16,rnd,memoryPair,src),items=[],fronts=new Set(),backs=new Set();
   for(const it of found){
     if(fronts.has(it.front)||backs.has(it.back))continue; // jedes Ergebnis und jede Aufgabe nur einmal, sonst wäre ein Paar nicht eindeutig
     fronts.add(it.front);backs.add(it.back);items.push(it);
@@ -85,23 +86,23 @@ export function memoryFlip(M,idx){
   return{event:"miss"};
 }
 // Neues Mini-Spiel. null, wenn die Art unbekannt ist oder keine passenden Aufgaben da sind.
-export function newMini(kind,s,rnd=Math.random){
+export function newMini(kind,s,rnd=Math.random,src=null){
   if(!MINI[kind])return null;
-  if(kind==="memory")return newMemory(s,rnd);
+  if(kind==="memory")return newMemory(s,rnd,src);
   if(kind==="dribble"){
-    const li=currentLeague(s),items=miniTasks(s,li,DRIBBLE_TRIES,rnd);
+    const li=currentLeague(s),items=miniTasks(s,li,DRIBBLE_TRIES,rnd,wallOptions,src);
     if(items.length<DRIBBLE_STATIONS)return null;
     return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null,pos:0,stations:DRIBBLE_STATIONS,lost:0,fin:false,bonusPaid:false};
   }
-  const li=currentLeague(s),items=miniTasks(s,li,MINI_LEN,rnd);
+  const li=currentLeague(s),items=miniTasks(s,li,MINI_LEN,rnd,wallOptions,src);
   if(items.length<MINI_LEN)return null;
   return{kind,li,items,i:0,res:[],pts:0,streak:0,done:false,pick:-1,ok:false,gain:0,shot:null};
 }
 // Überraschungsspiel: lost eine Art aus, für die es gerade passende Aufgaben gibt. exclude = die zuletzt gespielte Art (kommt nur dran, wenn es nichts anderes gibt).
 // Gibt das neue Spiel zurück (M.surprise = true) oder null, wenn gar nichts spielbar ist.
-export function newSurprise(s,rnd=Math.random,exclude=null){
+export function newSurprise(s,rnd=Math.random,exclude=null,src=null){
   const kinds=mixed(MINI_IDS.filter(k=>k!==exclude),rnd).concat(MINI_IDS.includes(exclude)?[exclude]:[]);
-  for(const k of kinds){const M=newMini(k,s,rnd);if(M){M.surprise=true;return M;}}
+  for(const k of kinds){const M=newMini(k,s,rnd,src);if(M){M.surprise=true;return M;}}
   return null;
 }
 // Antwort im Mini-Spiel: Loch idx. Verändert M und gibt {topic, ok, gain, val, T} zurück (für den Lernstand), oder null, wenn schon beantwortet.

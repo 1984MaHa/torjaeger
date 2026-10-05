@@ -7,13 +7,14 @@ Anker: Branch preview, Version 1.6.7, Schema 8, 295 Tests, HEAD 441c8e9. main/or
 | C0 Info-Grafik (1.7.0) | fertig, Tag v1.7.0 | 299 |
 | C1 Einmaleins-Grenze (1.7.1, Schema 9) | fertig, Tag v1.7.1 | 322 |
 | C2 Neue Aufgabenarten (1.7.2) | fertig, Tag v1.7.2 | 331 |
-| C3 Baukasten (1.7.3) | offen | |
+| C3 Baukasten (1.7.3, Konto 10, global 5) | fertig, Tag v1.7.3 | 345 |
 | C4 Vorlage 9er Reihe (1.7.4) | offen | |
 
 Entscheidungen:
 - C0: Zoom über Tasten + und − (3 Stufen, Bild in einem scrollbaren Rahmen), weil Seitenzoom im Vollbild-Overlay auf dem iPad unzuverlässig ist. Quelle war 1672 px breit, verkleinert auf 1600 px (Qualität 80, 364 KB). Alte Versionstests auf 1.7.0 gezogen, Bildlisten-Tests kennen die JPG.
 - C1: Grenze als Modulzustand in mul.js (setMul in S()), damit kein Generator-Aufruf umgebaut werden muss. Regel: eine der beiden Zahlen liegt in den Reihen, die andere ist 1 bis 10 (0 nur mit Schalter). Bezirksliga-Themen und Rechnen bis 1000 bleiben ausgenommen (Ergebnis über 100 nicht vereinbar). Nur Reihe 1: Teiler für Aufgaben mit Rest fällt auf den üblichen Bereich zurück (Rest muss kleiner als Teiler sein). Trainingslager-Ergebnisse jetzt höchstens 10. Die Ende-zu-Ende-Tests (v14e2e, v154-e2e) sind unter Last gelegentlich zeitlich knapp (4 s), einzeln laufen sie.
 - C2: Erweiterung von m3_1x1 statt neues Thema (kein Eingriff in TOPICS_AT_8, Aufstieg, Themenliste). Neue Aufgabenart `slots` (n Zahlenfelder) statt Erweiterung von pair. Abwechslung nur über Option (variety, rowPack), damit Mini-Spiele und Trainingslager unberührt bleiben. Flakige Ende-zu-Ende-Tests (liefen unter Last zu früh, seit schwerere Tests parallel laufen) warten jetzt auf den Server-Abgleich; v171 leichter gemacht.
+- C3: Lager aus Vorlagen als dynamische Einträge in CAMPS ("c:<Nr>"), damit der gesamte bestehende Ablauf (Halbzeiten, Sichern, Abzeichen, Neustart) unverändert trägt. Mitgelieferte Vorlage "Teilen mit Rest" bleibt das fest eingebaute Lager (Fortschritt unter m3_rest, keine Datenmigration nötig), erscheint in der Liste und ist kopierbar. Vorlage wird beim ersten Abschluss einer Einheit im Konto eingefroren (def), Neustart löscht sie. Nachspielzeit Mini-Spiele bekommen Aufgaben aus dem Lager (src), Memory fällt ohne Rechenaufgaben auf den Mix zurück. Vorlage löschen: Löschmarke, Lager mit Fortschritt bleiben beim Konto. Kein Wechsel zwischen den Einheiten im Schwierigkeitsgrad außer Englisch-Stufe und wechselndem Schwerpunkt. Lager-Nummern enthalten einen Doppelpunkt: Handler für data-camp und campreset angepasst (lastIndexOf, indexOf).
 
 ## Vorheriger Auftrag
 

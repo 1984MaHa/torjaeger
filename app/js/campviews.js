@@ -1,6 +1,7 @@
 // Darstellung des Trainingslagers (ab 1.5.4): Kachel auf der Startseite, Halbzeitpause, Ergebnisse, Abschnitt im Eltern-Bereich.
 // Reine Darstellung, kennt weder Speicher noch Netz. Texte ohne Gedankenstriche.
 import {CAMPS,SPECIAL_CAMP,halftimeSay,finalSay,penaltyScore,unitOf} from "./camp.js";
+import {BONUS_NAMES} from "./custom.js";
 import {campOf} from "./model.js";
 import {campOn,campDone,campNext,campBadge,unitDone,unitOpen} from "./rules.js";
 import {trainerSVG} from "./avatardraw.js";
@@ -11,6 +12,10 @@ export function unitResultText(rec){
   if(!rec||!rec.h1||!rec.h2)return "";
   return `1. Halbzeit ${rec.h1.c} von ${rec.h1.n}, 2. Halbzeit ${rec.h2.c} von ${rec.h2.n}`+(rec.pen?`, Elfmeterschießen ${penaltyScore(rec.pen.c,rec.pen.n)}`:"");
 }
+
+// Nachspielzeit des Lagers (eigene Lager: aus dem Baukasten, sonst Elfmeterschießen)
+export const bonusOf=C=>(C&&C.bonus)||"penalty";
+const endText=C=>{const b=bonusOf(C);return b==="none"?"":b==="penalty"?" und eine Nachspielzeit":` und als Nachspielzeit ${BONUS_NAMES[b]}`;};
 
 // ----- Startseite: die Kachel je eingeschaltetem Trainingslager -----
 export function campTilesHTML(s){
@@ -25,14 +30,14 @@ function campTileHTML(s,t){
     return `<button class="unitbtn ${d?"done":""} ${open&&!d?"next":""}" data-camp="${t}:${u.n}" ${open?"":"disabled"}><span class="un" aria-hidden="true">${d?"✓":u.n}</span><span class="ut"><b>${esc(u.title)}</b><span>${esc(sub)}</span></span><span class="uact">${d?"Nochmal":open?"Los":"Gesperrt"}</span></button>`;
   }).join("");
   const cheer=badge?`<p class="note campbadge">Geschafft! Du bist ${esc(C.badge)}. Du darfst jede Einheit trotzdem wiederholen.</p>`:"";
-  return `<section class="panel camp" aria-label="${esc(C.title)}"><div class="lg-head"><div><b>${esc(C.title)}</b><span class="k">${done} von ${nU} Einheiten geschafft. Jede Einheit hat 2 Halbzeiten und eine Nachspielzeit.</span></div>${head}</div>
+  return `<section class="panel camp" aria-label="${esc(C.title)}"><div class="lg-head"><div><b>${esc(C.title)}</b><span class="k">${done} von ${nU} Einheiten geschafft. Jede Einheit hat 2 Halbzeiten${endText(C)}.</span></div>${head}</div>
     <div class="lgbar" aria-hidden="true"><i style="width:${pct}%"></i></div>${cheer}<div class="units">${units}</div></section>`;
 }
 // Hinweis, wenn ein Spiel gesichert ist: Weiterspielen oder neu anfangen. info: {topic, unit, half, brk, pen, c, m}
 export function campResumeHTML(info){
   if(!info)return "";
   const U=unitOf(info.topic,info.unit),where=info.pen?"Elfmeterschießen":info.brk?"Halbzeitpause":`${info.half}. Halbzeit`;
-  return `<section class="panel packresume" role="status"><h3>${info.pen?"Elfmeterschießen":"Trainingslager"} weiterspielen?</h3><p class="note">Du hast angefangen: <b>${esc(CAMPS[info.topic].name)}</b>, Einheit ${info.unit}${U?` (${esc(U.title)})`:""}, ${where}. Stand ${info.c} : ${info.m}.</p>
+  return `<section class="panel packresume" role="status"><h3>${info.pen?"Elfmeterschießen":"Trainingslager"} weiterspielen?</h3><p class="note">Du hast angefangen: <b>${esc((CAMPS[info.topic]||{}).name||"Trainingslager")}</b>, Einheit ${info.unit}${U?` (${esc(U.title)})`:""}, ${where}. Stand ${info.c} : ${info.m}.</p>
     <div class="row"><button class="btn" id="campResume">Weiterspielen</button><button class="btn ghost" id="campDrop">Neu anfangen</button></div></section>`;
 }
 
@@ -58,7 +63,9 @@ export function campResultHTML(s,G){
 }
 export function campButtonsHTML(s,G){
   const C=G.camp,T=CAMPS[C.topic],nextOpen=C.unit<T.units.length&&unitOpen(s,C.topic,C.unit+1);
-  return `<div class="row" style="justify-content:center">${G.pen?"":`<button class="btn" id="penGo">Nachspielzeit: Elfmeterschießen</button>`}${G.pen&&nextOpen?`<button class="btn" data-camp="${C.topic}:${C.unit+1}">Nächste Einheit</button>`:""}<button class="btn ghost" id="home">Zur Kabine</button></div>`;
+  const b=bonusOf(T),after=G.pen||b==="none"; // nach der Nachspielzeit (oder ohne) geht es mit der nächsten Einheit weiter
+  const go=G.pen?"":b==="penalty"?`<button class="btn" id="penGo">Nachspielzeit: Elfmeterschießen</button>`:b==="none"?"":`<button class="btn" data-campmini="${b}">Nachspielzeit: ${esc(BONUS_NAMES[b])}</button>`;
+  return `<div class="row" style="justify-content:center">${go}${after&&nextOpen?`<button class="btn" data-camp="${C.topic}:${C.unit+1}">Nächste Einheit</button>`:""}<button class="btn ghost" id="home">Zur Kabine</button></div>`;
 }
 // Ergebnis des Elfmeterschießens
 export function penaltyResultHTML(s,G,teamName){
@@ -81,8 +88,8 @@ export function campAdminHTML(A,a,seg){
     }).join("");
     const ask=`campreset:${a.id}:${t}`;
     return `<section class="panel"><h3>${esc(C.title)}: ${esc(a.name)}</h3>
-      <p class="note">${C.generic?`Dieses Thema ist als Schwerpunkt markiert (Reiter Einstellungen, Themen). Das Sondertraining hat ${nU} Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Im Mix kommt das Thema außerdem etwa bei jeder dritten Aufgabe dran.`:`Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Der Schalter gilt nur für dieses Konto. Auf der Startseite des Kontos erscheint eine eigene Kachel, solange er an ist oder das Thema als Schwerpunkt markiert ist.`}</p>
-      ${C.generic?"":`<div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on:${a.id}`,"An"],[`${t}:off:${a.id}`,"Aus"]],`${t}:${on?"on":"off"}:${a.id}`)}</div>`}
+      <p class="note">${C.custom?`Eigenes Trainingslager aus dem Baukasten (Reiter Einstellungen, Eigene Trainingslager): ${nU} ${nU===1?"Einheit":"Einheiten"} mit je zwei Halbzeiten${endText(C)}. Schalter und Vorlage stehen dort. Neu starten übernimmt die aktuelle Vorlage.`:C.generic?`Dieses Thema ist als Schwerpunkt markiert (Reiter Einstellungen, Themen). Das Sondertraining hat ${nU} Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Im Mix kommt das Thema außerdem etwa bei jeder dritten Aufgabe dran.`:`Fünf Einheiten mit je zwei Halbzeiten und einem Elfmeterschießen als Belohnung. Die nächste Einheit ist frei, wenn die vorige zu Ende gespielt ist. Der Schalter gilt nur für dieses Konto. Auf der Startseite des Kontos erscheint eine eigene Kachel, solange er an ist oder das Thema als Schwerpunkt markiert ist.`}</p>
+      ${C.generic||C.custom?"":`<div class="setrow"><span>Trainingslager anzeigen</span>${seg("data-acamp",[[`${t}:on:${a.id}`,"An"],[`${t}:off:${a.id}`,"Aus"]],`${t}:${on?"on":"off"}:${a.id}`)}</div>`}
       <p class="small">Fortschritt: ${done} von ${nU} Einheiten${campBadge(s,t)?`, Abzeichen ${esc(C.badge)} erreicht`:""}.</p>${rows}
       <div class="row"><button class="btn warn" data-aask="${esc(ask)}">Trainingslager neu starten</button></div>
       ${A.confirm===ask?`<div class="confirm"><p>Das Trainingslager von <b>${esc(a.name)}</b> wirklich neu starten? Alle Einheiten und das Abzeichen werden gelöscht. Schon verdiente Punkte und Sticker bleiben.</p><div class="row"><button class="btn warn" data-ado>Ja, neu starten</button><button class="btn ghost" data-acancel>Abbrechen</button></div></div>`:""}</section>`;

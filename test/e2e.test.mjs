@@ -121,7 +121,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     const list=(await get("/api/profiles")).profiles;assert.equal(list.length,1);
     const id=list[0].id;
     let st=(await get(`/api/profiles/${id}/state`)).state;
-    assert.equal(st.meta.schemaVersion,9);
+    assert.equal(st.meta.schemaVersion,10);
     const av=st.profile.avatar;assert.equal(av.v,4);assert.equal(av.tpl,"emil");assert.deepEqual(av.kit,{trikot:"#2f9e55",streifen:"#f4f4f4",hose:"#1d3a78",stutzen:"#f5c431"});assert.equal(av.number,String(Number((await import("../app/js/avatar.js")).defaultLook("Emil").number)+1),"Nummer: Vorgabe plus 1");assert.equal(av.shirtName,"EMIL");assert.equal(av.team,"Die Wirbel");assert.equal(st.profile.avatarAsked,true);assert.ok(!("beard" in av),"kein Bart-Merkmal");
     assert.equal(st.history.length,1);assert.ok(Number.isFinite(st.history[0].dur)&&st.history[0].dur>=0,"Dauer gespeichert");
     const helped=Object.values(st.stats).flatMap(t=>Object.values(t.help||{}));
@@ -197,7 +197,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     assert.equal(st.settings.perRound,6);assert.equal(st.settings.hintAfter,0);
     const g=(await get("/api/settings")).settings;
     assert.equal(g.trainer.name,"Coach Marco");assert.equal(g.trainer.look.polo,"#4aa3e8");assert.equal(g.trainer.look.hose,"#1d3a78");assert.equal(g.trainer.look.stutzen,"#f4f4f4");assert.equal(g.trainer.look.v,4);
-    assert.equal(g.trainer2.name,"Trainerin");assert.equal(g.trainer2.look.polo,"#d23b3b");assert.equal(g.schemaVersion,4);
+    assert.equal(g.trainer2.name,"Trainerin");assert.equal(g.trainer2.look.polo,"#d23b3b");assert.equal(g.schemaVersion,5);
     // PIN ändern
     byId("aOldPin").value="1234";byId("aNewPin").value="4321";await clickData("apin",undefined,200);
     await until(()=>has("Die neue PIN gilt"),"PIN geändert");
@@ -206,7 +206,7 @@ test("Ende zu Ende: Konto, Avatar, Runde mit Hilfe, Eltern-Bereich",async()=>{
     // Sicherungen und System
     await clickData("atab","system");
     await until(()=>has("Tagessicherungen")&&has("Dieses Gerät"),"Listen vom Server");
-    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 9, App 9")&&has("Server 4, App 4"));
+    assert.ok(has("App-Version")&&has("Vorschau (VORSCHAU)")&&has("Server 10, App 10")&&has("Server 5, App 5"));
     // Konten: umbenennen, zurücksetzen, löschen
     await clickData("atab","accounts");
     await clickData("arename",id);byId("renameIn").value="Emil M.";await clickData("arenameok",id);
