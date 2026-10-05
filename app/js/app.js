@@ -4,11 +4,11 @@ import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng,ALL_TOPICS} from "./cont
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
 import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume,syncCustomCamps} from "./camp.js";
-import {customTask,saveTemplate,copyTemplate,copyForRow,deleteTemplate,findTemplate,draftOf,newDraft,templateOfDraft,ITEM_IDS} from "./custom.js";
+import {ITEM_LIST,FACH_ORDER,restoreTemplate,customTask,saveTemplate,copyTemplate,copyForRow,deleteTemplate,findTemplate,draftOf,newDraft,templateOfDraft,ITEM_IDS} from "./custom.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {currentLeague,leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyMulRow,applyMulZero,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {currentLeague,leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyMulRow,applyMulZero,applyMulAll,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -683,7 +683,7 @@ function bindAdmin($){
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
   document.querySelectorAll("[data-amul]").forEach(b=>b.onclick=()=>{
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
-    const [k,x,y]=b.dataset.amul.split(":");commitOn(a.rec,(s,c)=>k==="row"?applyMulRow(s,c,Number(x),y==="on"):applyMulZero(s,c,x==="on"));render();});
+    const [k,x,y]=b.dataset.amul.split(":");commitOn(a.rec,(s,c)=>k==="all"?applyMulAll(s,c):k==="row"?applyMulRow(s,c,Number(x),y==="on"):applyMulZero(s,c,x==="on"));render();});
   // Baukasten: Vorlagen (global) und Schalter je Konto
   const A1=()=>UI.admin,saveG=async()=>{globalRec.dirty=true;await store.put("global",globalRec);scheduleSync(300);};
   const grabTpl=()=>{const i=$("tplName"),A=A1();if(i&&A.tpl)A.tpl.name=i.value;};
@@ -693,6 +693,11 @@ function bindAdmin($){
   document.querySelectorAll("[data-atplcopyrow]").forEach(b=>b.onclick=async()=>{const [id,r]=b.dataset.atplcopyrow.split("|"),n=copyForRow(globalRec.state,ctx(),id,Number(r));if(!n)return;await saveG();adminReset();adminSay("ok",`Die Vorlage „${n.name}“ ist angelegt. Schalter und Bearbeiten stehen in der Liste.`);render();});
   document.querySelectorAll("[data-atplhalf]").forEach(b=>b.onclick=async()=>{const [id,n]=b.dataset.atplhalf.split("|"),t=findTemplate(globalRec.state,id);if(!t||t.builtin)return;
     saveTemplate(globalRec.state,ctx(),Object.assign({},t,{half:Number(n)}));await saveG();adminSay("ok",`${t.name}: ${n} Aufgaben je Halbzeit. Ein schon begonnenes Lager behält die alte Zahl, bis es neu gestartet wird.`);render();});
+  document.querySelectorAll("[data-atplfach]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,f=b.dataset.atplfach;if(!d||!FACH_ORDER.includes(f))return;
+    if(d.fachs.includes(f)){d.fachs=d.fachs.filter(x=>x!==f);d.items=d.items.filter(id=>!ITEM_LIST.some(x=>x.id===id&&x.fach===f));d.plan=null;}else d.fachs=FACH_ORDER.filter(x=>x===f||d.fachs.includes(x));render();});
+  document.querySelectorAll("[data-atplall]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,[f,v]=b.dataset.atplall.split("|");if(!d)return;
+    const ids=ITEM_LIST.filter(x=>x.fach===f).map(x=>x.id);d.items=v==="on"?[...new Set(d.items.concat(ids))]:d.items.filter(id=>!ids.includes(id));d.plan=null;render();});
+  document.querySelectorAll("[data-atplrestore]").forEach(b=>b.onclick=async()=>{const t=restoreTemplate(globalRec.state,ctx(),b.dataset.atplrestore);if(!t)return;await saveG();adminSay("ok",`Die Vorlage „${t.name}“ ist zurück. Schalter und Fortschritt der Konten waren nie weg.`);render();});
   document.querySelectorAll("[data-atplitem]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,id=b.dataset.atplitem;if(!d||!ITEM_IDS.has(id))return;d.items=d.items.includes(id)?d.items.filter(x=>x!==id):d.items.concat(id);d.plan=null;render();});
   document.querySelectorAll("[data-atplrow]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,r=Number(b.dataset.atplrow);if(!d)return;d.rows=d.rows.includes(r)?d.rows.filter(x=>x!==r):d.rows.concat(r).sort((p,q)=>p-q);render();});
   document.querySelectorAll("[data-atplset]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl;if(!d)return;const k=b.dataset.atplset.indexOf(":"),key=b.dataset.atplset.slice(0,k),v=b.dataset.atplset.slice(k+1);

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.7.7 (Baukasten übersichtlicher)
+- **Editor für Trainingslager in Schritten von oben nach unten:** 1. Wie viele Aufgaben (je Halbzeit und Einheiten, mit Rechnung „Eine Einheit hat 20 Aufgaben, bei 3 Einheiten 60“), 2. Welche Fächer (Mathe, Deutsch, Englisch, Sachkunde, Einmaleins-Reihen), 3. Welche Themen und Aufgaben (nur die Themen der gewählten Fächer, je Fach „Alle“ und „Keine“ und „x von y gewählt“), 4. Welche Reihen (nur wenn Aufgaben mit Mal und Geteilt gewählt sind, sonst entfällt der Schritt), dann Nachspielzeit und zuletzt der Name. Ein Fach abwählen nimmt auch seine Themen heraus.
+- **Gelöschte Vorlagen zurückholen:** Unter der Liste steht „Gelöschte Vorlagen“ mit „Zurückholen“. Der Fortschritt der Konten war nie weg.
+- **Alle Reihen wieder anschalten:** Im Abschnitt „Einmaleins“ eines Kontos gibt es die Taste „Alle Reihen wieder anschalten“ (die Einstellung „Auch mal 0“ bleibt, wie sie war).
+- Kein Schemawechsel. Version 1.7.7 an allen vier Stellen. Tests: `test/v174.test.mjs`, Ende zu Ende `test/v173-e2e.test.mjs`.
+
 ## 1.7.6 (Aufgaben je Halbzeit direkt einstellen)
 - **Eltern-Bereich, Eigene Trainingslager:** Bei jeder eigenen Vorlage (auch den Kopien für andere Reihen) steht in der Liste „Aufgaben je Halbzeit“ mit den Tasten 3, 5, 8, 10, 12, 15 und 20. Ein Tipp speichert sofort, ohne den Editor zu öffnen (der Editor hat dieselbe Auswahl). Die Zahl gilt für alle Einheiten der Vorlage, auch für ein Päckchen. Ein schon begonnenes Lager behält die alte Zahl, bis es neu gestartet wird. Die mitgelieferte 9er Reihe bleibt schreibgeschützt (erst für eine Reihe anlegen, dann einstellen).
 - Kein Schemawechsel. Version 1.7.6 an allen vier Stellen. Test in `test/v174.test.mjs`.

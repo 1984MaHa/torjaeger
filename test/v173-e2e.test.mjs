@@ -88,6 +88,10 @@ test("Ende zu Ende 1.7.3: Eltern bauen ein Trainingslager, das Kind spielt eine 
     assert.ok(has("Teilen mit Rest")&&has("data-atplnew"),"Liste mit der mitgelieferten Vorlage und Neu-Taste");
     await clickData("atplnew");
     await until(()=>has("Neue Vorlage")&&has('id="tplName"'),"Editor");
+    assert.ok(has("1. Wie viele Aufgaben?")&&has("2. Welche Fächer?")&&!has('data-atplitem="d3_ie"'),"Schritte, Deutsch noch nicht gewählt");
+    await clickData("atplfach","Deutsch");assert.ok(has('data-atplitem="d3_ie"'),"Deutsch zeigt seine Themen");
+    await clickData("atplall","Deutsch|on");assert.ok(has("von")&&has('aria-pressed="true"'));
+    await clickData("atplfach","Deutsch");assert.ok(!has('data-atplitem="d3_ie"'),"Deutsch wieder aus, seine Themen sind weg");
     byId("tplName").value="9er Reihe";
     await clickData("atplrow","9");await clickData("atplset","units:2");await clickData("atplset","half:5");await clickData("atplset","bonus:none");
     await clickData("atplsave");

@@ -18,6 +18,7 @@ Entscheidungen:
 - C4: Vorlage als fester Eintrag in BUILTIN_TEMPLATES (kein Datensatz im globalen Stand, daher keine Migration, nicht löschbar). Päckchen-Einheit 12 bis 16 Aufgaben unabhängig von half. Kopie für andere Reihe sofort angelegt (ohne Editor) und über die Liste änderbar. Ende-zu-Ende über die Oberfläche spielt alle fünf Einheiten, damit auch die Zahlenfelder (slots) im echten Ablauf getestet sind. Bekannte Eigenheit: Übt ein Konto die 9er Reihe nicht, nimmt die 9er-Vorlage dessen Reihen (nie erweitern), der Name bleibt dann "9er Reihe".
 - 1.7.5 (Nachbesserung nach Marcos erster Prüfung): Passkette mit festem Anpfiff, 9er Reihe 5 je Halbzeit, Päckchen im Lager folgt der Einstellung, Beschriftung Kopieren für andere Reihe.
 - 1.7.6: Aufgaben je Halbzeit (3 bis 20) direkt in der Vorlagenliste einstellbar.
+- 1.7.7: Editor des Baukastens in Schritten (Anzahl, Fächer, Themen je Fach, Reihen nur bei Bedarf, Nachspielzeit, Name), Vorlagen zurückholen, Alle Reihen anschalten.
 
 ## Vorheriger Auftrag
 

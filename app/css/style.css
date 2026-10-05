@@ -433,3 +433,5 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .tplhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
 .tplhead .k{font-size:.9rem;color:var(--muted)}
 .tpleditor .segb{min-height:44px}
+.tplstep{font-family:var(--display);font-size:1.15rem;margin:16px 0 4px;color:var(--ink)}
+.tplfach{border-top:2px solid #e4ece6;padding-top:8px;margin-top:8px}

@@ -135,6 +135,7 @@ export function mulPanel(a){
   return `<section class="panel"><h3>Einmaleins: ${esc(a.name)}</h3>
     <p class="note">Welche Reihen soll ${esc(a.name)} üben? Das gilt für alle Aufgaben mit Mal und Geteilt (Einmaleins, Teilen mit Rest, Sachaufgaben, Päckchen, Trainingslager, Mini-Spiele und Mix). Ein Trainingslager kann das nur noch enger machen. Das Ergebnis ist immer höchstens 100, jeder Faktor höchstens 10. Rechnen bis 1000 und die großen Aufgaben der Bezirksliga bleiben, wie sie sind.</p>
     <div class="setrow"><span>Reihen</span><span class="seg">${ALL_ROWS.map(btn).join("")}</span></div>
+    <div class="row"><button class="btn ghost sm" data-amul="all:all">Alle Reihen wieder anschalten</button></div>
     <div class="setrow"><span>Auch mal 0</span>${seg("data-amul",[["zero:on","An"],["zero:off","Aus"]],`zero:${m.zero?"on":"off"}`)}</div></section>`;
 }
 function settingsTab(A){

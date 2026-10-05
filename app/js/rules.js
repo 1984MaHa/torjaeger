@@ -252,6 +252,7 @@ export function applyMulRow(s,ctx,row,on){
   if(on)set.add(row);else{if(set.size<=1&&set.has(row))return false;set.delete(row);}
   s.settings.mul={rows:[...set].sort((a,b)=>a-b),zero:m.zero};s.settings.t=ctx.now;touch(s,ctx);return true;
 }
+export function applyMulAll(s,ctx){const m=normMul(s.settings.mul);s.settings.mul={rows:[1,2,3,4,5,6,7,8,9,10],zero:m.zero};s.settings.t=ctx.now;touch(s,ctx);return true;}
 export function applyMulZero(s,ctx,on){
   const m=normMul(s.settings.mul);s.settings.mul={rows:m.rows,zero:!!on};s.settings.t=ctx.now;touch(s,ctx);return true;
 }

@@ -186,10 +186,21 @@ export function customPen(def,n,seen=new Set()){
 }
 export {ALL_ROWS};
 
+// Eine gelöschte Vorlage zurückholen (die Löschmarke bleibt ja stehen)
+export const deletedTemplates=g=>templatesOf(g).filter(t=>t.del);
+export function restoreTemplate(g,ctx,id){
+  const list=templatesOf(g),i=list.findIndex(t=>t.id===id&&t.del);if(i<0)return null;
+  const t=Object.assign({},list[i],{t:ctx.now});delete t.del;list[i]=t;g.templates=list;g.updatedAt=ctx.now;return t;
+}
 // ---------- Baukasten im Eltern-Bereich ----------
 // Entwurf (so, wie die Eltern ihn bearbeiten) und Vorlage ineinander umwandeln
-export const newDraft=()=>({id:"",name:"",items:["m3_1x1"],rows:[],zero:"inherit",units:3,half:10,bonus:"penalty",plan:null});
-export const draftOf=t=>({id:t.id,name:t.name,items:t.items.slice(),rows:(t.rows||[]).slice(),zero:t.zero===false?"off":"inherit",units:t.units,half:t.half,bonus:t.bonus,plan:t.plan?t.plan.map(l=>l.slice()):null});
+export const FACH_ORDER=["Mathe","Deutsch","Englisch","Sachkunde","Einmaleins-Reihen"];
+export const fachsOfItems=items=>FACH_ORDER.filter(f=>ITEM_LIST.some(x=>x.fach===f&&items.includes(x.id)));
+// Brauchen die gewählten Aufgaben eine Reihe (Mal und Geteilt)? Nur dann zeigt der Editor die Reihen.
+const ROW_ITEMS=["m_mal","m3_rest","m3_1x1","m3_sach"];
+export const usesRows=items=>items.some(id=>ROW_ITEMS.includes(id)||isKind(id));
+export const newDraft=()=>({id:"",name:"",fachs:["Mathe"],items:["m3_1x1"],rows:[],zero:"inherit",units:3,half:10,bonus:"penalty",plan:null});
+export const draftOf=t=>({id:t.id,name:t.name,fachs:fachsOfItems(t.items),items:t.items.slice(),rows:(t.rows||[]).slice(),zero:t.zero===false?"off":"inherit",units:t.units,half:t.half,bonus:t.bonus,plan:t.plan?t.plan.map(l=>l.slice()):null});
 export const templateOfDraft=d=>({id:d.id,name:d.name,items:d.items,rows:d.rows&&d.rows.length?d.rows:null,zero:d.zero==="off"?false:null,units:d.units,half:d.half,bonus:d.bonus,plan:d.plan});
 // Der Ablauf je Einheit (plan) passt nur zur Zahl der Einheiten und zu den Themen der Vorlage: ändern die Eltern das, gilt wieder "alle Einheiten mischen alles".
 export const draftSummary=t=>`${t.units} ${t.units===1?"Einheit":"Einheiten"}, ${t.half} Aufgaben je Halbzeit, ${BONUS_NAMES[t.bonus]}${t.rows?`, Reihen ${t.rows.join(", ")}`:""}`;

@@ -7,10 +7,13 @@ import {newProfile,newGlobal,checkGlobalState} from "../app/js/model.js";
 import {ALL_TOPICS} from "../app/js/content.js";
 import {setMul,defaultMul,ALL_ROWS} from "../app/js/mul.js";
 import {CAMPS,syncCustomCamps,campUnit,isPackUnit} from "../app/js/camp.js";
-import {BUILTIN_TEMPLATES,findTemplate,entriesOf,saveTemplate,deleteTemplate,copyForRow,copyTemplate,campIdOf,liveTemplates,templatesOf} from "../app/js/custom.js";
+import {FACH_ORDER,usesRows,newDraft,draftOf,deletedTemplates,restoreTemplate,BUILTIN_TEMPLATES,findTemplate,entriesOf,saveTemplate,deleteTemplate,copyForRow,copyTemplate,campIdOf,liveTemplates,templatesOf} from "../app/js/custom.js";
 import {campOn,applyCampOn,unitOpen} from "../app/js/rules.js";
 import {campTilesHTML} from "../app/js/campviews.js";
-import {tplPanelHTML} from "../app/js/tplviews.js";
+import {tplPanelHTML,tplEditorHTML} from "../app/js/tplviews.js";
+import {mulOf} from "../app/js/mul.js";
+import {applyMulRow,applyMulZero,applyMulAll} from "../app/js/rules.js";
+import {mulPanel} from "../app/js/admin.js";
 import {isRight} from "../app/js/check.js";
 
 const ROOT=fileURLToPath(new URL("..",import.meta.url));
@@ -121,4 +124,39 @@ test("Aufgaben je Halbzeit lassen sich in jeder eigenen Vorlage direkt in der Li
     assert.ok(!h.includes('data-atplhalf="b-9er|'),"mitgelieferte Vorlage nicht direkt änderbar");
   }finally{reset();}
   assert.ok(fs.readFileSync(ROOT+"app/js/app.js","utf8").includes("[data-atplhalf]"));
+});
+
+test("Editor von oben nach unten: Anzahl, Fächer, Themen je Fach, Reihen nur wenn nötig, Nachspielzeit, Name",()=>{
+  const d=newDraft(),h=tplEditorHTML(d);
+  const pos=s=>h.indexOf(s);
+  const order=["1. Wie viele Aufgaben?","2. Welche Fächer?","3. Welche Themen und Aufgaben?","4. Welche Reihen?","5. Nachspielzeit","6. Name"].map(pos);
+  assert.ok(order.every(p=>p>=0)&&order.every((p,i)=>i===0||p>order[i-1]),"Reihenfolge der Schritte");
+  assert.ok(pos("data-atplset=\"half:5\"")<pos("2. Welche Fächer?"));
+  for(const f of FACH_ORDER)assert.ok(h.includes(`data-atplfach="${f}"`),f);
+  assert.ok(h.includes('data-atplitem="m3_1x1"'),"Themen des gewählten Fachs");assert.ok(!h.includes('data-atplitem="d3_ie"'),"Themen eines nicht gewählten Fachs fehlen");
+  assert.match(h,/data-atplall="Mathe\|on"/);assert.match(h,/1 von \d+ gewählt/);
+  // nur Deutsch: keine Reihen, Nummerierung rückt auf
+  const de=Object.assign(newDraft(),{fachs:["Deutsch"],items:["d3_ie"]}),hd=tplEditorHTML(de);
+  assert.ok(!hd.includes("Welche Reihen?")&&!hd.includes("data-atplrow"));assert.match(hd,/4\. Nachspielzeit/);assert.match(hd,/5\. Name/);assert.ok(hd.includes('data-atplitem="d3_ie"'));
+  // Zusammenfassung der Anzahl
+  assert.match(tplEditorHTML(Object.assign(newDraft(),{units:2,half:5})),/also 10 Aufgaben. Bei 2 Einheiten sind das 20 Aufgaben/);
+  assert.match(tplEditorHTML(Object.assign(newDraft(),{fachs:[],items:[]})),/Wähle oben mindestens ein Fach/);
+  assert.ok(usesRows(["kind:chain"])&&usesRows(["m3_rest"])&&!usesRows(["d3_ie","en_colors"]));
+  assert.deepEqual(draftOf(findTemplate(newGlobal(),"b-9er")).fachs,["Einmaleins-Reihen"]);
+  const js=fs.readFileSync(ROOT+"app/js/app.js","utf8");for(const a of ["atplfach","atplall","atplrestore"])assert.ok(js.includes(`[data-${a}]`),a);
+});
+test("Gelöschte Vorlage zurückholen und alle Reihen eines Kontos wieder anschalten",()=>{
+  const g=newGlobal(),t=saveTemplate(g,ctx(10),{name:"Weg",items:["m3_1x1"]});
+  assert.ok(deleteTemplate(g,ctx(20),t.id));assert.equal(deletedTemplates(g).length,1);
+  const s=prof(),a={id:s.profile.id,name:"Emil",state:s};
+  assert.match(tplPanelHTML({g,tpl:null,confirm:null},a,g,seg),new RegExp(`data-atplrestore="${t.id}"`));
+  const r=restoreTemplate(g,ctx(30),t.id);assert.equal(r.name,"Weg");assert.equal(r.del,undefined);assert.equal(findTemplate(g,t.id).t,30);assert.equal(deletedTemplates(g).length,0);
+  assert.equal(restoreTemplate(g,ctx(31),t.id),null);assert.ok(!tplPanelHTML({g,tpl:null,confirm:null},a,g,seg).includes("data-atplrestore"));
+  // wieder gelöscht und gleichzeitig zurückgeholt auf zwei Geräten: der spätere Stand gewinnt
+  const A=JSON.parse(JSON.stringify(g)),B=JSON.parse(JSON.stringify(g));deleteTemplate(A,ctx(40),t.id);restoreTemplate(B,ctx(40),t.id);
+  assert.equal(templatesOf(A).length,1);
+  // alle Reihen
+  const q=prof();applyMulRow(q,ctx(5),9,false);applyMulRow(q,ctx(6),8,false);applyMulZero(q,ctx(7),false);assert.equal(mulOf(q).rows.length,8);
+  applyMulAll(q,ctx(8));assert.deepEqual(mulOf(q).rows,ALL_ROWS);assert.equal(mulOf(q).zero,false,"die 0 bleibt, wie sie war");
+  assert.match(mulPanel({name:"Emil",state:q}),/data-amul="all:all"/);
 });
