@@ -103,3 +103,22 @@ test("Eltern-Liste: mitgeliefert ohne Bearbeiten und Löschen, mit Reihen zum Ko
   }finally{reset();}
   const js=fs.readFileSync(ROOT+"app/js/app.js","utf8");assert.ok(js.includes("[data-atplcopyrow]")&&js.includes("copyForRow"));
 });
+
+test("Aufgaben je Halbzeit lassen sich in jeder eigenen Vorlage direkt in der Liste einstellen (3 bis 20), die mitgelieferte nicht",()=>{
+  reset();
+  try{
+    const g=newGlobal(),s=prof(),a={id:s.profile.id,name:"Emil",state:s};
+    const c=copyForRow(g,ctx(5),"b-9er",7);
+    for(const n of [3,5,8,10,12,15,20]){
+      const t=saveTemplate(g,ctx(10+n),Object.assign({},findTemplate(g,c.id),{half:n}));assert.equal(t.half,n);
+      syncCustomCamps(g,{},1);const id=campIdOf(c);
+      assert.equal(campUnit(id,1).h1.length,n);assert.equal(campUnit(id,5).h1.length,n,"auch das Päckchen");
+    }
+    assert.equal(saveTemplate(g,ctx(99),Object.assign({},findTemplate(g,c.id),{half:7})).half,10,"ungültige Zahl wird zu 10");
+    syncCustomCamps(g,s.camps,1);
+    const h=tplPanelHTML({g,tpl:null,confirm:null},a,g,seg);
+    for(const n of [3,20])assert.ok(h.includes(`data-atplhalf="${c.id}|${n}"`),"Taste "+n);
+    assert.ok(!h.includes('data-atplhalf="b-9er|'),"mitgelieferte Vorlage nicht direkt änderbar");
+  }finally{reset();}
+  assert.ok(fs.readFileSync(ROOT+"app/js/app.js","utf8").includes("[data-atplhalf]"));
+});

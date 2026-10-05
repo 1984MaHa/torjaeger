@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.7.6 (Aufgaben je Halbzeit direkt einstellen)
+- **Eltern-Bereich, Eigene Trainingslager:** Bei jeder eigenen Vorlage (auch den Kopien für andere Reihen) steht in der Liste „Aufgaben je Halbzeit“ mit den Tasten 3, 5, 8, 10, 12, 15 und 20. Ein Tipp speichert sofort, ohne den Editor zu öffnen (der Editor hat dieselbe Auswahl). Die Zahl gilt für alle Einheiten der Vorlage, auch für ein Päckchen. Ein schon begonnenes Lager behält die alte Zahl, bis es neu gestartet wird. Die mitgelieferte 9er Reihe bleibt schreibgeschützt (erst für eine Reihe anlegen, dann einstellen).
+- Kein Schemawechsel. Version 1.7.6 an allen vier Stellen. Test in `test/v174.test.mjs`.
+
 ## 1.7.5 (Korrekturen aus der ersten Prüfung)
 - **Passkette eindeutig:** Der erste Kreis oben (Anpfiff, gelb) ist jetzt immer vorgegeben, das ist die 0 oder die erste Zahl der Reihe. Dazu kommt höchstens ein weiterer vorgegebener Wert. Vorher konnte man bei einem Wert wie 18 nicht wissen, wo die Kette anfängt, und eine richtige Antwort galt als falsch.
 - **Weniger Aufgaben:** Die mitgelieferte Vorlage 9er Reihe hat 5 Aufgaben je Halbzeit. Ein Päckchen in einem eigenen Lager hat so viele Aufgaben, wie bei „Aufgaben je Halbzeit“ (5, 10 oder 15) eingestellt ist, nicht mehr fest 12 bis 16. Das lässt sich in jeder eigenen Vorlage ändern (die mitgelieferte erst kopieren). Im normalen Einmaleins-Päckchen bleibt es bei 12 bis 16.

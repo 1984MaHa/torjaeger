@@ -12,7 +12,7 @@ import {LIGEN,TOPICS,FACHER,isEng} from "./content.js";
 export const KIND_PREFIX="kind:";
 export const BONUS_KINDS=["penalty","wall","memory","dribble","surprise","none"];
 export const BONUS_NAMES={penalty:"Elfmeterschießen",wall:"Torwand",memory:"Memory",dribble:"Dribbel-Parcours",surprise:"Überraschung",none:"Keine Nachspielzeit"};
-export const HALF_CHOICES=[5,10,15];
+export const HALF_CHOICES=[3,5,8,10,12,15,20]; // Aufgaben je Halbzeit (gilt auch für ein Päckchen im Lager)
 export const UNIT_MIN=1,UNIT_MAX=5;
 export const NAME_MAX=30;
 export const PEN_N=5;                 // Schüsse im Elfmeterschießen
@@ -196,5 +196,5 @@ export const draftSummary=t=>`${t.units} ${t.units===1?"Einheit":"Einheiten"}, $
 // Alle Vorlagen für die Liste: Teilen mit Rest (fest eingebaut), mitgelieferte, eigene. campId = Schlüssel im Konto.
 export const SPECIAL_ENTRY={id:"m3_rest",campId:"m3_rest",name:"Teilen mit Rest",builtin:true,special:true,summary:"5 Einheiten, je 2 Halbzeiten und Elfmeterschießen"};
 export function entriesOf(g){
-  return [SPECIAL_ENTRY].concat(allTemplates(g).map(t=>({id:t.id,campId:campIdOf(t),name:t.name,builtin:!!t.builtin,special:false,summary:draftSummary(t),rows1:t.rows&&t.rows.length===1?t.rows[0]:0})));
+  return [SPECIAL_ENTRY].concat(allTemplates(g).map(t=>({id:t.id,campId:campIdOf(t),name:t.name,builtin:!!t.builtin,special:false,summary:draftSummary(t),half:t.half,rows1:t.rows&&t.rows.length===1?t.rows[0]:0})));
 }

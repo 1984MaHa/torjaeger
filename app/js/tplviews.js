@@ -1,7 +1,7 @@
 // Darstellung des Baukastens "Eigenes Trainingslager" im Eltern-Bereich (ab 1.7.3): Liste der Vorlagen mit Schalter je Konto und der Editor.
 // Reine Darstellung, kennt weder Speicher noch Netz. Alle Namen laufen durch esc().
 import {esc} from "./util.js";
-import {ITEM_LIST,BONUS_KINDS,BONUS_NAMES,HALF_CHOICES,UNIT_MIN,UNIT_MAX,NAME_MAX,entriesOf} from "./custom.js";
+import {HALF_CHOICES as HALVES,ITEM_LIST,BONUS_KINDS,BONUS_NAMES,HALF_CHOICES,UNIT_MIN,UNIT_MAX,NAME_MAX,entriesOf} from "./custom.js";
 import {campOn,campDone,campBadge} from "./rules.js";
 import {CAMPS} from "./camp.js";
 
@@ -34,6 +34,7 @@ export function tplPanelHTML(A,a,g,seg){
     const ask=`tpldel:${e.id}`;
     return `<div class="tplrow"><div class="tplhead"><b>${esc(e.name)}</b>${e.builtin?` <span class="pill">mitgeliefert</span>`:""}<span class="k">${esc(e.summary)}</span></div>
       <div class="setrow"><span>Für ${esc(a.name)}</span>${switchHTML}</div>${on&&prog?`<p class="small">Fortschritt: ${esc(prog)}.</p>`:""}
+      ${e.builtin||e.special?"":`<div class="setrow"><span>Aufgaben je Halbzeit</span>${seg("data-atplhalf",HALVES.map(n=>[`${e.id}|${n}`,String(n)]),`${e.id}|${e.half}`)}</div>`}
       ${e.rows1?`<div class="setrow"><span>Dieselbe Vorlage für eine andere Reihe anlegen</span><span class="seg wrapseg">${[1,2,3,4,5,6,7,8,9,10].filter(r=>r!==e.rows1).map(r=>`<button class="segb" data-atplcopyrow="${esc(e.id)}|${r}" aria-label="${esc(e.name)} für die ${r}er Reihe kopieren">${r}</button>`).join("")}</span></div><p class="small">Tippe die Reihe, für die du dieses Lager auch haben möchtest (zum Beispiel 7 für die 7er Reihe). Es entsteht sofort eine eigene Vorlage mit gleichem Ablauf, die weiter unten in der Liste steht. Dort kannst du sie ändern und für ein Konto einschalten.</p>`:""}
       <div class="row"><button class="btn ghost sm" data-atplcopy="${esc(e.id)}">Kopieren</button>${e.builtin?"":`<button class="btn ghost sm" data-atpledit="${esc(e.id)}">Bearbeiten</button><button class="btn warn sm" data-aask="${esc(ask)}">Löschen</button>`}</div>
       ${A.confirm===ask?`<div class="confirm"><p>Die Vorlage <b>${esc(e.name)}</b> wirklich löschen? Konten, die schon Einheiten gespielt haben, behalten ihr Lager und ihren Fortschritt, bis es dort ausgeschaltet wird.</p><div class="row"><button class="btn warn" data-ado>Ja, löschen</button><button class="btn ghost" data-acancel>Abbrechen</button></div></div>`:""}</div>`;
