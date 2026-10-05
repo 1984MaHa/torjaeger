@@ -34,6 +34,7 @@ export function tplPanelHTML(A,a,g,seg){
     const ask=`tpldel:${e.id}`;
     return `<div class="tplrow"><div class="tplhead"><b>${esc(e.name)}</b>${e.builtin?` <span class="pill">mitgeliefert</span>`:""}<span class="k">${esc(e.summary)}</span></div>
       <div class="setrow"><span>Für ${esc(a.name)}</span>${switchHTML}</div>${on&&prog?`<p class="small">Fortschritt: ${esc(prog)}.</p>`:""}
+      ${e.rows1?`<div class="setrow"><span>Für andere Reihe kopieren</span><span class="seg wrapseg">${[1,2,3,4,5,6,7,8,9,10].filter(r=>r!==e.rows1).map(r=>`<button class="segb" data-atplcopyrow="${esc(e.id)}|${r}" aria-label="${esc(e.name)} für die ${r}er Reihe kopieren">${r}</button>`).join("")}</span></div>`:""}
       <div class="row"><button class="btn ghost sm" data-atplcopy="${esc(e.id)}">Kopieren</button>${e.builtin?"":`<button class="btn ghost sm" data-atpledit="${esc(e.id)}">Bearbeiten</button><button class="btn warn sm" data-aask="${esc(ask)}">Löschen</button>`}</div>
       ${A.confirm===ask?`<div class="confirm"><p>Die Vorlage <b>${esc(e.name)}</b> wirklich löschen? Konten, die schon Einheiten gespielt haben, behalten ihr Lager und ihren Fortschritt, bis es dort ausgeschaltet wird.</p><div class="row"><button class="btn warn" data-ado>Ja, löschen</button><button class="btn ghost" data-acancel>Abbrechen</button></div></div>`:""}</div>`;
   }).join("");

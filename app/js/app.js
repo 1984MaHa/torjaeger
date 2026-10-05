@@ -4,7 +4,7 @@ import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng,ALL_TOPICS} from "./cont
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
 import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResumable,campResume,syncCustomCamps} from "./camp.js";
-import {customTask,saveTemplate,copyTemplate,deleteTemplate,findTemplate,draftOf,newDraft,templateOfDraft,ITEM_IDS} from "./custom.js";
+import {customTask,saveTemplate,copyTemplate,copyForRow,deleteTemplate,findTemplate,draftOf,newDraft,templateOfDraft,ITEM_IDS} from "./custom.js";
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
@@ -690,6 +690,7 @@ function bindAdmin($){
   document.querySelectorAll("[data-atplnew]").forEach(b=>b.onclick=()=>{adminReset();A1().tpl=newDraft();render();});
   document.querySelectorAll("[data-atpledit]").forEach(b=>b.onclick=()=>{const t=findTemplate(globalRec.state,b.dataset.atpledit);if(t&&!t.builtin){adminReset();A1().tpl=draftOf(t);render();window.scrollTo(0,0);}});
   document.querySelectorAll("[data-atplcopy]").forEach(b=>b.onclick=async()=>{const n=copyTemplate(globalRec.state,ctx(),b.dataset.atplcopy);if(!n)return;await saveG();adminReset();A1().tpl=draftOf(findTemplate(globalRec.state,n.id));adminSay("ok","Kopie angelegt. Prüft den Namen und die Auswahl, dann speichern.");render();window.scrollTo(0,0);});
+  document.querySelectorAll("[data-atplcopyrow]").forEach(b=>b.onclick=async()=>{const [id,r]=b.dataset.atplcopyrow.split("|"),n=copyForRow(globalRec.state,ctx(),id,Number(r));if(!n)return;await saveG();adminReset();adminSay("ok",`Die Vorlage „${n.name}“ ist angelegt. Schalter und Bearbeiten stehen in der Liste.`);render();});
   document.querySelectorAll("[data-atplitem]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,id=b.dataset.atplitem;if(!d||!ITEM_IDS.has(id))return;d.items=d.items.includes(id)?d.items.filter(x=>x!==id):d.items.concat(id);d.plan=null;render();});
   document.querySelectorAll("[data-atplrow]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl,r=Number(b.dataset.atplrow);if(!d)return;d.rows=d.rows.includes(r)?d.rows.filter(x=>x!==r):d.rows.concat(r).sort((p,q)=>p-q);render();});
   document.querySelectorAll("[data-atplset]").forEach(b=>b.onclick=()=>{grabTpl();const d=A1().tpl;if(!d)return;const k=b.dataset.atplset.indexOf(":"),key=b.dataset.atplset.slice(0,k),v=b.dataset.atplset.slice(k+1);

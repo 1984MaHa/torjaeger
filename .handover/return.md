@@ -1,6 +1,51 @@
 # Rückübergabe Claude Code nach Cowork, 02.10.2026 (Versionen 1.6.0 bis 1.6.7)
 
-> **Laufender Auftrag C0 bis C4 (ab 05.10.2026):** Stand siehe `.handover/progress.md`. C0 (1.7.0, Info-Grafik), C1 (1.7.1, Einmaleins-Grenze, Schema 9) C2 (1.7.2, Aufgaben zur Reihe) und C3 (1.7.3, Baukasten, Konto-Schema 10, global 5) sind fertig auf `preview`, Tags v1.7.0 bis v1.7.3, 345 Tests. Nichts gepusht, `main` und `origin` bei e0cd3e5. Die Rückübergabe unten gilt für 1.6.0 bis 1.6.7 und bleibt gültig.
+## Rückübergabe Auftrag C0 bis C4 (05.10.2026, Versionen 1.7.0 bis 1.7.4)
+
+Alle Pakete sind fertig, je Paket ein Commit und ein lokaler Tag (v1.7.0 bis v1.7.4) auf `preview`. Tests: 351 grün. Details je Paket in CHANGELOG.md, SPEC.md und `.handover/progress.md`.
+
+| Paket | Version | Inhalt | Schema (Konto/global) |
+|---|---|---|---|
+| C0 | 1.7.0 | Taste "?" auf "Wer spielt?", Überblicks-Grafik bildschirmfüllend mit Zoom (Original in assets-src) | 8 / 4 |
+| C1 | 1.7.1 | Einmaleins-Grenze je Konto (Reihen 1 bis 10, auch mal 0, Ergebnis höchstens 100) in allen kleinen Mal- und Geteilt-Aufgaben | 9 / 4 |
+| C2 | 1.7.2 | Ballsäcke, Passkette, Rechenkreis vor- und rückwärts (neue Aufgabenart slots), Päckchen Reihe; in Einmaleins eingemischt | 9 / 4 |
+| C3 | 1.7.3 | Baukasten Eigenes Trainingslager (globale Vorlagen, Schalter und Fortschritt je Konto, eingefrorene Vorlage) | 10 / 5 |
+| C4 | 1.7.4 | Mitgelieferte Vorlage 9er Reihe (aus), Kopie für andere Reihe mit einem Klick | 10 / 5 |
+
+### Was Marco in dieser Sitzung ausgeführt hat
+Nur Start und Freigabe ("los gehts"). **Nicht ausgeführt:** Push nach origin, Merge nach main, deploy.sh auf der NAS (Vorschau und Live), Test auf iPad oder iPhone, Browser-Vorschau. Nichts im Vault geschrieben.
+
+### Stand je Umgebung
+`preview` lokal auf dem Commit mit dieser Datei, Version 1.7.4. `main`, `origin/main` und `origin/preview` unverändert bei e0cd3e5 (1.5.5). Lokale Tags v1.6.0 bis v1.7.4, nichts gepusht. Was auf der NAS läuft, ist hier unbekannt.
+
+### Entscheidungen und Abweichungen
+- **C1:** Grenze als Modulzustand (mul.js, von S() in app.js gesetzt). Regel: eine Zahl der Aufgabe liegt in den Reihen, die andere ist 1 bis 10. **Ausgenommen:** Rechnen bis 1000 und die Bezirksliga-Themen "Malnehmen groß" und "Teilen groß" (Ergebnis über 100 nicht vereinbar mit der Grenze). Nur Reihe 1 gewählt: Aufgaben mit Rest brauchen einen Teiler ab 2, dann gilt der übliche Teiler-Bereich. Trainingslager-Ergebnisse bei Rest jetzt höchstens 10.
+- **C2:** Erweiterung von Einmaleins statt neues Thema (kein Eingriff in Aufstieg und Themenliste). Jede vierte Einmaleins-Aufgabe, jeder vierte Themenblock; Mini-Spiele und Lager nur über Option.
+- **C3:** Lager sind dynamische CAMPS-Einträge "c:<Nr>". "Teilen mit Rest" bleibt das fest eingebaute Lager (Fortschritt unverändert, Migration ohne Datenänderung), steht in der Liste und ist kopierbar. Vorlage wird beim ersten Abschluss einer Einheit im Konto eingefroren, Neustart löscht sie. Gelöschte Vorlage: Löschmarke, Lager mit Fortschritt bleiben. Mini-Spiele als Nachspielzeit nehmen Aufgaben aus dem Lager (Memory ohne Rechenaufgaben fällt auf den Mix zurück). Schwierigkeit über Einheiten: wechselnder Schwerpunkt und Englisch-Stufe.
+- **C4:** Vorlage als feste Konstante (nicht löschbar, keine Migration). Päckchen-Einheit immer 12 bis 16 Aufgaben. Übt ein Konto die 9er Reihe nicht, nimmt die Vorlage dessen Reihen (nie erweitern), der Name bleibt "9er Reihe".
+
+### Restposten
+- **Echter Blocker:** keiner.
+- **Bewusst offen:** Prüfung auf iPad/iPhone (Größe der Tipp-Felder in Passkette und Rechenkreis, Zoom der Überblicks-Grafik, Baukasten-Editor), Texte der Vorlage, Testrunde in Emils Konto. Der Ende-zu-Ende-Test "Ende zu Ende 1.4.0" ist im Gesamtlauf unter Last gelegentlich rot (Zeitüberschreitung "Kreisliga zeigt Englisch", etwa jeder dritte bis fünfte Lauf), einzeln immer grün; Ursache nicht gefunden (Verdacht: Wettlauf beim Abgleich mit dem Server, seit schwerere Tests parallel laufen). Die übrigen Ende-zu-Ende-Tests warten jetzt auf den Abgleich.
+- **Kosmetisch:** Die Rechenkreis-Zeichnung ist nur im Fake-DOM geprüft, nicht visuell.
+
+### Anker
+Branch preview, HEAD siehe git log (Commit "Rückübergabe 1.7.4"), Tag v1.7.4, Arbeitsbaum sauber.
+
+### Prüfliste für Marco (kurz)
+1. Startseite "Wer spielt?": runde Taste "?" oben rechts, Grafik öffnet, + und − zoomen, Schließen.
+2. Eltern, Einstellungen: "Einmaleins" Reihen und "Auch mal 0" schalten, danach Einmaleins und Teilen mit Rest üben: nur gewählte Reihen.
+3. Eltern, Eigene Trainingslager: 9er Reihe für Emil einschalten, Einheit 1 (Ballsäcke) bis 4 spielen: Felder antippen, Zahlenblock, "Weiter".
+4. Bei der 9er Reihe eine andere Reihe antippen ("Für andere Reihe kopieren"), Kopie bearbeiten, einschalten.
+5. Eigene Vorlage anlegen, ändern während Emil mitten im Lager ist: Lager bleibt gleich bis Neustart.
+6. Alle Geräte vor dem Einspielen auf neue Version bringen (Schema 10, "Jetzt laden").
+
+### Nächste Schritte für Marco (Befehle einzeln)
+```bash
+git -C "C:/AI/_MBrain Data/Projects/Torjaeger-Liga" push origin preview --tags
+```
+Danach auf der NAS die Vorschau ausrollen (wie bisher, deploy.sh im Vorschau-Klon). Live (merge nach main und deploy) erst nach deiner Prüfung und nur auf dein Wort.
+
 
 Auftrag: `.handover/current.md` (Cross-Handover Cowork nach Claude Code, Modus bauen, Budget-Modus). Pakete A0 und B1 bis B8 sind **alle fertig**, je Paket ein Commit und ein lokaler Tag. Darunter stehen die Nachträge je Paket (neueste zuerst) und danach die Rückübergabe der früheren 1.5.4-Sitzung.
 

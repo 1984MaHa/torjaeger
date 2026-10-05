@@ -71,6 +71,7 @@ test("Ende zu Ende 1.4.0: Englisch und Sachkunde, neue Aufgabenarten, Vorlesen, 
     byId("pinIn").value="1234";await clickId("pinOk",60);
     await until(()=>has('data-open="1"'),"Eltern-Bereich in der Trainerbank");
     // Der Server kennt das Konto erst nach dem ersten Abgleich: darauf warten (sonst gibt es unter Last kein Freigeben)
+    for(let n=0;n<400;n++){const s=(await get("/api/settings")).settings;if(s&&s.pin)break;await sleep(25);} // ... und die Eltern-PIN
     for(let n=0;n<400;n++){const p=(await get("/api/profiles")).profiles;if(p.length&&(await get(`/api/profiles/${p[0].id}/state`)).state)break;await sleep(25);}
     // unter Last kann der erste Tipp ins Leere gehen (Abgleich läuft gleichzeitig): bis zu dreimal versuchen
     for(let n=0;n<3&&!has('data-fach="1:eng"');n++){if(has('data-open="1"'))await clickData("open","1");const t0=Date.now();while(Date.now()-t0<4000&&!has('data-fach="1:eng"'))await sleep(25);}

@@ -57,8 +57,12 @@ export const tplIdOfCamp=id=>String(id).slice(CUSTOM_PREFIX.length);
 export const defOf=t=>{const d=normTemplate(t);delete d.del;delete d.builtin;return d;};
 
 // ---------- Mitgelieferte Vorlagen (nur lesen, aber kopierbar) ----------
-// Wird in 1.7.4 mit der Vorlage "9er Reihe" gefüllt. Teilen mit Rest ist ein fest eingebautes Lager (camp.js) und steht hier nicht.
-export const BUILTIN_TEMPLATES=[];
+// "9er Reihe" nach Emils Hausaufgabe (ab 1.7.4): fünf Einheiten, je eine Aufgabenart, Nachspielzeit Elfmeterschießen, ausgeschaltet (die Eltern schalten sie je Konto ein).
+// Teilen mit Rest ist ein fest eingebautes Lager (camp.js) und steht hier nicht.
+export const BUILTIN_TEMPLATES=[
+  {id:"b-9er",name:"9er Reihe",items:["kind:sacks","kind:chain","kind:wheel","kind:wheelback","kind:pack"],rows:[9],zero:null,units:5,half:10,bonus:"penalty",
+    plan:[["kind:sacks"],["kind:chain"],["kind:wheel"],["kind:wheelback"],["kind:pack"]],t:0}
+];
 
 // ---------- Vorlagenliste im globalen Stand ----------
 // g.templates: Liste {id, name, items, rows, zero, units, half, bonus, plan, t, del?}. Gelöschte bleiben als Löschmarke (del) stehen,
@@ -81,6 +85,15 @@ export function saveTemplate(g,ctx,tpl){
   const i=list.findIndex(t=>t.id===n.id);
   if(i>=0)list[i]=n;else list.push(n);
   g.templates=list;stamp(g,ctx);return n;
+}
+// Kopie für eine andere Reihe (ab 1.7.4): dieselbe Vorlage mit der gewählten Reihe, der Name passt sich an ("9er Reihe" wird "7er Reihe")
+export function copyForRow(g,ctx,id,row){
+  const src=findTemplate(g,id);if(!src||!Number.isInteger(row)||row<1||row>10)return null;
+  const old=src.rows&&src.rows.length===1?src.rows[0]:null;
+  const re=old!==null?new RegExp(`(^|\\s)${old}er(?=\\s|$)`):null;
+  const name=re&&re.test(src.name)?src.name.replace(re,`$1${row}er`):`${src.name} (${row}er Reihe)`;
+  const c=Object.assign(JSON.parse(JSON.stringify(defOf(src))),{id:"",name,rows:[row]});
+  return saveTemplate(g,ctx,c);
 }
 // Kopie mit eigenem Namen (auch von einer mitgelieferten Vorlage)
 export function copyTemplate(g,ctx,id,name){
@@ -153,7 +166,7 @@ export function customHalf(def,n,seen=new Set()){
     const count=def.half;
     if(isPackUnitDef(def,n)){
       for(let tries=0;tries<30;tries++){
-        const tasks=rowPackTasks(undefined,count).map(T=>Object.assign({topic:"m3_1x1"},T));
+        const tasks=rowPackTasks().map(T=>Object.assign({topic:"m3_1x1"},T)); // 12 bis 16 Aufgaben, unabhängig von der Zahl je Halbzeit
         if(!tasks.some(T=>seen.has(keyOf(T)))||tries===29){tasks.forEach(T=>seen.add(keyOf(T)));return tasks;}
       }
     }
@@ -183,5 +196,5 @@ export const draftSummary=t=>`${t.units} ${t.units===1?"Einheit":"Einheiten"}, $
 // Alle Vorlagen für die Liste: Teilen mit Rest (fest eingebaut), mitgelieferte, eigene. campId = Schlüssel im Konto.
 export const SPECIAL_ENTRY={id:"m3_rest",campId:"m3_rest",name:"Teilen mit Rest",builtin:true,special:true,summary:"5 Einheiten, je 2 Halbzeiten und Elfmeterschießen"};
 export function entriesOf(g){
-  return [SPECIAL_ENTRY].concat(allTemplates(g).map(t=>({id:t.id,campId:campIdOf(t),name:t.name,builtin:!!t.builtin,special:false,summary:draftSummary(t)})));
+  return [SPECIAL_ENTRY].concat(allTemplates(g).map(t=>({id:t.id,campId:campIdOf(t),name:t.name,builtin:!!t.builtin,special:false,summary:draftSummary(t),rows1:t.rows&&t.rows.length===1?t.rows[0]:0})));
 }
