@@ -4,6 +4,7 @@
 import {GEN,mk} from "./generators.js";
 import {packOf,keyOf} from "./check.js";
 import {R,pick,shuffle} from "./util.js";
+import {pickRow} from "./mul.js";
 import {LIGEN,TOPICS} from "./content.js";
 
 export const HALF_LEN=10;   // Aufgaben je Halbzeit
@@ -54,7 +55,7 @@ const withWay=T=>{const b=T.inv.y,q=T.a[0],r=T.a[1],a=b*q+r;
   return Object.assign(T,{ex:r?`${b} · ${q} = ${b*q}, ${a} − ${b*q} = ${r}. Also ${a} : ${b} = ${q} Rest ${r}.`:`${b} · ${q} = ${a}, es bleibt nichts übrig. Also ${a} : ${b} = ${q} Rest 0.`});};
 // Einheit 1: Einmaleins rückwärts, Teilen ohne Rest, Teiler 2 bis 5
 function warmTask(){
-  const b=R(2,5),q=R(2,10),a=b*q;
+  const b=pickRow(2,5,2),q=R(2,10),a=b*q;
   if(Math.random()<.5){const T=mk.einmaleins(q,b,true);T.sig="w|"+a+"|"+b;
     T.hint="Denk an das Einmaleins rückwärts: Welche Zahl mal dem Teiler ergibt die große Zahl?";return T;}
   return{type:"num",q:`Wie oft passt die <mark>${b}</mark> in die <mark>${a}</mark>?`,a:q,inv:{op:"/",y:b},sig:"w|"+a+"|"+b,
@@ -63,7 +64,7 @@ function warmTask(){
 // Einheit 2 und 3: Teilen mit Rest. maxB = größter Teiler, top = größter Dividend, pic = mit Ballbildern. Der Rest ist meist größer als 0.
 function restUnitTask(maxB,top,pic){
   for(;;){
-    const b=R(2,maxB),q=R(1,Math.floor(top/b)),r=Math.random()<.85?R(1,b-1):0,a=b*q+r;
+    const b=pickRow(2,maxB,2),q=R(1,Math.min(10,Math.floor(top/b))),r=Math.random()<.85?R(1,b-1):0,a=b*q+r;
     if(a>=b+1&&a<=top)return restTask(a,b,pic);
   }
 }
@@ -77,7 +78,7 @@ const SACH=[
   (a,b)=>({q:`Es gibt ${a} Trinkflaschen für Kästen zu je ${b} Flaschen. Wie viele Kästen braucht man, damit keine Flasche stehen bleibt?`,up:true,unit:"Kästen"})
 ];
 function sachTask(){
-  const b=R(3,9),q=R(2,Math.floor(90/b)-1),r=R(1,b-1),a=b*q+r,S=pick(SACH)(a,b),right=S.up?q+1:q;
+  const b=pickRow(3,9,2),q=R(2,Math.min(10,Math.floor(90/b)-1)),r=R(1,b-1),a=b*q+r,S=pick(SACH)(a,b),right=S.up?q+1:q;
   const way=`${a} : ${b} = ${q} Rest ${r}.`;
   return{type:"num",topic:"m3_sach",q:S.q,a:right,sig:"s|"+S.q,
     ex:S.up?`${b} · ${q} = ${b*q}, ${a} − ${b*q} = ${r}. ${way} Die ${r} übrigen brauchen auch einen Platz, also ${q+1}.`

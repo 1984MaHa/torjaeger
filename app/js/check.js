@@ -3,6 +3,7 @@
 // Die Probe verrät die Lösung nie: Sie rechnet mit der Antwort des Kindes oder nennt nur die Strategie.
 import {GEN,mk} from "./generators.js";
 import {R,pick,esc} from "./util.js";
+import {pickRow,getMul} from "./mul.js";
 import {BONUS_FIX,ENG_IDS,SU_IDS} from "./content.js";
 
 export const PACK_MIN=3,PACK_MAX=6,DEFAULT_PACK=5;
@@ -14,11 +15,11 @@ export const packLen=t=>PACK_N[t]||DEFAULT_PACK;
 // ---------- Päckchen ----------
 const PACKS={
   // gleicher Teiler, der Dividend steigt, der Rest wächst oder springt auf 0 (32:8, 33:8, 35:8 ...)
-  m3_rest(n){const b=R(3,9);let a=b*R(2,4)+R(0,b-1);const out=[];
+  m3_rest(n){const b=pickRow(3,9,2);let a=b*R(2,4)+R(0,b-1);const out=[];
     for(let i=0;i<n;i++){out.push(mk.rest(a,b));a+=pick([1,1,2,2,3]);}
     return out;},
   // gleiche Reihe, die andere Zahl steigt (3·6, 4·6, 5·6 oder 18:6, 24:6, 30:6)
-  m3_1x1(n){const b=R(2,10),div=Math.random()<.4,a0=R(2,11-n),out=[];
+  m3_1x1(n){const b=pickRow(1,10),div=Math.random()<.4,a0=Math.random()<.2?(getMul().zero?0:1):R(2,11-n),out=[];
     for(let i=0;i<n;i++)out.push(mk.einmaleins(a0+i,b,div));
     return out;},
   // gleiche Zahl dazu oder weg, die erste Zahl steigt in Zehner- oder Hunderterschritten

@@ -1,6 +1,6 @@
 // Datenmodell, Schemaversion und Migrationen.
 //
-// Konto (profile-Stand, schemaVersion 8):
+// Konto (profile-Stand, schemaVersion 9):
 //   meta      schemaVersion, deviceId, rev (letzte bekannte Server-Revision), updatedAt, createdAt, resetAt
 //   profile   id, name, t (Zeitstempel der letzten Änderung), avatar (Aussehen samt eigenem t oder null), avatarAsked
 //   progress  dev (Zähler je Gerät: points, rounds, wins, stickers), days, lg (Ligen-Freigaben), sel, cur ({li, t}: gewählte aktuelle Liga, li null = Vorgabe)
@@ -9,6 +9,7 @@
 //   history   abgeschlossene Spiele {id, t, d, liga, mode, trial, c, n, pts, dur?, topic?, pk?} (pk = Päckchen, topic = Themenblock; mode auch eng und su)
 //   settings  sound, t, perRound, trialN, trialDaily, hintAfter, topicMode (je Thema "wiederholen", "aus", "schwerpunkt" oder "zurueck", fehlt = aktuell),
 //             topicUntil (ab Schema 8: je zurückgestelltem Thema optional das Datum "JJJJ-MM-TT", an dem es wieder aktuell wird), topicSeen (ab Schema 8: Themen, die das Konto schon kennt; ein Thema, das fehlt und nicht in topicMode steht, ist neu und startet zurückgestellt)
+//   settings.mul (ab Schema 9, App 1.7.1) Einmaleins-Grenze: {rows: Reihen 1 bis 10, zero: auch mal 0}; fehlt sie, gelten alle Reihen und 0 an
 //   camps     (ab Schema 7, App 1.5.4) Trainingslager je Thema: {m3_rest: {on, t (Schalter), rs (Neustart), units: {"1": {h1, h2, pen?, t, runs}}, badge (Zeitpunkt oder 0)}}
 // Global (kontenübergreifend): schemaVersion, pin, updatedAt, trainer und trainer2 (Trainer und Trainerin: name, look, t).
 // Schemaversion 1 (Phase 1) hatte weder avatar noch die neuen Einstellungen, help, dur und trainer.
@@ -24,7 +25,7 @@ import {PROBE} from "./content.js";
 import {clone} from "./util.js";
 import {defaultTrainer,defaultTrainer2,cleanLook,cleanTrainer,upgradeOldHair} from "./avatar.js";
 
-export const SCHEMA_VERSION=8;        // Konto-Stand
+export const SCHEMA_VERSION=9;        // Konto-Stand
 export const GLOBAL_SCHEMA_VERSION=4; // globale Einstellungen
 
 const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
@@ -35,7 +36,7 @@ export class UnsupportedSchema extends Error{constructor(v){super("Stand hat neu
 // topicMode: je Thema die Steuerung der Eltern ("wiederholen" oder "aus"), fehlt ein Thema, ist es "aktuell".
 // Alle Themen, die es bei Schemaversion 8 (App 1.6.1) gab. Feste Liste: die Migration 7 nach 8 trägt sie als bekannt ein, spätere Themen sind dann neu.
 export const TOPICS_AT_8=["m_read","m_split","m_plaet","m_zehner","m_mal","m_rechnen","d_wortart","d_verl","d_satz","m3_rest","m3_1x1","m3_htz","m3_plus","m3_sach","d3_praet","d3_fam","d3_ie","d3_doppel","d3_satzglied","en_farben","en_zahlen","en_koerper","en_kleidung","en_familie","en_schule","en_essen","en_tiere","en_hobbys","en_wetter","su_sinne","su_tiere","su_getreide","su_kartoffel","su_wasser","su_himmel","su_verkehr","m4_stelle","m4_mult","m4_div","m4_runden","d4_perfekt","d4_rede","d4_steigern"];
-export const defaultSettings=()=>({sound:true,t:0,perRound:8,trialN:3,trialDaily:true,hintAfter:45,topicMode:{}});
+export const defaultSettings=()=>({sound:true,t:0,perRound:8,trialN:3,trialDaily:true,hintAfter:45,topicMode:{},mul:{rows:[1,2,3,4,5,6,7,8,9,10],zero:true}});
 
 // Ein neues Konto kennt alle Themen, die es gerade gibt (topics = Liste der Themen-Kennungen aus content.js).
 export function newProfile({id,name,deviceId,now=Date.now(),topics=null}){
@@ -121,6 +122,13 @@ const PROFILE_MIGRATIONS=[
     if(!Array.isArray(s.settings.topicSeen))s.settings.topicSeen=TOPICS_AT_8.slice();
     s.meta.schemaVersion=8;
     return s;
+  }},
+  // 8 -> 9 (App 1.7.1): Einmaleins-Grenze je Konto (Standard: alle Reihen, 0 an). Eine schon vorhandene Einstellung bleibt, Unbekanntes auch.
+  {from:8,to:9,run:s=>{
+    s.settings=Object.assign(defaultSettings(),s.settings);
+    if(!isObj(s.settings.mul))s.settings.mul=defaultSettings().mul;
+    s.meta.schemaVersion=9;
+    return s;
   }}
 ];
 export function migrateProfile(state,opts={}){
@@ -170,6 +178,7 @@ export function checkProfileState(s){
   // Themen-Zustände (ab 1.6.1) sind freiwillig: topicUntil ein Objekt, topicSeen eine Liste
   if(s.settings.topicUntil!==undefined&&!isObj(s.settings.topicUntil))return"settings.topicUntil ist kein Objekt";
   if(s.settings.topicSeen!==undefined&&!Array.isArray(s.settings.topicSeen))return"settings.topicSeen ist keine Liste";
+  if(s.settings.mul!==undefined&&!isObj(s.settings.mul))return"settings.mul ist kein Objekt";
   // Trainingslager (ab 1.5.4) ist freiwillig. Ist es da, muss es ein Objekt sein, je Thema ein Objekt mit units als Objekt.
   if(s.camps!==undefined){
     if(!isObj(s.camps))return"camps ist kein Objekt";

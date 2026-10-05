@@ -163,7 +163,7 @@ test("Ende zu Ende 1.5.4: Trainingslager von den Eltern bis zum Elfmeterschieße
     let st;
     for(let n=0;n<300;n++){st=(await get(`/api/profiles/${id}/state`)).state;if(st.camps&&st.camps.m3_rest&&st.camps.m3_rest.units["1"]&&st.camps.m3_rest.units["1"].pen)break;await sleep(25);}
     const c=st.camps.m3_rest;
-    assert.equal(st.meta.schemaVersion,8);assert.equal(c.on,true);
+    assert.equal(st.meta.schemaVersion,9);assert.equal(c.on,true);
     assert.deepEqual(c.units["1"].h1,{c:8,n:10});assert.deepEqual(c.units["1"].h2,{c:8,n:10});assert.deepEqual(c.units["1"].pen,{c:4,n:5});assert.equal(c.badge,0);
     const camps=st.history.filter(h=>h.mode==="camp");
     assert.equal(camps.length,1);assert.equal(camps[0].c,16);assert.equal(camps[0].n,20);assert.equal(camps[0].topic,"m3_rest");

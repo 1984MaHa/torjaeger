@@ -9,6 +9,7 @@ import {lookOf} from "./avatar.js";
 import {trainerPanelHTML} from "./avatarui.js";
 import {campAdminHTML} from "./campviews.js";
 import {CAMPS} from "./camp.js";
+import {mulOf,ALL_ROWS} from "./mul.js";
 
 export const ADMIN_TABS=[["accounts","Konten"],["stand","Lernstand"],["settings","Einstellungen"],["system","Sicherungen und System"]];
 export const ROUND_CHOICES=[6,8,10];
@@ -127,6 +128,14 @@ function topicControl(a){
 }
 
 // ---------- Einstellungen ----------
+// Einmaleins-Grenze (ab 1.7.1): Reihen 1 bis 10 und "auch mal 0". Ergebnis höchstens 100 und Faktor höchstens 10 gelten immer.
+export function mulPanel(a){
+  const m=mulOf(a.state),btn=r=>`<button class="segb ${m.rows.includes(r)?"on":""}" data-amul="row:${r}:${m.rows.includes(r)?"off":"on"}" aria-pressed="${m.rows.includes(r)}">${r}</button>`;
+  return `<section class="panel"><h3>Einmaleins: ${esc(a.name)}</h3>
+    <p class="note">Welche Reihen soll ${esc(a.name)} üben? Das gilt für alle Aufgaben mit Mal und Geteilt (Einmaleins, Teilen mit Rest, Sachaufgaben, Päckchen, Trainingslager, Mini-Spiele und Mix). Ein Trainingslager kann das nur noch enger machen. Das Ergebnis ist immer höchstens 100, jeder Faktor höchstens 10. Rechnen bis 1000 und die großen Aufgaben der Bezirksliga bleiben, wie sie sind.</p>
+    <div class="setrow"><span>Reihen</span><span class="seg">${ALL_ROWS.map(btn).join("")}</span></div>
+    <div class="setrow"><span>Auch mal 0</span>${seg("data-amul",[["zero:on","An"],["zero:off","Aus"]],`zero:${m.zero?"on":"off"}`)}</div></section>`;
+}
 function settingsTab(A){
   const a=selAccount(A),st=a?settingsOf(a.state):null;
   const acct=a?`${chips(A)}<section class="panel"><h3>Einstellungen für ${esc(a.name)}</h3>
@@ -137,7 +146,7 @@ function settingsTab(A){
     <div class="setrow"><span>Tipp-Zeit: der Trainer meldet sich nach</span>${seg("data-aset",HINT_CHOICES.map(([n,l])=>[`hintAfter:${n}`,l]),`hintAfter:${st.hintAfter}`)}</div>
     <p class="small">Die Tipp-Zeit gilt, wenn bei einer Aufgabe so lange nichts angetippt wird. „Aus“ heißt: Der Trainer meldet sich nicht von selbst. Die Hilfe-Taste bleibt immer da.</p></section>`
     :`<p class="lead">Kein Konto mit Spielstand.</p>`;
-  const topics=a?topicControl(a):"";
+  const topics=a?mulPanel(a)+topicControl(a):"";
   const pin=`<section class="panel"><h3>Eltern-PIN ändern</h3><p class="note">Die PIN gilt für alle Konten und alle Geräte. Die alte PIN wird gebraucht.</p>
     <div class="pin" style="margin-top:8px"><input id="aOldPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Alte PIN" aria-label="Alte PIN"><input id="aNewPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><button class="btn sm" data-apin>PIN ändern</button></div></section>`;
   return `${acct}${topics}${trainerPanelHTML(A.tr1,1)}${trainerPanelHTML(A.tr2,2)}${pin}`;

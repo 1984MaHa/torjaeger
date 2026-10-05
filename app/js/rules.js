@@ -6,6 +6,7 @@ import {lgOf,devOf,statOf,total,newProfile,defaultLg,defaultSettings,lvOf,campOf
 import {CAMPS,UNIT_COUNT} from "./camp.js";
 import {cleanLook,cleanText,cleanTrainerLook} from "./avatar.js";
 import {todayKey} from "./util.js";
+import {normMul} from "./mul.js";
 
 // ---------- Abfragen ----------
 export function topicSafe(s,t){
@@ -244,6 +245,16 @@ export function applyMiniPoints(s,ctx,pts){
   devOf(s,ctx.deviceId).points+=Math.min(1000,Math.round(pts));touch(s,ctx);return true;
 }
 // Fach ganz ein- oder ausschalten (Eltern). Gehört zu den Einstellungen (neuerer Stand gewinnt). Gibt false für ein unbekanntes Fach.
+// Einmaleins-Grenze (Eltern, je Konto, ab 1.7.1): eine Reihe 1 bis 10 an- oder ausschalten (mindestens eine bleibt) oder "auch mal 0". Gehört zu den Einstellungen.
+export function applyMulRow(s,ctx,row,on){
+  if(!Number.isInteger(row)||row<1||row>10)return false;
+  const m=normMul(s.settings.mul),set=new Set(m.rows);
+  if(on)set.add(row);else{if(set.size<=1&&set.has(row))return false;set.delete(row);}
+  s.settings.mul={rows:[...set].sort((a,b)=>a-b),zero:m.zero};s.settings.t=ctx.now;touch(s,ctx);return true;
+}
+export function applyMulZero(s,ctx,on){
+  const m=normMul(s.settings.mul);s.settings.mul={rows:m.rows,zero:!!on};s.settings.t=ctx.now;touch(s,ctx);return true;
+}
 export function applyFach(s,ctx,fach,on){
   if(!Object.values(FACH_OF).includes(fach))return false;
   const o=Object.assign({},s.settings.fachOff);

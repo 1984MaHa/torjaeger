@@ -1,4 +1,5 @@
 // Steuerung: Start, Konten, Spielablauf, lokales Speichern und automatischer Abgleich.
+import {setMul,mulOf} from "./mul.js";
 import {LIGEN,RIVALS,BONUS_FIX,allTopicsOf,poolOf,isEng,ALL_TOPICS} from "./content.js";
 import {GEN} from "./generators.js";
 import {packOf,gradePack,isRight,termResults,keyOf,packSnapshot,packResumable,packResume} from "./check.js";
@@ -6,7 +7,7 @@ import {CAMPS,campUnit,isPackUnit,penaltyTasks,wrongNote,campSnapshot,campResuma
 import {speak,canSpeak} from "./speech.js";
 import {shuffle,pick,todayKey,esc,randomId,canon} from "./util.js";
 import {newProfile,newGlobal,migrateProfile,migrateGlobal,UnsupportedSchema,SCHEMA_VERSION,GLOBAL_SCHEMA_VERSION,lvOf} from "./model.js";
-import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
+import {leagueState,budgetOf,nextTopic,applyAnswer,applyTrial,applyRoundEnd,applyOpen,applyLock,applySound,applySel,applyRename,applySettings,applyHelp,applyAvatar,applyAvatarAsked,applyProfilePin,validKidPin,applyTrainer,applyCurrent,applyControl,applyTopicMode,applyTopicUntil,strikeStep,applyMiniPoints,activeTopics,topicOn,settingsOf,roundLen,trialLen,playable,applyFach,applyMulRow,applyMulZero,applyCampOn,applyCampUnit,applyCampPen,applyCampReset,campOn,unitOpen,unitDone} from "./rules.js";
 import {makePin,checkPin,validPin} from "./pin.js";
 import {openStore,withRetry} from "./store.js";
 import {createSync} from "./sync.js";
@@ -31,7 +32,7 @@ let cur=null;                  // {rec:{id,state,baseRev,dirty,lastSync}}
 let view="accounts",G=null,MG=null; // MG: laufendes Mini-Spiel
 const UI={saveFail:false,savedPack:null,savedCamp:null,fach:null,lgOpen:{},av:null,preview:"",parent:false,pinMsg:"",celebrate:"",newAcct:false,acctMsg:"",adminAsk:false,admin:null,sync:"",updateReady:false,fatal:""};
 const ctx=()=>({deviceId,now:Date.now()});
-const S=()=>cur.rec.state;
+const S=()=>{const s=cur.rec.state;setMul(mulOf(s));return s;}; // setMul: Einmaleins-Grenze des Kontos für alle Generatoren
 
 // ================= Speicher =================
 async function loadAll(){
@@ -668,6 +669,9 @@ function bindAdmin($){
     const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
     const kv=b.dataset.aset.split(":"),k=kv[0],v=kv[1];
     commitOn(a.rec,(s,c)=>applySettings(s,c,{[k]:v==="true"?true:v==="false"?false:Number(v)}));render();});
+  document.querySelectorAll("[data-amul]").forEach(b=>b.onclick=()=>{
+    const a=accounts.find(x=>x.id===A.sel&&x.rec.state)||accounts.find(x=>x.rec.state);if(!a)return;
+    const [k,x,y]=b.dataset.amul.split(":");commitOn(a.rec,(s,c)=>k==="row"?applyMulRow(s,c,Number(x),y==="on"):applyMulZero(s,c,x==="on"));render();});
   document.querySelectorAll("[data-acamp]").forEach(b=>b.onclick=()=>{
     const [t,v,id]=b.dataset.acamp.split(":"),a=accounts.find(x=>x.id===id&&x.rec.state);if(!a)return; // gilt für das Konto, an dessen Karte der Schalter steht
     commitOn(a.rec,(s,c)=>applyCampOn(s,c,t,v==="on"));render();});

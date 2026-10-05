@@ -2,6 +2,7 @@
 import {R,pick,shuffle,fmt} from "./util.js";
 import {blocksSVG,stwSVG,fieldSVG,groupsSVG} from "./svg.js";
 import {TASKGEN} from "./tasks.js";
+import {pickRow,otherFactor,rowsOnly} from "./mul.js";
 
 const NOMEN=[["BALL","der Ball"],["TOR","das Tor"],["TRAINER","der Trainer"],["WIESE","die Wiese"],["TRIKOT","das Trikot"],["SCHUH","der Schuh"],["PFIFF","der Pfiff"],["SONNE","die Sonne"],["SCHAF","das Schaf"],["HUND","der Hund"],["BLUME","die Blume"],["NETZ","das Netz"],["MANNSCHAFT","die Mannschaft"],["KATZE","die Katze"]];
 const VERBEN=[["LAUFEN","ich laufe"],["SPRINGT","er springt"],["SCHIESST","er schießt"],["LIEGT","es liegt"],["KICKT","sie kickt"],["JUBELN","wir jubeln"],["RENNT","er rennt"],["SPIELEN","wir spielen"],["LACHT","sie lacht"],["FÄNGT","er fängt"],["WIRFT","sie wirft"],["PFEIFT","er pfeift"]];
@@ -54,8 +55,8 @@ export const GEN={
   m_zehner(){const unit=Math.random()<.6?"Zehner":"Einer",plus=Math.random()<.55,k=R(1,4);let a,res;
     if(unit==="Zehner"){a=plus?R(11,99-10*k):R(10*k+1,98);res=plus?a+10*k:a-10*k;}else{a=plus?R(11,95-k):R(k+10,98);res=plus?a+k:a-k;}
     const op=plus?"+":"−",v=unit==="Zehner"?10*k:k;return{type:"num",q:`${a} ${op} ${k} <mark>${unit}</mark> = ?`,a:res,inv:{op:plus?"+":"-",y:v},ex:`${k} ${unit} sind ${v}. ${a} ${op} ${v} = ${res}.`};},
-  m_mal(){let r=R(2,5),c=R(2,6);if(r===c)c=c===6?5:c+1;const ex=`${r} Reihen mit je ${c} Punkten: ${r} · ${c} = ${r*c}.`;
-    if(Math.random()<.5){const right=`${r} · ${c}`;return{type:"choice",q:"Welche <mark>Malaufgabe</mark> passt zum Bild? Zähle die Reihen.",vis:fieldSVG(r,c),choices:[right,`${r} + ${c}`,`${r+1} · ${c}`,`${r} · ${c+1}`],a:right,probeText:"Zähle die Reihen und die Punkte in jeder Reihe noch einmal. Passt deine Malaufgabe genau zum Bild?",ex};}
+  m_mal(){let r=R(2,5),c=R(2,6);if(rowsOnly()){const x=pickRow(2,10,1),o=R(2,6);if(Math.random()<.5){r=x;c=o;}else{c=x;r=o;}}if(r===c)c=c===6?5:c+1;const ex=`${r} Reihen mit je ${c} Punkten: ${r} · ${c} = ${r*c}.`;
+    if(Math.random()<.5){const right=`${r} · ${c}`;return{type:"choice",q:"Welche <mark>Malaufgabe</mark> passt zum Bild? Zähle die Reihen.",vis:fieldSVG(r,c),choices:[right,`${r} + ${c}`,`${r<10?r+1:r-1} · ${c}`,`${r} · ${c<10?c+1:c-1}`],a:right,probeText:"Zähle die Reihen und die Punkte in jeder Reihe noch einmal. Passt deine Malaufgabe genau zum Bild?",ex};}
     return{type:"num",q:"Wie viele Punkte sind es? Rechne mit <mark>mal</mark>.",vis:fieldSVG(r,c),a:r*c,probeText:`Rechne die Tauschaufgabe: ${c} · ${r} = ? Kommt dasselbe heraus wie bei deiner Antwort?`,ex};},
   m_rechnen(){const t=R(0,2);let a,b;
     if(t===0){do{a=R(12,88);b=R(3,9);}while(a%10+b<10||a+b>99);const s=10-a%10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`Erst bis zum Zehner: ${a} + ${s} = ${a+s}. Dann noch ${b-s}: ${a+b}.`};}
@@ -69,8 +70,9 @@ export const GEN={
     return{type:"tap",q:"Wo ist der erste Satz zu Ende? Tippe auf das Wort, nach dem der <mark>Punkt</mark> kommt.",words:w,a:w1.length-1,ex:`Richtig ist: ${p[0]}. ${p[1]}.`,
       hint:"Lies laut. Wo deine Stimme nach unten geht, ist der Satz zu Ende. Nach dem Punkt geht es groß weiter.",tapLabel:"Punkt setzen!",mark:true};},
   // ---- Klasse 3 ----
-  m3_rest(){const b=R(2,9),q=R(1,9),r=Math.random()<.8?R(1,b-1):0;return mk.rest(b*q+r,b);},
-  m3_1x1(){const a=R(2,10),b=R(2,10);return mk.einmaleins(a,b,Math.random()>=.5);},
+  m3_rest(){const b=pickRow(2,9,2),q=R(1,9),r=Math.random()<.8?R(1,b-1):0;return mk.rest(b*q+r,b);},
+  m3_1x1(){const a=pickRow(1,10),b=otherFactor(),swap=b>0&&Math.random()<.5; // a = Reihe, b = andere Zahl (kann 0 sein); beim Teilen nie durch 0
+    return swap?mk.einmaleins(a,b,Math.random()>=.5):mk.einmaleins(b,a,Math.random()>=.5);},
   m3_htz(){const n=R(101,999),H=Math.floor(n/100),Z=Math.floor(n/10)%10,E=n%10,t=R(0,2);
     if(t===2)return{type:"num",q:`${H} <mark>H</mark> + ${Z} <mark>Z</mark> + ${E} <mark>E</mark> = ?`,a:n,ex:`${H} Hunderter, ${Z} Zehner und ${E} Einer sind ${n}.`};
     const w=t===0?"Hunderter":"Zehner";return{type:"num",q:`Wie viele <mark>${w}</mark> stehen an der Stelle in <b>${n}</b>?`,a:t===0?H:Z,ex:`${n} = ${H} H + ${Z} Z + ${E} E.`};},
@@ -79,7 +81,7 @@ export const GEN={
     if(t===1){a=R(4,9)*100+R(0,9)*10;b=R(1,3)*100+R(0,9)*10;if(b>a)b=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst die Hunderter weg, dann die Zehner: ${a} − ${b} = ${a-b}.`};}
     if(t===2){a=R(100,899);b=R(1,9)*10;return{type:"num",q:`${a} + ${b} = ?`,a:a+b,inv:{op:"+",y:b},ex:`${b/10} Zehner dazu: ${a} + ${b} = ${a+b}.`};}
     a=R(1,9)*100;b=R(1,9)*10+R(1,9);if(b>a)a+=100;return{type:"num",q:`${a} − ${b} = ?`,a:a-b,inv:{op:"-",y:b},ex:`Erst ${b-b%10} weg: ${a-(b-b%10)}. Dann noch ${b%10} weg: ${a-b}.`};},
-  m3_sach(){const b=R(3,6);let q=R(3,8),r=R(1,b-1),a=b*q+r;
+  m3_sach(){const b=pickRow(3,6,2);let q=R(3,8),r=R(1,b-1),a=b*q+r;
     const S1=[`${a} Kinder fahren zum Turnier. In ein Auto passen ${b} Kinder. Wie viele Autos braucht man?`,q+1,`${a} : ${b} = ${q} Rest ${r}. Die ${r} übrigen Kinder brauchen auch ein Auto, also ${q+1} Autos.`],
       S2=[`Emil verteilt ${a} Sticker gerecht an ${b} Freunde. Wie viele Sticker bekommt jeder?`,q,`${a} : ${b} = ${q} Rest ${r}. Jeder bekommt ${q}, ${r} Sticker bleiben übrig.`],
       S3=[`Für ${a} Bälle gibt es Netze. In ein Netz passen ${b} Bälle. Wie viele Netze werden ganz voll?`,q,`${a} : ${b} = ${q} Rest ${r}. ${q} Netze werden ganz voll. Im letzten Netz ${r===1?"liegt nur 1 Ball":"liegen nur "+r+" Bälle"}, das Netz ist nicht voll.`];
