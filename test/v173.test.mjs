@@ -179,7 +179,7 @@ test("Päckchen-Einheit im Lager: ein Päckchen pro Halbzeit mit Kontroll-Pfiff 
     assert.deepEqual(t.plan,[["kind:sacks"],["kind:pack"]]);
     syncCustomCamps(g,{},1);
     assert.ok(!isPackUnit(id,1));assert.ok(isPackUnit(id,2));
-    const sets=campUnit(id,2);assert.ok(sets.h1.length>=12 && sets.h1.length<=16,"Paeckchen der Reihe mit 12 bis 16 Aufgaben");assert.ok(sets.h1.every(T=>T.type==="num"&&T.topic==="m3_1x1"));assert.deepEqual(sets.pen,[]);
+    const sets=campUnit(id,2);assert.equal(sets.h1.length,10,"ein Paeckchen mit so vielen Aufgaben wie je Halbzeit");assert.ok(sets.h1.every(T=>T.type==="num"&&T.topic==="m3_1x1"));assert.deepEqual(sets.pen,[]);
     const u1=campUnit(id,1);assert.ok(u1.h1.every(T=>T.kind==="sacks"&&T.sacks.k===9));
     assert.equal(CAMPS[id].units[0].title,"Ballsäcke");
     assert.equal(campHalf(id,1,1).length,10);assert.deepEqual(penaltyTasks(id,1),[]);assert.equal(campTask(id,1,1).kind,"sacks");

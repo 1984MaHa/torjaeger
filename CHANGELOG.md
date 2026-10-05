@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.7.5 (Korrekturen aus der ersten Prüfung)
+- **Passkette eindeutig:** Der erste Kreis oben (Anpfiff, gelb) ist jetzt immer vorgegeben, das ist die 0 oder die erste Zahl der Reihe. Dazu kommt höchstens ein weiterer vorgegebener Wert. Vorher konnte man bei einem Wert wie 18 nicht wissen, wo die Kette anfängt, und eine richtige Antwort galt als falsch.
+- **Weniger Aufgaben:** Die mitgelieferte Vorlage 9er Reihe hat 5 Aufgaben je Halbzeit. Ein Päckchen in einem eigenen Lager hat so viele Aufgaben, wie bei „Aufgaben je Halbzeit“ (5, 10 oder 15) eingestellt ist, nicht mehr fest 12 bis 16. Das lässt sich in jeder eigenen Vorlage ändern (die mitgelieferte erst kopieren). Im normalen Einmaleins-Päckchen bleibt es bei 12 bis 16.
+- **Verständlicher:** Die Taste „Für andere Reihe kopieren“ heißt jetzt „Dieselbe Vorlage für eine andere Reihe anlegen“, mit Erklärung darunter (Reihe antippen, es entsteht sofort eine eigene Vorlage in der Liste).
+- Kein Schemawechsel. Version 1.7.5 an allen vier Stellen.
+
 ## 1.7.4 (Mitgelieferte Vorlage: 9er Reihe)
 - **Neue mitgelieferte Vorlage „9er Reihe“** nach Emils Hausaufgabe, im Eltern-Bereich (Einstellungen, Eigene Trainingslager) in der Liste, **ausgeschaltet** (die Eltern schalten sie je Konto ein). Fünf Einheiten, jede mit einer Aufgabenart: **1 Ballsäcke, 2 Passkette, 3 Rechenkreis vorwärts, 4 Rechenkreis rückwärts, 5 Päckchen Reihe** (je Halbzeit ein Päckchen mit 12 bis 16 Aufgaben und Kontroll-Pfiff). 10 Aufgaben je Halbzeit in den Einheiten 1 bis 4, Nachspielzeit Elfmeterschießen (fünf Schüsse mit Aufgaben der Einheit). Das Abzeichen heißt „Profi: 9er Reihe“.
 - **Für andere Reihe kopieren:** Bei der 9er Reihe (und bei jeder eigenen Vorlage mit genau einer Reihe) stehen in der Liste die Tasten der anderen Reihen. Ein Tipp legt sofort eine eigene Vorlage für diese Reihe an (Name passt sich an: „7er Reihe“, bei einem Namen ohne Reihe „Name (7er Reihe)“), mit demselben Ablauf. Die Kopie lässt sich wie jede eigene Vorlage ändern und einschalten.

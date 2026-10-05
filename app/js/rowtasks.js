@@ -27,12 +27,12 @@ export function sacksTask(row=pickRow(2,10,1)){
 // ---------- b) Passkette: 10 Kreise mit der Reihe, ein oder zwei Werte stehen schon da ----------
 export function chainTask(row=pickRow(2,10,1),zeroStart=getMul().zero&&Math.random()<.3){
   const start=zeroStart?0:1,vals=[...Array(CHAIN_N).keys()].map(i=>(start+i)*row);
-  const givenN=Math.random()<.5?1:2,givenAt=new Set();
-  while(givenAt.size<givenN)givenAt.add(R(0,CHAIN_N-1));
+  const givenN=Math.random()<.5?1:2,givenAt=new Set([0]); // der Anpfiff (erster Kreis) ist immer vorgegeben, sonst weiß man nicht, wo die Kette anfängt
+  while(givenAt.size<givenN)givenAt.add(R(1,CHAIN_N-1));
   let j=0;const cells=vals.map((v,i)=>givenAt.has(i)?{fix:v}:{slot:j++});
   const a=vals.filter((_,i)=>!givenAt.has(i));
   return{type:"slots",kind:"chain",row,chain:{row,start},
-    q:`Die Spieler passen sich den Ball zu. In jeden Kreis kommt die nächste Zahl der ${row}er-Reihe.${zeroStart?" Die Kette beginnt mit der 0.":""}`,
+    q:`Die Spieler passen sich den Ball zu. Der erste Kreis oben ist der Anpfiff, von dort geht es im Uhrzeigersinn weiter. In jeden Kreis kommt die nächste Zahl der ${row}er-Reihe.`,
     cells,labels:cells.map((c,i)=>`Kreis ${i+1}`),a,sig:`ch|${row}|${start}|${[...givenAt].sort((x,y)=>x-y).join(",")}`,
     ex:`Die ${row}er-Reihe: ${vals.join(", ")}.`,
     hint:"Geh die Kette der Reihe nach. Von einem Kreis zum nächsten kommt immer dieselbe Zahl dazu. Dann findest du auch die Zahlen dazwischen.",

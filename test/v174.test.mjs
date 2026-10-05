@@ -49,9 +49,9 @@ test("Fünf Einheiten: Ballsäcke, Passkette, Rechenkreis vorwärts und rückwä
         if(n<=4){assert.equal(T.type,"slots");assert.equal(T.kind,KINDS[n-1]);assert.equal(T.row,9);}
         else{assert.equal(T.type,"num");const m=/^(\d+) ([·:]) (\d+) = \?$/.exec(String(T.q));assert.ok(m,T.q);const a=+m[1],b=+m[3];assert.ok(m[2]==="·"?(a===9||b===9):(b===9||a/b===9),"Aufgabe der 9er Reihe: "+T.q);}
       }
-      if(n<=4){assert.equal(set.h1.length,10);assert.equal(set.h2.length,10);}
+      if(n<=4){assert.equal(set.h1.length,5);assert.equal(set.h2.length,5);}
       else{
-        assert.ok(set.h1.length>=12&&set.h1.length<=16&&set.h2.length>=12&&set.h2.length<=16);
+        assert.equal(set.h1.length,5);assert.equal(set.h2.length,5);
         const qs=set.h1.map(T=>T.q);assert.equal(new Set(qs).size,qs.length,"Päckchen ohne doppelte Aufgabe");
       }
       for(const T of [].concat(set.h1,set.h2,set.pen))if(T.type==="slots")assert.ok(isRight(T,T.a.map(String)));
@@ -96,7 +96,7 @@ test("Eltern-Liste: mitgeliefert ohne Bearbeiten und Löschen, mit Reihen zum Ko
     const h=tplPanelHTML({g,tpl:null,confirm:null},a,g,seg);
     assert.ok(h.includes("9er Reihe")&&h.includes("mitgeliefert"));
     assert.ok(!h.includes('data-atpledit="b-9er"')&&!h.includes('data-aask="tpldel:b-9er"'));assert.ok(h.includes('data-atplcopy="b-9er"'));
-    assert.match(h,/Für andere Reihe kopieren/);
+    assert.match(h,/für eine andere Reihe anlegen/);
     for(const r of ALL_ROWS)if(r!==9)assert.ok(h.includes(`data-atplcopyrow="b-9er|${r}"`),"Reihe "+r);
     assert.ok(!h.includes('data-atplcopyrow="b-9er|9"'));
     assert.ok(h.includes(`data-atplon="${s.profile.id}|c:b-9er|off"`)&&h.includes(`data-atplon="${s.profile.id}|c:b-9er|on"`));

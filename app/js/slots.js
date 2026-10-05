@@ -20,8 +20,8 @@ function slotCircle(T,G,j,cx,cy,r){
     +(s.act?`<circle cx="${cx}" cy="${cy}" r="${r+6}" fill="none" stroke="#cfe0ff" stroke-width="5"/>`:"")
     +`<text x="${cx}" y="${cy+9}" text-anchor="middle" font-size="${r*0.95}" font-family="Lilita One,Arial Rounded MT Bold,sans-serif" fill="${INK}">${esc(s.v)}</text></g>`;
 }
-function fixCircle(v,cx,cy,r){
-  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#e8f1ea" stroke="${INK}" stroke-width="3"/>`
+function fixCircle(v,cx,cy,r,fill="#e8f1ea"){
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${INK}" stroke-width="3"/>`
     +`<text x="${cx}" y="${cy+9}" text-anchor="middle" font-size="${r*0.95}" font-family="Lilita One,Arial Rounded MT Bold,sans-serif" fill="${INK}">${v}</text>`;
 }
 const cellCircle=(T,G,c,cx,cy,r)=>c.slot!==undefined?slotCircle(T,G,c.slot,cx,cy,r):fixCircle(c.fix,cx,cy,r);
@@ -60,7 +60,7 @@ export function chainSVG(T,G){
     s+=`<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${INK}" stroke-width="3"/>`
       +`<polygon points="${bx.toFixed(1)},${by.toFixed(1)} ${(bx-ux*10+uy*6).toFixed(1)},${(by-uy*10-ux*6).toFixed(1)} ${(bx-ux*10-uy*6).toFixed(1)},${(by-uy*10+ux*6).toFixed(1)}" fill="${INK}"/>`;
   }
-  cells.forEach((c,i)=>{const [x,y]=pos(i);s+=cellCircle(T,G,c,x.toFixed(1),y.toFixed(1),r);});
+  cells.forEach((c,i)=>{const [x,y]=pos(i);s+=i===0&&c.fix!==undefined?fixCircle(c.fix,x.toFixed(1),y.toFixed(1),r,"#fff0b8"):cellCircle(T,G,c,x.toFixed(1),y.toFixed(1),r);}); // der Anpfiff ist gelb
   s+=`<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="26" font-family="Lilita One,Arial Rounded MT Bold,sans-serif" fill="${INK}">${T.chain.row}er-Reihe</text>`
     +`<text x="${cx}" y="${cy+26}" text-anchor="middle" font-size="20" fill="#5b6b60">Anpfiff oben</text></svg>`;
   return s;

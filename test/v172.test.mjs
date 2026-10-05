@@ -31,7 +31,7 @@ test("Passkette: 10 Kreise der Reihe, ein oder zwei Werte vorgegeben, Variante m
     const zero=i%2===0,T=chainTask(row,zero);
     assert.equal(T.cells.length,CHAIN_N);
     const vals=T.cells.map((c,j)=>c.fix!==undefined?c.fix:null),given=vals.filter(v=>v!==null);
-    assert.ok(given.length===1||given.length===2);
+    assert.ok(given.length===1||given.length===2);assert.notEqual(T.cells[0].fix,undefined,"der Anpfiff ist vorgegeben");
     const start=zero?0:1,full=[...Array(CHAIN_N).keys()].map(j=>(start+j)*row);
     T.cells.forEach((c,j)=>{if(c.fix!==undefined)assert.equal(c.fix,full[j]);});
     assert.deepEqual(T.a,full.filter((_,j)=>T.cells[j].slot!==undefined));assert.deepEqual(slotsOf(T),T.a.map((_,j)=>j));

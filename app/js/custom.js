@@ -60,7 +60,7 @@ export const defOf=t=>{const d=normTemplate(t);delete d.del;delete d.builtin;ret
 // "9er Reihe" nach Emils Hausaufgabe (ab 1.7.4): fünf Einheiten, je eine Aufgabenart, Nachspielzeit Elfmeterschießen, ausgeschaltet (die Eltern schalten sie je Konto ein).
 // Teilen mit Rest ist ein fest eingebautes Lager (camp.js) und steht hier nicht.
 export const BUILTIN_TEMPLATES=[
-  {id:"b-9er",name:"9er Reihe",items:["kind:sacks","kind:chain","kind:wheel","kind:wheelback","kind:pack"],rows:[9],zero:null,units:5,half:10,bonus:"penalty",
+  {id:"b-9er",name:"9er Reihe",items:["kind:sacks","kind:chain","kind:wheel","kind:wheelback","kind:pack"],rows:[9],zero:null,units:5,half:5,bonus:"penalty",
     plan:[["kind:sacks"],["kind:chain"],["kind:wheel"],["kind:wheelback"],["kind:pack"]],t:0}
 ];
 
@@ -166,7 +166,7 @@ export function customHalf(def,n,seen=new Set()){
     const count=def.half;
     if(isPackUnitDef(def,n)){
       for(let tries=0;tries<30;tries++){
-        const tasks=rowPackTasks().map(T=>Object.assign({topic:"m3_1x1"},T)); // 12 bis 16 Aufgaben, unabhängig von der Zahl je Halbzeit
+        const tasks=rowPackTasks(undefined,count).map(T=>Object.assign({topic:"m3_1x1"},T)); // so viele Aufgaben wie je Halbzeit eingestellt
         if(!tasks.some(T=>seen.has(keyOf(T)))||tries===29){tasks.forEach(T=>seen.add(keyOf(T)));return tasks;}
       }
     }

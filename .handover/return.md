@@ -2,6 +2,8 @@
 
 ## Rückübergabe Auftrag C0 bis C4 (05.10.2026, Versionen 1.7.0 bis 1.7.4)
 
+**Nachtrag 1.7.5:** Nach Marcos erster Prüfung nachgebessert (Passkette mit festem Anpfiff, 9er Reihe 5 je Halbzeit, Päckchen im Lager folgt der Einstellung, klarere Beschriftung beim Kopieren). Siehe CHANGELOG 1.7.5.
+
 Alle Pakete sind fertig, je Paket ein Commit und ein lokaler Tag (v1.7.0 bis v1.7.4) auf `preview`. Tests: 351 grün. Details je Paket in CHANGELOG.md, SPEC.md und `.handover/progress.md`.
 
 | Paket | Version | Inhalt | Schema (Konto/global) |

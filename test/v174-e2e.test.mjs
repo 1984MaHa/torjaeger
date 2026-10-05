@@ -51,7 +51,7 @@ const plain=q=>q.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
 // Die Lösung steht nie im DOM: der Test liest die Zeichnung (Säcke zählen, Zahlen im Kreis lesen) und rechnet selbst.
 function cellsOf(svg){
   const out=[];
-  for(const m of svg.matchAll(/<g data-slot="(\d+)"|fill="#e8f1ea" stroke="#16271c" stroke-width="3"\/><text[^>]*>(\d+)<\/text>/g))out.push(m[1]!==undefined?{slot:+m[1]}:{fix:+m[2]});
+  for(const m of svg.matchAll(/<g data-slot="(\d+)"|fill="#(?:e8f1ea|fff0b8)" stroke="#16271c" stroke-width="3"\/><text[^>]*>(\d+)<\/text>/g))out.push(m[1]!==undefined?{slot:+m[1]}:{fix:+m[2]});
   return out;
 }
 function solveSlots(){
@@ -62,7 +62,7 @@ function solveSlots(){
   }
   let m;
   if((m=/<svg viewBox="0 0 420 420"[\s\S]*?<\/svg>/.exec(html))){ // Passkette
-    const cells=cellsOf(m[0]),row=+/(\d+)er-Reihe/.exec(q)[1],start=/beginnt mit der 0/.test(q)?0:1;
+    const cells=cellsOf(m[0]),row=+/(\d+)er-Reihe/.exec(q)[1],start=cells[0].fix/row; // der Anpfiff (erster Kreis) ist vorgegeben
     return cells.filter(c=>c.slot!==undefined).map(c=>(start+cells.indexOf(c))*row);
   }
   if((m=/<svg viewBox="0 0 440 440"[\s\S]*?<\/svg>/.exec(html))){ // Rechenkreis
@@ -113,13 +113,13 @@ test("Ende zu Ende 1.7.4: Vorlage 9er Reihe für die 7er Reihe kopiert und alle 
     await clickId("adminOpen");byId("adminPin").value="1234";await clickId("adminGo",150);
     await until(()=>has("Eltern-Bereich"),"Eltern-Bereich");
     await clickData("atab","settings");await until(()=>has("Eigene Trainingslager"),"Baukasten");
-    assert.ok(has("9er Reihe")&&has("mitgeliefert")&&has("Für andere Reihe kopieren"));
+    assert.ok(has("9er Reihe")&&has("mitgeliefert")&&has("für eine andere Reihe anlegen"));
     assert.ok(!has("data-atpledit=\"b-9er\""),"mitgelieferte Vorlage nicht bearbeitbar");
     await clickData("atplcopyrow","b-9er|7");
     await until(()=>has("Die Vorlage „7er Reihe“ ist angelegt"),"Kopie angelegt");
     const tid=/data-atpledit="(t-[a-z0-9]+)"/.exec(html)[1],camp="c:"+tid;
     await clickData("atpledit",tid);await until(()=>has("Vorlage bearbeiten"),"Editor");
-    await clickData("atplset","half:5");await clickData("atplsave");
+    await clickData("atplsave");
     await until(()=>has("Die Vorlage ist gespeichert"),"gespeichert");
     await clickData("atplon",`${id}|${camp}|on`);
     await clickData("aclose");await until(()=>has("Wer spielt?"),"zurück");
@@ -154,7 +154,7 @@ test("Ende zu Ende 1.7.4: Vorlage 9er Reihe für die 7er Reihe kopiert und alle 
     await clickData("camp",`${camp}:5`);
     await until(()=>has("Einheit 5 · 1. Halbzeit · Päckchen · Aufgabe 1 von "),"Päckchen startet");
     for(const half of [1,2]){
-      const N=+/Aufgabe 1 von (\d+)/.exec(html)[1];assert.ok(N>=12&&N<=16,"Päckchen mit 12 bis 16 Aufgaben: "+N);
+      const N=+/Aufgabe 1 von (\d+)/.exec(html)[1];assert.equal(N,5,"Päckchen mit so vielen Aufgaben wie je Halbzeit: "+N);
       for(let k=1;k<=N;k++){await until(()=>has(`Aufgabe ${k} von ${N}`),`P${half}.${k}`);await type(solveNum());}
       await until(()=>has("Kontroll-Pfiff!")&&has(`Einheit 5 · ${half}. Halbzeit`),"Kontroll-Pfiff "+half);
       assert.equal([...html.matchAll(/class="cval"/g)].length,N,"alle Antworten stehen im Kontroll-Pfiff");
