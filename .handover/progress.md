@@ -1,4 +1,19 @@
-# Fortschritt (Auftrag current.md vom 02.10.2026, Teil B)
+# Fortschritt (Auftrag current.md vom 05.10.2026, Pakete C0 bis C4)
+
+Anker: Branch preview, Version 1.6.7, Schema 8, 295 Tests, HEAD 441c8e9. main/origin bei e0cd3e5.
+
+| Paket | Stand | Tests |
+|---|---|---|
+| C0 Info-Grafik (1.7.0) | offen | |
+| C1 Einmaleins-Grenze (1.7.1) | offen | |
+| C2 Neue Aufgabenarten (1.7.2) | offen | |
+| C3 Baukasten (1.7.3) | offen | |
+| C4 Vorlage 9er Reihe (1.7.4) | offen | |
+
+Entscheidungen:
+
+## Vorheriger Auftrag
+
 
 Anker (Fortsetzung): Branch preview, Version 1.6.7, Schema 8, Tests 295 grün. Tags v1.6.0 bis v1.6.7 lokal. main und origin unverändert bei e0cd3e5 (nichts gepusht).
 

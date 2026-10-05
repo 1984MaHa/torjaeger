@@ -1,91 +1,73 @@
-Cross-Handover cowork nach claude-code, 2026-10-02.
+Cross-Handover cowork nach claude-code, 2026-10-05.
 Modus: bauen. Stufe: voll.
-Projekt: Torjäger-Liga (Fußball-Lernspiel für Emil). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger). Stand: 1.5.4 (Trainingslager mit Elfmeterschießen) und 1.5.5 (Fächer je Konto ausschalten) sind gebaut, auf main und preview und gepusht. Was auf der NAS läuft, bei Marco erfragen.
+Projekt: Torjäger-Liga (Fußball-Lernspiel für Emil). Repo: C:\AI\_MBrain Data\Projects\Torjaeger-Liga (GitHub 1984MaHa/torjaeger).
+Stand: preview hat 1.6.0 bis 1.6.7 (Tags lokal), Schema 8, 295 Tests. main/origin standen zuletzt bei e0cd3e5 (1.5.5), Push und Deploy von 1.6.7 macht Marco.
 
-BUDGET-MODUS (wichtig, gilt für die ganze Sitzung)
-Marcos Wochenkontingent ist fast aufgebraucht und kann jederzeit mitten in der Arbeit enden. Ziel: so viel wie möglich schaffen, ohne dass etwas verloren geht.
-- Arbeite die PAKETE unten strikt der Reihe nach ab. Jedes Paket: kurz prüfen, bauen, Tests dazu, node --test grün, committen auf preview.
-- Nach JEDEM Paket sofort: .handover\progress.md aktualisieren (Paket, Commit, Teststand, was offen ist, nächstes Paket) und mit committen. return.md wird laufend mitgeführt, nicht erst am Ende.
-- Jeder Commit ist ein lauffähiger Stand: Tests grün, keine halbfertigen Funktionen sichtbar. Unfertiges hinter einem Schalter verstecken oder nicht committen.
-- Sparsam lesen: nur die Dateien, die das Paket braucht. Keine langen Zusammenfassungen im Chat, keine Screenshots, kein Browser.
-- Keine Rückfragen an Marco innerhalb eines Pakets, außer bei echten Blockern. Offene Punkte entscheiden und in progress.md festhalten.
-- Wenn ein Paket zu groß wird: in sinnvolle Teilschritte teilen, jeden Teilschritt einzeln committen.
-- Eine neue Sitzung (nach Abbruch) liest zuerst progress.md und macht beim nächsten offenen Paket weiter.
+BUDGET-MODUS (gilt für die ganze Sitzung, wie beim letzten Auftrag)
+- PAKETE strikt der Reihe nach. Jedes Paket: kurz prüfen, bauen, Tests, node --test grün, committen auf preview, Tag setzen.
+- Nach JEDEM Paket .handover\progress.md und return.md aktualisieren und mit committen. Jeder Commit lauffähig, Unfertiges hinter Schalter oder nicht committen.
+- Sparsam lesen, keine langen Chat-Zusammenfassungen, kein Browser, keine Screenshots. Keine Rückfragen außer bei echten Blockern; Entscheidungen in progress.md festhalten.
+- Neue Sitzung nach Abbruch: progress.md lesen, beim nächsten offenen Paket weitermachen.
 
 ANKER, zuerst gegenprüfen, nicht arbeiten:
-Diese Sitzung gehört NUR zum Repo C:\AI\_MBrain Data\Projects\Torjaeger-Liga. Steht die Sitzung in einem anderen Ordner (z. B. TopDesk-SLA-Dashboard): sofort stoppen, nichts ändern, Marco Bescheid geben.
+Diese Sitzung gehört NUR zum Repo C:\AI\_MBrain Data\Projects\Torjaeger-Liga. Steht die Sitzung woanders (z. B. TopDesk-SLA-Dashboard): sofort stoppen, nichts ändern, Marco Bescheid geben.
 git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" branch --show-current   -> erwartet preview
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1         -> erwartet e0cd3e5
-git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1 main    -> erwartet e0cd3e5
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1         -> erwartet 441c8e9
+git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" log --oneline -1 main    -> erwartet e0cd3e5, oder 441c8e9 falls Marco 1.6.7 inzwischen freigegeben hat (dann in return.md festhalten)
 git -C "C:\AI\_MBrain Data\Projects\Torjaeger-Liga" status --short           -> erwartet genau: ?? .handover/next.md
-grep APP_VERSION app/js/version.js -> erwartet 1.5.5
-Wenn .handover\progress.md existiert: Es ist eine Fortsetzung. Dann gelten die Anker aus progress.md, nicht die obigen.
-Erster Commit: next.md nach current.md verschieben (überschreiben), progress.md anlegen, committen.
+grep APP_VERSION app/js/version.js -> erwartet 1.6.7
+Erster Commit: next.md nach current.md verschieben (überschreiben), progress.md für diesen Auftrag neu beginnen (alte Tabelle als Abschnitt "Vorheriger Auftrag" behalten), committen.
 Bei Abweichung: nicht anfangen, Marco fragen.
 
-LIES ZUERST (knapp):
-1. C:\AI\_MBrain Data\Projects\Torjaeger-Liga\CLAUDE.md (Pflichtregel Rückübergabe)
-2. SPEC.md (Datenmodell schemaVersion 6, Abgleich, Kontroll-Pfiff, Päckchen sichern), Kopf von CHANGELOG.md
-3. Den Code nur paketweise, wenn er gebraucht wird.
+LIES ZUERST (knapp): CLAUDE.md, SPEC.md (Datenmodell, Trainingslager camps, Sondertraining, Themen-Zustände, Mini-Spiele), Kopf von CHANGELOG.md und return.md. Code nur paketweise.
 
-LEITBILD (Marco, 01.10.2026)
-Freude am Lernen und Wiederholen vor Perfektion. Lehrplannah, aber kein didaktischer Umbau. Spielfluss bleibt.
+LEITBILD: Freude am Lernen und Wiederholen vor Perfektion, lehrplannah, kein didaktischer Umbau. Grundregeln: Updates setzen nie einen Stand zurück (Schemaversion plus Migration plus Fixture-Test, Mindeststruktur mitziehen, Unbekanntes erhalten), Fragen eindeutig, Texte ohne Gedankenstriche, Version an allen vier Stellen, neue Dateien in FILES von sw.js. Name "Trainingslager" für Lager, nie "Trainingscamp" (das ist die Liga für Klasse 2).
 
-GRUNDREGELN
-Updates setzen nie einen Stand zurück (jede Datenänderung: nächste schemaVersion mit Migration ohne Verlust und Fixture-Test, Mindeststruktur checkProfileState mitziehen, Unbekanntes erhalten). Fragen müssen eindeutig sein. Texte ohne Gedankenstriche. Version an allen vier Stellen (app/js/version.js, VERSION in app/sw.js, SERVER_VERSION, package.json), neue Dateien in FILES von sw.js. Jede auslieferbare Version bekommt eine neue Nummer (Service-Worker-Cache).
+PAKET C0 (Version 1.7.0): Info-Grafik hinter einem Fragezeichen (war im letzten Auftrag Paket A1 und wurde übersprungen).
+- Quelle: C:\Users\marco.haufe\Downloads\TorjägerLiga.jpg (16:9, 2,2 MB). Original nach assets-src\, für die App verkleinert (Breite etwa 1600 px, unter 400 KB), in FILES.
+- Startseite "Wer spielt?": runde Taste "?" oben rechts (mindestens 44 px). Öffnet die Grafik bildschirmfüllend, zoombar, Schließen-Taste, Alternativtext "Überblick: Was die Torjäger-Liga ist und wie sie aufgebaut ist". Keine PIN. Test: Datei in FILES, Taste, Öffnen und Schließen.
 
-=====================================================================
-TEIL A: ERLEDIGT, nur Rückübergabe nachtragen
-=====================================================================
-1.5.4 (Trainingslager Teilen mit Rest, Elfmeterschießen, Schema 7) ist fertig (bd83083 bis 7574e94). Danach kamen ohne Rückübergabe: 750e247 "1.5.5: Fächer je Konto ganz ausschalten" und e0cd3e5 "Hinweis Jetzt laden auch in Wer spielt und im Eltern-Bereich".
-PAKET A0: return.md um 1.5.5 und e0cd3e5 ergänzen (was, warum, Tests, Stand main/preview/origin, NAS-Stand laut Marco), progress.md anlegen, committen. Keine Codeänderung.
+PAKET C1 (Version 1.7.1): Einmaleins-Grenze je Konto (Entscheidung Marco: je Konto, ein Lager kann weiter einengen, nie erweitern).
+- Eltern-Bereich je Konto: "Einmaleins" mit Reihen-Auswahl 1 bis 10 (Standard alle), Schalter "auch mal 0" (Standard an), Ergebnis höchstens 100 (fest), Faktor höchstens 10.
+- ALLE Aufgaben mit Mal und Geteilt halten sich daran: Einmaleins, Teilen mit Rest (Teiler aus den gewählten Reihen, Ergebnis höchstens 10, Rest kleiner als Teiler), Sachaufgaben mit Mal/Geteilt, Kontroll-Pfiff, Trainingslager, Sondertraining, Mini-Spiele, Mix. Plus/Minus (Rechnen bis 1000) bleibt unberührt.
+- Datenmodell: nächste Konto-Schemaversion mit Migration (Standard: alle Reihen, 0 an). Tests: über viele Zufallsläufe je Generator keine Aufgabe außerhalb der Grenze, auch mit nur einer gewählten Reihe (z. B. nur 9).
 
-PAKET A1 (klein, Version 1.5.6): Info-Grafik hinter einem Fragezeichen.
-- Quelle: C:\Users\marco.haufe\Downloads\TorjägerLiga.jpg (Erklär-Grafik 16:9, 2,2 MB, von Marco erstellt). Original nach assets-src\ kopieren, für die App verkleinert ablegen (z. B. app\img\info.webp oder .jpg, Breite etwa 1600 px, Ziel unter 400 KB), in FILES von sw.js, damit sie offline da ist.
-- Auf der Startseite "Wer spielt?" eine kleine runde Taste "?" (mindestens 44 px, oben rechts, unauffällig). Antippen öffnet die Grafik bildschirmfüllend mit Schließen-Taste, auf dem iPad zoombar (Pinch), Querformat passend. Alternativtext: "Überblick: Was die Torjäger-Liga ist und wie sie aufgebaut ist".
-- Keine PIN nötig (reine Info). Test: Datei in FILES, Taste vorhanden, Öffnen und Schließen.
-- Committen, progress.md und return.md aktualisieren.
+PAKET C2 (Version 1.7.2): Neue Aufgabenarten nach Emils Hausaufgabe "Die 9er Reihe" (Arbeitsblatt), für JEDE Reihe nutzbar, Fußball-Optik.
+Vorbild auf dem Blatt: (1) Bilder mit 1 bis 10 Säcken zu je 9 Orangen, Kind schreibt die Malaufgabe (1 · 9 = 9). (2) Zahlen der 9er Reihe in eine Kette von Kreisen schreiben, ein Wert (18) ist vorgegeben. (3) Rechenkreise: Mitte "· 9", innerer Ring Zahlen 0 bis 10, äußerer Ring leer zum Ausrechnen; zwei Kreise umgekehrt: äußerer Ring zeigt Ergebnisse (27, 90, 0, 18, 81, 45, 63, 72), innen fehlt der Faktor. (4) 16 gemischte Aufgaben mit Tauschaufgaben, 0 und 10 (1 · 9, 9 · 2, 0 · 9, 9 · 0, 10 · 9, 9 · 10 ...).
+Umsetzen als:
+- a) "Ballsäcke": Bild mit n Ballsäcken (bzw. Netzen) zu je k Bällen, die Zahl k steht gut sichtbar auf dem Sack; Kind baut die Malaufgabe n · k und das Ergebnis (zwei Eingaben). Säcke klar zählbar.
+- b) "Passkette": Kette von 10 Kreisen (Spieler, die sich den Ball zupassen) mit der Reihe k bis 10 · k, ein oder zwei Werte vorgegeben, Lücken ausfüllen. Variante mit 0 am Anfang.
+- c) "Rechenkreis vorwärts": Kreis mit "· k" in der Mitte, 8 Zahlen innen, Ergebnisse außen eintragen. d) "Rechenkreis rückwärts": Ergebnisse außen gegeben, Faktor innen finden (Vorstufe zum Teilen). Als Zielscheibe oder Torwand-Rund gestalten, auf dem iPad gut tippbar.
+- e) "Päckchen Reihe": 12 bis 16 gemischte Aufgaben der Reihe inklusive Tauschaufgabe, mal 0, mal 1, mal 10, als Päckchen mit Kontroll-Pfiff-Option.
+- Neues Mathe-Thema "Einmaleins-Reihen" (Kreisliga) bzw. Erweiterung von m3_1x1, je nach Code-Lage; die Reihen kommen aus der Einmaleins-Grenze (C1). Alle Arten auch im Baukasten (C3) wählbar. Tests: Eindeutigkeit, Grenzen, jede Art für jede Reihe 1 bis 10 lösbar.
 
-=====================================================================
-TEIL B: VERSION 1.6.x (Plan Abschnitt K), nur wenn Budget übrig ist
-=====================================================================
-Jedes Paket ist eine eigene auslieferbare Version (1.6.0, 1.6.1, ...), mit Tag. Aufbauen auf camps aus Schema 7 (camp.js, campviews.js) und dem wiederverwendbaren startPenalty. Datenänderungen jeweils mit eigener Schemaversion und Migration.
+PAKET C3 (Version 1.7.3): Baukasten "Eigenes Trainingslager" im Eltern-Bereich (Entscheidung Marco: mittlere Flexibilität).
+- Eltern stellen ein Lager zusammen: Name (z. B. "9er Reihe"), Themen und Aufgabenarten (aus allen Fächern, inklusive der neuen aus C2), Reihen bzw. Zahlenraum (engt die Konto-Grenze nur ein), Anzahl Einheiten 1 bis 5, Aufgaben je Halbzeit 5, 10 oder 15, Nachspielzeit-Mini-Spiel (Elfmeterschießen, Torwand, Memory, Dribbel-Parcours, Überraschung, keins).
+- Speichern als Vorlage, kopieren, umbenennen, löschen (mit Rückfrage), je Konto einschalten und ausschalten. Mehrere Lager je Konto möglich, jedes aktive Lager bekommt eine eigene Kachel. Neustart eines Lagers wie bisher.
+- Vorlagen gelten für alle Konten (global, abgeglichen), Fortschritt je Konto. Das bestehende Lager "Teilen mit Rest" wird zur mitgelieferten Vorlage (Fortschritt bleibt erhalten, Migration).
+- Ablauf je Einheit wie das bisherige Trainingslager (2 Halbzeiten, Pause, Abpfiff, Sichern und Fortsetzen, Abzeichen am Ende des Lagers). Einheiten mischen die gewählten Arten; bei mehreren Einheiten steigt die Schwierigkeit leicht oder die Arten wechseln, das darf Code entscheiden.
+- Datenmodell: globale und Konto-Schemaversion hoch, Migration, Merge-Regeln wie bei camps, Tests (Migration, Abgleich zweier Geräte, Vorlage ändern während ein Kind mitten im Lager ist: laufendes Lager bleibt unverändert bis Neustart).
 
-PAKET B1: Sondertraining verallgemeinern. Eltern markieren ein oder mehrere Themen als Schwerpunkt; das Trainingslager funktioniert für jedes Mathe- und Deutsch-Thema (Einheiten aus dem jeweiligen Generator, 2 Halbzeiten). Im Mix kommen Schwerpunkt-Aufgaben etwa jede dritte Aufgabe. Teilen mit Rest behält seine 5 besonderen Einheiten.
-PAKET B2: Themen-Zustände je Konto: Schwerpunkt, aktuell, wiederholen, zurückgestellt bis Datum (Datum optional, wird am Datum automatisch aktuell), aus. Neue Themen starten als "zurückgestellt" (Entscheidung Marco). Zurückgestellte und ausgeschaltete Themen blockieren den Aufstieg nicht. Bestehende Zustände aus 1.4.0 verlustfrei übernehmen.
-PAKET B3: Frust-Bremse (Entscheidung Marco): drei Fehler in Folge im selben Thema, dann kommt es für die Runde seltener, der Trainer bietet einen Tipp an, im Eltern-Bereich wird das Thema markiert ("Ist das schon im Unterricht dran?").
-PAKET B4: Mini-Spiel Torwand: Antworten auf den Löchern, Schuss aufs richtige Loch.
-PAKET B5: Mini-Spiel Memory: Aufgabe und Ergebnis als Kartenpaare.
-PAKET B6: Mini-Spiel Dribbel-Parcours: jede richtige Antwort bringt den Spieler an einem Hütchen oder Gegner vorbei, bei Fehler Ball verloren, neuer Versuch.
-PAKET B7: "Überraschungsspiel" lost ein Mini-Spiel aus, oder Emil wählt selbst (Auswahl in der Kabine).
-PAKET B8: Liga-Freigaben serverseitig schützen (aus der Bewertung 01.10.2026): Freischaltung einer Liga nur über einen Weg mit Eltern-PIN, nicht über den normalen Konto-Abgleich; der Server behält eine gesetzte Freigabe.
+PAKET C4 (Version 1.7.4): Mitgelieferte Vorlage "9er Reihe" (ausgeschaltet), 5 Einheiten: 1 Ballsäcke, 2 Passkette, 3 Rechenkreis vorwärts, 4 Rechenkreis rückwärts, 5 Päckchen Reihe mit Kontroll-Pfiff; Nachspielzeit Elfmeterschießen. Dieselbe Vorlage mit einem Klick "für andere Reihe kopieren" (Reihe wählen, Name passt sich an).
 
 NICHT-ZIELE
-- Keine Änderungen an Avatar-Vorlagen, Englisch- und Sachkunde-Inhalten, Ligen-Aufbau.
-- Kein Merge nach main, kein Live-Deploy, außer Marco weist es in der Sitzung ausdrücklich an (dann festhalten). Kein Push ohne Marcos Wort.
-- Nichts im Vault schreiben.
+- Keine Änderungen an Deutsch-, Englisch-, Sachkunde-Inhalten, Avatar, Ligen-Aufbau.
+- Kein Merge nach main, kein Push, kein Deploy ohne Marcos ausdrückliches Wort (dann festhalten). Nichts im Vault schreiben.
 
-ENTSCHIEDEN, nicht mehr zur Debatte
-- So viel von 1.6 wie das Budget hergibt, Pakete in der Reihenfolge B1 bis B8 (Marco, 02.10.2026).
-- Längere Runden im Trainingslager: 2 Halbzeiten zu je 10 Aufgaben mit Halbzeitpause (Marco, 02.10.2026).
-- Name "Sondertraining" (nicht "Trainingscamp", das ist die Liga für Klasse 2). Für Teilen mit Rest heißt die Kachel "Trainingslager".
-- Neue Themen starten als zurückgestellt. Frust-Bremse wie beschrieben. Alle vier Mini-Spiele gewollt.
+ENTSCHIEDEN
+- Einmaleins-Grenze je Konto plus je Lager (nur einengen), Ergebnis höchstens 100 (Marco, 05.10.2026).
+- Baukasten mittlere Flexibilität wie beschrieben (Marco, 05.10.2026).
+- Hausaufgabe "Die 9er Reihe" als Spiel umsetzen (Marco, 05.10.2026).
 
-OFFEN, darf die annehmende Seite entscheiden
-- Texte, Abzeichen-Namen, Gestaltung von Pause und Mini-Spielen, Zahlenbereiche innerhalb der Vorgaben.
-- Ob das Elfmeterschießen auch nach einzelnen Halbzeiten kommt.
+OFFEN, darf Code entscheiden
+- Gestaltung der neuen Aufgabenarten, Bildmotive (Säcke, Netze), Steigerung über Einheiten, Texte, Abzeichen-Namen.
 
 ABNAHME (je Paket)
-- node --test grün, neue Tests zum Paket, Fixture-Migration bei Datenänderung.
-- progress.md und return.md aktuell, Arbeitsbaum sauber nach jedem Commit.
-- Bei jeder fertigen Version: CHANGELOG, SPEC, ggf. README, Tag, Prüfliste für Marco in return.md.
-
-RESTPOSTEN, kategorisiert
-- Echter Blocker: keiner bekannt.
-- Bewusst offen: Prüfung docs/Inhalte-Englisch-Sachkunde.md durch Marco, Testrunden in Emils Konto, Hyper Backup.
+- node --test grün, neue Tests zum Paket, Fixture-Migration bei Datenänderung, progress.md und return.md aktuell, Tag gesetzt, Arbeitsbaum sauber.
+- Am Ende (oder beim Abbruch) Prüfliste für Marco in return.md, mit den Befehlen für Push, Vorschau und Live (Live nur auf seinen Wunsch).
 
 DOKU-ZUSTÄNDIGKEIT
-Repo trägt die Wahrheit über den Code. Vault pflegt Cowork. Rückweg: vollständige Rückübergabe in .handover\return.md (laufend gepflegt) und als Block laut CLAUDE.md, mit allem, was Marco in der Sitzung selbst ausgeführt oder angewiesen hat, dem Stand von main/preview/origin, den gesetzten Tags sowie Vorschau und Live auf der NAS. Bei Abbruch durch das Budget genügen progress.md und return.md als Rückübergabe.
+Repo trägt die Wahrheit über den Code. Vault pflegt Cowork. Rückübergabe laufend in .handover\return.md und als Block laut CLAUDE.md, mit allem, was Marco selbst ausgeführt oder angewiesen hat, Stand main/preview/origin, Tags, Vorschau und Live auf der NAS.
 
 ERSTER SCHRITT
-Anker prüfen, nicht arbeiten. Danach ohne weitere Rückfrage mit Paket A0, dann A1, dann B1 beginnen, sobald Marco "los" sagt.
+Anker prüfen, nicht arbeiten. Danach ohne weitere Rückfrage mit C0 beginnen, sobald Marco "los" sagt.
