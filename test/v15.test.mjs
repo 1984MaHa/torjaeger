@@ -30,11 +30,11 @@ const noInput=s=>s.replace(/<input[^>]*>/g,"");
 const clean=(s,w)=>{assert.ok(wellFormed(s),w+": nicht wohlgeformt");assert.ok(!/undefined|NaN|\bnull\b|\[object/.test(s.replace(/data-[a-z]+="[^"]*"/g,"")),w+": kaputter Wert");assert.ok(!/<script|<img|javascript:|\son[a-z]+\s*=/i.test(s),w+": unsicher");};
 
 // ---------- Datenmodell ----------
-test("Schema ist 8 (Konto) und 4 (global), Version 1.6.7 an allen vier Stellen",()=>{
+test("Schema ist 8 (Konto) und 4 (global), Version 1.7.0 an allen vier Stellen",()=>{
   assert.equal(SCHEMA_VERSION,8);assert.equal(GLOBAL_SCHEMA_VERSION,4);
-  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.6.7"/);assert.match(sw,/VERSION = "1.6.7"/);
-  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.6.7"/);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.6.7");
+  assert.match(fs.readFileSync(path.join(ROOT,"app/js/version.js"),"utf8"),/"1.7.0"/);assert.match(sw,/VERSION = "1.7.0"/);
+  assert.match(fs.readFileSync(path.join(ROOT,"server/server.js"),"utf8"),/SERVER_VERSION = "1.7.0"/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(ROOT,"package.json"),"utf8")).version,"1.7.0");
 });
 
 test("Migration 5 nach 6: Stand im Format 1.4.1 bleibt vollständig, Farben, Nummer, Name und Mannschaft wandern in die neue Vorlage",()=>{
@@ -116,7 +116,7 @@ test("Aussehen prüfen: Vorgaben, Farben, Vorschläge und Text",()=>{
 
 // ---------- Bilder ----------
 test("Figuren-Bilder: Dateien, Maße, Liste des Service Workers, kein Markenlogo, freigestellt, Größe im Blick",()=>{
-  const dir=path.join(ROOT,"app/img"),files=fs.readdirSync(dir).sort();
+  const dir=path.join(ROOT,"app/img"),files=fs.readdirSync(dir).filter(f=>f!=="ueberblick.jpg").sort();
   assert.deepEqual(files,["fig-emil-back-layer.png","fig-emil-back.png","fig-emil-front-layer.png","fig-emil-front.png","fig-trainer-back-layer.png","fig-trainer-back.png","fig-trainer-front-layer.png","fig-trainer-front.png","fig-trainerin-back-layer.png","fig-trainerin-back.png","fig-trainerin-front-layer.png","fig-trainerin-front.png"]);
   for(const f of files){assert.ok(sw.includes(`"img/${f}"`),"nicht im Service Worker: "+f);assert.ok(!/adidas|nike|puma|logo/i.test(f),f);}
   const bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);

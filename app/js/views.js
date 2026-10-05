@@ -134,6 +134,13 @@ export function homeHTML(s,UI,env){
   </details></section>`;
 }
 
+// Überblicks-Grafik hinter dem Fragezeichen (ab 1.7.0): bildschirmfüllend, mit Vergrößern und Schließen, keine PIN
+export const INFO_IMG="img/ueberblick.jpg",INFO_ALT="Überblick: Was die Torjäger-Liga ist und wie sie aufgebaut ist",INFO_ZOOM_MAX=3;
+export function infoHTML(UI){
+  if(!UI.info)return "";
+  const z=Math.min(INFO_ZOOM_MAX,Math.max(1,UI.infoZoom||1));
+  return `<div class="infoovl" role="dialog" aria-modal="true" aria-label="Überblick"><div class="infobar"><button class="btn ghost sm" id="infoMinus" aria-label="Verkleinern"${z<=1?" disabled":""}>−</button><button class="btn ghost sm" id="infoPlus" aria-label="Vergrößern"${z>=INFO_ZOOM_MAX?" disabled":""}>+</button><button class="btn sm" id="infoClose">Schließen</button></div><div class="infoscroll"><img src="${INFO_IMG}" alt="${INFO_ALT}" style="width:${z*100}%"></div></div>`;
+}
 export function accountsHTML(accounts,UI,env){
   const list=accounts.map(a=>{const look=lookOf({name:a.name,avatar:a.avatar});
     return `<button class="mode acct" data-acct="${esc(a.id)}"${a.locked?` aria-label="${esc(a.name)}, mit PIN"`:""}><span class="av">${avatarSVG(look,{crop:"bust",px:72,label:"Spieler "+(a.name||"")})}</span><span><b>${esc(a.name)}${a.locked?" (PIN)":""}</b><span class="team">${esc(look.team)}</span></span></button>`;}).join("");
@@ -144,7 +151,7 @@ export function accountsHTML(accounts,UI,env){
     <div class="pin"><input id="acctPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="${env.hasPin?"Eltern-PIN":"Neue Eltern-PIN"}" placeholder="PIN"><button class="btn sm" id="acctCreate">Konto anlegen</button><button class="btn ghost sm" id="acctCancel">Abbrechen</button></div>
     ${UI.acctMsg?`<p class="note">${UI.acctMsg}</p>`:""}</section>`
     :`<div class="row"><button class="btn" id="acctNew">Neues Konto</button>${env.hasPin?`<button class="btn ghost" id="adminOpen">Eltern</button>`:""}</div>${UI.adminAsk?adminAskHTML(UI.adminMsg):""}`;
-  return `<div><h1 class="title">Torjäger-Liga</h1><p class="lead">${accounts.length?"Wer spielt?":"Willkommen! Legt das erste Konto an."}</p></div>
+  return `<div class="whohead"><h1 class="title">Torjäger-Liga</h1><p class="lead">${accounts.length?"Wer spielt?":"Willkommen! Legt das erste Konto an."}</p><button class="infobtn" id="infoOpen" aria-label="Überblick: Was ist die Torjäger-Liga?">?</button></div>${infoHTML(UI)}
   ${accounts.length?`<div class="modes">${list}</div>`:""}${ask}${!UI.newAcct&&UI.acctMsg?`<p class="lead">${UI.acctMsg}</p>`:""}${form}
   ${env.persistent?"":`<p class="lead small">Achtung: Dieser Browser kann nichts dauerhaft speichern.</p>`}`;
 }

@@ -768,6 +768,10 @@ function bind(){
     if($("kidPin").value.trim()===code){const keep=$("kidPinKeep")&&$("kidPinKeep").checked,id=UI.pinAsk.id;
       (keep?store.put("pinok:"+id,{day:todayKey(),code}):store.del?store.del("pinok:"+id):Promise.resolve()).then(()=>useAccount(id,true));}else{UI.pinAsk.msg="Die PIN stimmt nicht.";render();const i=$("kidPin");if(i)i.focus();}};
   if($("kidPinCancel"))$("kidPinCancel").onclick=()=>{UI.pinAsk=null;render();};
+  if($("infoOpen"))$("infoOpen").onclick=()=>{UI.info=true;UI.infoZoom=1;render();};
+  if($("infoClose"))$("infoClose").onclick=()=>{UI.info=false;render();};
+  if($("infoPlus"))$("infoPlus").onclick=()=>{UI.infoZoom=Math.min(3,(UI.infoZoom||1)+1);render();};
+  if($("infoMinus"))$("infoMinus").onclick=()=>{UI.infoZoom=Math.max(1,(UI.infoZoom||1)-1);render();};
   if($("acctNew"))$("acctNew").onclick=()=>{UI.newAcct=true;UI.acctMsg="";UI.acctName="";render();};
   if($("acctCancel"))$("acctCancel").onclick=()=>{UI.newAcct=false;UI.acctMsg="";UI.acctName="";render();};
   if($("acctCreate"))$("acctCreate").onclick=createAccount;

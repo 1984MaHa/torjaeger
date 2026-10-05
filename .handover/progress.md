@@ -4,13 +4,14 @@ Anker: Branch preview, Version 1.6.7, Schema 8, 295 Tests, HEAD 441c8e9. main/or
 
 | Paket | Stand | Tests |
 |---|---|---|
-| C0 Info-Grafik (1.7.0) | offen | |
+| C0 Info-Grafik (1.7.0) | fertig, Tag v1.7.0 | 299 |
 | C1 Einmaleins-Grenze (1.7.1) | offen | |
 | C2 Neue Aufgabenarten (1.7.2) | offen | |
 | C3 Baukasten (1.7.3) | offen | |
 | C4 Vorlage 9er Reihe (1.7.4) | offen | |
 
 Entscheidungen:
+- C0: Zoom über Tasten + und − (3 Stufen, Bild in einem scrollbaren Rahmen), weil Seitenzoom im Vollbild-Overlay auf dem iPad unzuverlässig ist. Quelle war 1672 px breit, verkleinert auf 1600 px (Qualität 80, 364 KB). Alte Versionstests auf 1.7.0 gezogen, Bildlisten-Tests kennen die JPG.
 
 ## Vorheriger Auftrag
 

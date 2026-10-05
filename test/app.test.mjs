@@ -18,7 +18,7 @@ const walk=(d,base=d)=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDir
 const sw=fs.readFileSync(path.join(APP,"sw.js"),"utf8");
 
 test("Service Worker cached jede App-Datei (offline nichts vergessen)",()=>{
-  const listed=[...sw.matchAll(/"([\w./-]+\.(?:html|js|css|png|woff2|webmanifest))"/g)].map(m=>m[1]);
+  const listed=[...sw.matchAll(/"([\w./-]+\.(?:html|js|css|png|jpg|woff2|webmanifest))"/g)].map(m=>m[1]);
   const actual=walk(APP).filter(f=>f!=="sw.js"&&f!=="js/package.json"&&f!=="fonts/OFL.txt");
   assert.deepEqual([...new Set(listed)].sort(),actual.sort());
 });

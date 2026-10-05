@@ -1,5 +1,9 @@
 # Änderungen
 
+## 1.7.0 (Überblick hinter dem Fragezeichen)
+- **Info-Grafik:** Auf „Wer spielt?“ gibt es oben rechts eine runde Taste „?“ (48 px). Sie öffnet die Überblicks-Grafik „Was die Torjäger-Liga ist und wie sie aufgebaut ist“ bildschirmfüllend, mit Tasten zum Vergrößern und Verkleinern (bis dreifach, verschieben durch Wischen) und „Schließen“. Keine PIN. Die Grafik ist ein Bild (`app/img/ueberblick.jpg`, 1600 px, unter 400 KB, in `FILES` von `sw.js`, also offline da), das Original liegt in `assets-src/TorjaegerLiga-Ueberblick.jpg`.
+- Kein Schemawechsel (bleibt 8). Version 1.7.0 an allen vier Stellen. Tests: `test/v170.test.mjs`.
+
 ## 1.6.7 (Liga-Freigaben gehören dem Server)
 - **Freigeben und Sperren nur mit Eltern-PIN, über den Server:** Neuer Aufruf `POST /api/admin/profiles/<id>/league` (`{pin, li, open}`). Die Trainerbank in der Kabine und der Eltern-Bereich („Ganz freigeben“, „Wieder sperren“) rufen ihn auf; erst wenn der Server ja sagt, gilt die Änderung auch auf dem Gerät. Ohne Verbindung zum Server gibt es eine freundliche Meldung („geht nur mit Verbindung“).
 - **Der normale Abgleich ändert keine Freigabe mehr:** Beim Speichern eines Kontos (`PUT .../state`) behält der Server den gespeicherten Wert von `progress.lg.<Liga>.open` (`guardLeagues` in `rules.js`). Ein älterer oder veränderter Stand kann also weder eine Liga freigeben noch eine Freigabe aufheben. Die Antwort nennt, was der Server festgehalten hat (`lg`), und die App gleicht sich an. Wird ein Konto neu angelegt (noch kein Stand auf dem Server), gilt der erste Stand, damit alte lokale Konten ihre Freigaben mitbringen.
