@@ -7,7 +7,7 @@ import {ICONS} from "./icons.js";
 import {speakBtn} from "./speech.js";
 import {stickerHTML} from "./stickers.js";
 import {probeHTML,givenText,packLen} from "./check.js";
-import {avatarSVG,sceneSVG,SHOT_TEXT} from "./avatardraw.js";
+import {avatarSVG,sceneSVG,SHOT_TEXT,goalText,isCorner} from "./avatardraw.js";
 import {lookOf,defaultTrainer,defaultTrainer2} from "./avatar.js";
 // Name der Mannschaft (Vereinsname) für Kabine und Anzeigetafel
 const teamOf=s=>lookOf(s.profile).team||s.profile.name;
@@ -206,7 +206,7 @@ export function playHTML(s,G,trainers=[defaultTrainer(),defaultTrainer2()]){
   if(G.done){
     const shot=G.shot||{kind:G.ok?"goal":"wide",side:1},look=lookOf(s.profile);
     if(G.ok&&G.why&&T.ex)overlay=`<div class="ovl why" role="status"><div class="ovlcard whycard"><div class="whyhead">Darum stimmt das</div><div class="whytxt">${T.ex}</div><button class="btn" id="ovlNext">${G.i+1>=G.len?lastLbl:"Weiter"}</button></div></div>`;
-    else if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":SHOT_TEXT.goal}</div>${sceneSVG(look,shot,{keeper:!!G.pen})}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div>${T.ex?`<button class="btn sm ovlwhy" id="why">Warum stimmt das?</button>`:""}</div></div>`;
+    else if(G.ok)overlay=`<div class="ovl" id="ovl" role="status"><div class="ovlcard"><div class="ovltxt${G.fixedNow||isCorner(shot)?" long":""}">${G.fixedNow?"Selbst gefunden, stark!":goalText(shot)}</div>${sceneSVG(look,shot,{keeper:!!G.pen})}<div class="ovlplus">+${G.gain}${G.gain>10&&!G.fixedNow?" Serie!":""}${G.fixedNow?` (mit ${BONUS_FIX} Bonus)`:""}</div>${T.ex?`<button class="btn sm ovlwhy" id="why">Warum stimmt das?</button>`:""}</div></div>`;
     else fb=`<div class="fb no">${sceneSVG(look,shot,{keeper:!!G.pen})}<div class="fbtxt"><span class="big">${SHOT_TEXT[shot.kind]}</span></div></div>`+coachHTML({T,G,trainers})+(G.note?`<div class="bubble" role="status"><span class="who">${esc(trainers[1].name)}</span><p>${esc(G.note)}</p></div>`:"")+`<button class="btn" id="next">${G.i+1>=G.len?lastLbl:"Weiter"}</button>`;
   }
   let coach=G.done||G.phase==="edit"?"":coachHTML({T,G,trainers});
@@ -235,6 +235,7 @@ export function resultHTML(s,G,UI){
   return boardHTML(s)+`<section class="card result"><h2>${head}</h2>
     <div class="final"><span class="team">${esc(teamOf(s))}<small>Heim</small></span><span>${c} : ${m}</span><span class="team">${G.rival}<small>Gast</small></span></div>
     <p class="q" style="font-size:1.4rem">+${G.pts} Punkte${G.bonus?` (davon ${G.bonus} Bonus)`:""}</p>
+    ${G.corners?`<p class="corners">${G.corners===1?"1 Ecktor":G.corners+" Ecktore"}!</p>`:""}
     ${G.camp?campResultHTML(s,G):""}
     ${pk?(G.checked?(pk.fixed?`<div class="celebrate">Kontroll-Pfiff: Du hast ${pk.fixed} Fehler selbst gefunden und verbessert. Stark! (+${pk.bonus} Bonus)</div>`:`<p>Kontroll-Pfiff gemacht. Gutes Kontrollieren!</p>`):`<p>Nächstes Mal kontrollierst du vor dem Abgeben. Dann gibt es Kontroll-Bonus.</p>`):""}
     ${UI.celebrate?`<div class="celebrate">${UI.celebrate}</div>`:""}${info}

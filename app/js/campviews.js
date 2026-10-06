@@ -74,6 +74,7 @@ export function penaltyResultHTML(s,G,teamName){
   return `<section class="card result"><h2>${head}</h2>
     <div class="final"><span class="team">${esc(teamName)}<small>Heim</small></span><span>${penaltyScore(c,n)}</span><span class="team">${esc(G.rival)}<small>Gast</small></span></div>
     <p class="q" style="font-size:1.4rem">Elfmeterschießen: ${penaltyScore(c,n)} · +${G.pts} Punkte</p>
+    ${G.corners?`<p class="corners">${G.corners===1?"1 Ecktor":G.corners+" Ecktore"}!</p>`:""}
     <p class="note">${esc(T.title)} · Einheit ${C.unit}</p>${campButtonsHTML(s,G)}</section>`;
 }
 

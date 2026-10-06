@@ -79,8 +79,8 @@ export function trainerFullSVG(look,{px=260,label,which=1,view="front",name=""}=
 // Der Spieler steht mit dem Rücken zur Kamera (Rückansicht der Vorlage, Name und Nummer im Rückenfeld) und macht beim Schuss einen kleinen Satz nach vorn.
 // Ausgang: goal (Tor), post (Pfosten), bar (Latte), wide (knapp vorbei).
 export const SHOT_KINDS=["goal","post","bar","wide"];
-export const SHOT_TEXT={goal:"Tor!",post:"Pfosten!",bar:"Latte!",wide:"Knapp vorbei",saved:"Gehalten!"};
-const SHOT_ARIA={saved:"Der Torwart hält den Ball.",goal:"Der Ball fliegt ins Tor.",post:"Der Ball trifft den Pfosten.",bar:"Der Ball trifft die Latte.",wide:"Der Ball fliegt knapp am Tor vorbei."};
+export const SHOT_TEXT={goal:"Tor!",post:"Pfosten!",bar:"Latte!",wide:"Knapp vorbei",saved:"Gehalten!",corner:"Tor! Genau ins Eck!"};
+const SHOT_ARIA={corner:"Der Ball schlägt genau im Torwinkel ein.",saved:"Der Torwart hält den Ball.",goal:"Der Ball fliegt ins Tor.",post:"Der Ball trifft den Pfosten.",bar:"Der Ball trifft die Latte.",wide:"Der Ball fliegt knapp am Tor vorbei."};
 const POP_TEXT={post:"PLING!",bar:"BONG!",wide:"Uups!",saved:"Gehalten!"};
 
 // Trefferpunkte im Tor (Bildpunkte der Szene, Tor innen 114 bis 226 mal 40 bis 88). side: -1 links, 1 rechts, 0 Mitte.
@@ -89,17 +89,25 @@ export const SPOTS={
   ul:{x:127,y:48,side:-1,curve:"effet"},ur:{x:213,y:48,side:1,curve:"effet"},
   ll:{x:127,y:80,side:-1,curve:"flat"},lr:{x:213,y:80,side:1,curve:"flat"},
   ml:{x:138,y:64,side:-1,curve:"arc"},mr:{x:202,y:64,side:1,curve:"arc"},
-  mf:{x:170,y:82,side:0,curve:"flat"},lat:{x:170,y:44,side:0,curve:"arc"}
+  mf:{x:170,y:82,side:0,curve:"flat"},lat:{x:170,y:44,side:0,curve:"arc"},
+  wl:{x:119,y:44,side:-1,curve:"effet",corner:true},wr:{x:221,y:44,side:1,curve:"effet",corner:true} // Torwinkel
 };
-export const SPOT_IDS=Object.keys(SPOTS);
-let lastSpot="";
+export const SPOT_IDS=Object.keys(SPOTS).filter(i=>!SPOTS[i].corner);
+export const CORNER_IDS=Object.keys(SPOTS).filter(i=>SPOTS[i].corner);
+export const isCorner=shot=>!!(shot&&shot.kind==="goal"&&SPOTS[shot.spot]&&SPOTS[shot.spot].corner);
+export const goalText=shot=>isCorner(shot)?SHOT_TEXT.corner:SHOT_TEXT.goal;
+// Eckentreffer-Regel: bei jeder 3. richtigen Antwort in Folge (opts.streak) sicher, sonst zufällig mit 1 zu 10 (zusammen mit der Lücke etwa jeder 6. Treffer), spätestens beim 6. Treffer nach dem letzten Eck.
+export const CORNER_CHANCE=.1,CORNER_MAX_GAP=5;
+let lastSpot="",sinceCorner=0;
 // Richtig: Tor mit gewürfeltem Trefferpunkt (nie zweimal derselbe hintereinander). Falsch: zufällig Pfosten, Latte oder knapp vorbei.
 // Seite zufällig (-1 links, 1 rechts). opts.prev: der vorige Punkt (sonst wird der zuletzt gewürfelte gemerkt), opts.pen: Elfmeterschießen (richtig = Tor, falsch = gehalten).
 export function pickShot(ok,rnd=Math.random,opts={}){
   if(opts.pen&&!ok)return{kind:"saved",side:rnd()<.5?-1:1};
   if(!ok)return{kind:["post","bar","wide"][Math.floor(rnd()*3)%3],side:rnd()<.5?-1:1};
-  const prev=opts.prev!==undefined?opts.prev:lastSpot,pool=SPOT_IDS.filter(i=>i!==prev),spot=pool[Math.floor(rnd()*pool.length)%pool.length];
-  if(opts.prev===undefined)lastSpot=spot;
+  const track=opts.prev===undefined,prev=track?lastSpot:opts.prev,since=track?sinceCorner:(opts.since||0);
+  const corner=(opts.streak>0&&opts.streak%3===0)||since>=CORNER_MAX_GAP||rnd()<CORNER_CHANCE;
+  const base=corner?CORNER_IDS:SPOT_IDS,pool=base.filter(i=>i!==prev),spot=pool[Math.floor(rnd()*pool.length)%pool.length];
+  if(track){lastSpot=spot;sinceCorner=corner?0:sinceCorner+1;}
   return{kind:"goal",spot,side:SPOTS[spot].side||(rnd()<.5?-1:1)};
 }
 // Zwischenpunkt der ersten Strecke: leicht gebogene Bahn
@@ -115,7 +123,9 @@ export function shotPath(kind,side,spot){
   if(kind==="saved"){const end={x:170+sd*34,y:68,s:.66};return{start:s,c:bend(s,end,"arc",sd),end};}
   if(kind==="goal"){
     const sp=SPOTS[spot]||SPOTS[sd>0?"ur":"ul"],end={x:sp.x,y:sp.y,s:.6};
-    return{start:s,c:bend(s,end,sp.curve,sp.side),end};
+    const out={start:s,c:bend(s,end,sp.curve,sp.side),end};
+    if(sp.corner)out.n={x:end.x+(s.x-end.x)*.1,y:end.y+(s.y-end.y)*.1,s:end.s+(s.s-end.s)*.1}; // kurz vor dem Einschlag: Zeitlupe
+    return out;
   }
   if(kind==="post"){const hit={x:sd>0?238:102,y:62,s:.66};return{start:s,c:bend(s,hit,"effet",sd),hit,end:{x:sd>0?276:64,y:132,s:.95}};}
   if(kind==="bar"){const hit={x:170+sd*34,y:32,s:.68};return{start:s,c:bend(s,hit,"arc",sd),hit,end:hit,out:{x:170+sd*62,y:-24,s:.5}};}
@@ -140,7 +150,7 @@ const CROWD=["#e5484d","#ffc83d","#f4f4f4","#2f6fde","#34a853","#ff8a00"];
 export function sceneSVG(look,shot,opts={}){
   const l=cleanLook(look),keeper=!!opts.keeper,k=SHOT_KINDS.includes(shot&&shot.kind)||(keeper&&shot&&shot.kind==="saved")?shot.kind:"goal",side=shot&&shot.side<0?-1:1,p=shotPath(k,side,shot&&shot.spot);
   const pt=(n,o)=>`--${n}x:${Math.round(o.x)}px;--${n}y:${Math.round(o.y)}px;--${n}s:${o.s}`;
-  const vars=[pt("s",p.start),pt("e",p.end),pt("c",p.c),p.hit?pt("h",p.hit):"",p.out?pt("o",p.out):""].filter(Boolean).join(";");
+  const vars=[pt("s",p.start),pt("e",p.end),pt("c",p.c),p.n?pt("n",p.n):"",p.hit?pt("h",p.hit):"",p.out?pt("o",p.out):""].filter(Boolean).join(";");
   let crowd="";
   for(let r=0;r<3;r++)for(let i=0;i<40;i++)crowd+=`<circle cx="${(4+r*4+i*8.6).toFixed(1)}" cy="${46+r*7}" r="3.1" fill="${CROWD[(i*5+r*3)%CROWD.length]}"/>`;
   let stripes="";
@@ -148,11 +158,13 @@ export function sceneSVG(look,shot,opts={}){
   let mesh="";
   for(let x=114;x<=226;x+=9.3)mesh+=`<line x1="${x.toFixed(1)}" y1="40" x2="${x.toFixed(1)}" y2="88"/>`;
   for(let y=40;y<=88;y+=8)mesh+=`<line x1="114" y1="${y}" x2="226" y2="${y}"/>`;
+  let sparks="";
+  if(p.n)for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r=24+(i%3)*8;sparks+=`<circle class="sp" cx="${p.end.x}" cy="${p.end.y}" r="${i%2?2.2:3}" fill="${["#ffc83d","#fff","#e5484d"][i%3]}" style="--dx:${Math.round(Math.cos(a)*r)}px;--dy:${Math.round(Math.sin(a)*r)}px"/>`;}
   const pop=POP_TEXT[k]?(()=>{
     const c=k==="saved"?{x:side>0?236:104,y:34}:k==="post"?{x:side>0?290:50,y:70}:k==="bar"?{x:side>0?92:248,y:20}:{x:side>0?250:90,y:108};
     return `<g class="pop"><ellipse cx="${c.x}" cy="${c.y}" rx="${POP_TEXT[k].length*5.4+12}" ry="15" fill="#fff" stroke="${INK}" stroke-width="2.4"/><text x="${c.x}" y="${c.y+5.5}" text-anchor="middle" font-family="${FONT}" font-size="17" fill="#e5484d">${POP_TEXT[k]}</text></g>`;
   })():"";
-  return `<svg class="scene sc-${k}" viewBox="0 0 340 230" role="img" aria-label="${esc(SHOT_ARIA[k])}">`
+  return `<svg class="scene sc-${k}${p.n?" sc-corner":""}" viewBox="0 0 340 230" role="img" aria-label="${esc(SHOT_ARIA[p.n?"corner":k])}">`
     +`<defs><linearGradient id="scSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eb6ff"/><stop offset="1" stop-color="#d8f0ff"/></linearGradient>`
     +`<linearGradient id="scGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f9a4f"/><stop offset="1" stop-color="#5cc06c"/></linearGradient>`
     +`<linearGradient id="scPost" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e3e8ec"/><stop offset="1" stop-color="#b9c2c9"/></linearGradient>`
@@ -167,5 +179,6 @@ export function sceneSVG(look,shot,opts={}){
     +`<g class="pl">${playerG(l)}</g>`
     +`<g class="ballpos" style="${vars}"><g class="ballspin"><circle r="9" fill="url(#scBall)"/><polygon points="0,-4.5 4.3,-1.4 2.7,3.6 -2.7,3.6 -4.3,-1.4" fill="${INK}"/><path d="M0 -4.5 V-9 M4.3 -1.4 L8.6 -2.8 M2.7 3.6 L5.3 7.3 M-2.7 3.6 L-5.3 7.3 M-4.3 -1.4 L-8.6 -2.8" stroke="${INK}" stroke-width="1.4" fill="none"/></g><ellipse cx="-3" cy="-4.4" rx="2.8" ry="1.7" fill="#fff" opacity=".75"/></g>`
     +pop
+    +(sparks?`<g class="sparks">${sparks}</g>`:"")
     +`</svg>`;
 }

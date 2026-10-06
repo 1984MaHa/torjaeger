@@ -1,5 +1,13 @@
 # Änderungen
 
+## 1.7.9 (Genau ins Eck)
+- **Torwinkel-Treffer:** Der Ball schlägt genau im oberen Eck ein (links oder rechts, `wl` und `wr` in `SPOTS`). Kurz vor dem Einschlag läuft der Ball in Zeitlupe, das Netz zappelt im Eck, Jubel-Funken fliegen. Das Overlay zeigt „Tor! Genau ins Eck!“, das Vorlesen der Szene nennt den Torwinkel.
+- **Regel (`pickShot`):** Bei jeder 3. richtigen Antwort in Folge sicher (Serie 3, 6, 9 ...), sonst zufällig mit 1 zu 10, spätestens beim 6. Treffer nach dem letzten Eck (zusammen etwa jeder 6. Treffer). Wer eine Runde mit 8 richtigen Antworten spielt, sieht mindestens zwei Ecktore. Nie zweimal derselbe Punkt hintereinander.
+- **Elfmeterschießen:** Der Torwart springt immer in die andere Seite, er kommt an den Eck-Treffer nicht heran.
+- **Ecktore zählen:** Am Ende der Runde (und im Elfmeter-Ergebnis) steht „2 Ecktore!“, wenn es welche gab (`G.corners`, nur im laufenden Spiel, nichts wird gespeichert).
+- Dauer: Ball 1 Sekunde ab 0,25, Netz und Funken bis etwa 1,8 Sekunden, nichts verlängert den Spielfluss. Mit `prefers-reduced-motion` liegt der Ball sofort im Eck, der Text nennt den Treffer.
+- Kein Schemawechsel, kein neuer Sticker. Version 1.7.9 an allen vier Stellen. Tests in `test/v178.test.mjs`.
+
 ## 1.7.8 (Tor-Animation: wechselnde Trefferpunkte, gebogene Flugbahn)
 - **Trefferpunkte im Tor:** Bei jedem Treffer wird ein Punkt gewürfelt (unten links, unten rechts, oben links, oben rechts, halbhoch links oder rechts, Mitte flach, unter die Latte). Nie zweimal derselbe hintereinander (`pickShot`, `SPOTS`).
 - **Flugbahn:** Der Ball fliegt eine leicht gebogene Bahn (Effet, hoher Bogen oder flach, je nach Punkt) und wird Richtung Tor kleiner. Das Netz beult an der Trefferstelle aus und federt zurück (`netfx`, Animation `bump`). Pfosten, Latte und knapp vorbei nutzen dieselbe Bogenbahn (Zwischenpunkt `c` in `shotPath`).

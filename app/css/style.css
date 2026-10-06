@@ -110,6 +110,11 @@ details summary::-webkit-details-marker{display:none}
 .scene .kp{animation:kdive .55s ease-out .35s both}
 @keyframes kdive{from{transform:translate(0,0) rotate(0)}}
 .scene .ballspin{animation:spin 1s linear .3s both}
+.sc-corner .ballpos{animation:k-corner 1s linear .25s both}
+.sc-corner .ballspin{animation:spin 1.6s linear .25s both}
+.sc-corner .netfx{animation:bumpc .6s ease-out 1.2s both}
+.scene .sparks .sp{opacity:0;transform-box:fill-box;transform-origin:50% 50%}
+.sc-corner .sparks .sp{animation:spark .55s ease-out 1.22s both}
 .scene .netfx{opacity:0;transform-box:fill-box;transform-origin:50% 50%}
 .sc-goal .netfx{animation:bump .62s ease-out 1.12s both}
 .scene .pop{opacity:0;animation:pop .4s ease-out 1s forwards}
@@ -122,11 +127,15 @@ details summary::-webkit-details-marker{display:none}
 @keyframes k-bar{0%{transform:translate(var(--sx),var(--sy)) scale(var(--ss))}22%{transform:translate(var(--cx),var(--cy)) scale(var(--cs))}45%{transform:translate(var(--hx),var(--hy)) scale(var(--hs))}100%{transform:translate(var(--ox),var(--oy)) scale(var(--os))}}
 @keyframes k-wide{0%{transform:translate(var(--sx),var(--sy)) scale(var(--ss))}28%{transform:translate(var(--cx),var(--cy)) scale(var(--cs))}55%{transform:translate(var(--hx),var(--hy)) scale(var(--hs))}100%{transform:translate(var(--ex),var(--ey)) scale(var(--es))}}
 @keyframes spin{to{transform:rotate(540deg)}}
+/* Eck-Treffer: schnell, dann Zeitlupe kurz vor dem Einschlag (Punkt n), das Netz zappelt im Eck */
+@keyframes k-corner{0%{transform:translate(var(--sx),var(--sy)) scale(var(--ss))}30%{transform:translate(var(--cx),var(--cy)) scale(var(--cs))}60%{transform:translate(var(--nx),var(--ny)) scale(var(--ns))}100%{transform:translate(var(--ex),var(--ey)) scale(var(--es))}}
+@keyframes bumpc{0%{opacity:0;transform:scale(.4) rotate(0)}15%{opacity:1;transform:scale(1.45) rotate(8deg)}32%{opacity:.85;transform:scale(.8) rotate(-8deg)}50%{opacity:.7;transform:scale(1.2) rotate(5deg)}70%{opacity:.5;transform:scale(.95) rotate(-3deg)}100%{opacity:0;transform:scale(1) rotate(0)}}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.2)}}
 @keyframes bump{0%{opacity:0;transform:scale(.4)}15%{opacity:.95;transform:scale(1.25)}38%{opacity:.7;transform:scale(.85)}62%{opacity:.5;transform:scale(1.08)}100%{opacity:0;transform:scale(1)}}
 @keyframes pop{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 @keyframes popin{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.scene .kp,.scene .pl,.scene .ballpos,.scene .ballspin,.scene .netfx,.ovl,.ovltxt{animation:none!important}.scene .pop{animation:none!important;opacity:1}.bar i{transition:none}}
+@media (prefers-reduced-motion:reduce){.scene .kp,.scene .pl,.scene .ballpos,.scene .ballspin,.scene .netfx,.scene .sparks .sp,.ovl,.ovltxt{animation:none!important}.scene .pop{animation:none!important;opacity:1}.bar i{transition:none}}
 .fb .fbtxt{display:flex;flex-direction:column;gap:4px;justify-content:center}
 
 /* Overlay nach einer richtigen Antwort: kurz sichtbar, dann geht es von allein weiter */
@@ -437,3 +446,4 @@ code{background:#e6ece7;padding:1px 6px;border-radius:6px}
 .tpleditor .segb{min-height:44px}
 .tplstep{font-family:var(--display);font-size:1.15rem;margin:16px 0 4px;color:var(--ink)}
 .tplfach{border-top:2px solid #e4ece6;padding-top:8px;margin-top:8px}
+.corners{font-family:var(--display);font-size:1.5rem;color:#c98a00;margin:4px 0}

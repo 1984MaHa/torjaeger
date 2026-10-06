@@ -15,7 +15,7 @@ import {createSync} from "./sync.js";
 import {createAdminApi,adminError} from "./adminapi.js";
 import {adminHTML} from "./admin.js";
 import {avatarBuilderHTML} from "./avatarui.js";
-import {pickShot} from "./avatardraw.js";
+import {pickShot,isCorner} from "./avatardraw.js";
 import {cleanLook,cleanTrainer,lookOf,withKit,withPreset,defaultTrainer,defaultTrainer2} from "./avatar.js";
 import {loadFigures} from "./figures.js";
 import {similarExample,exampleHTML} from "./coach.js";
@@ -394,7 +394,7 @@ function answer(val){
   if(G.pack){packAnswer(val);return;}
   const ok=isRight(T,val);
   clearTimeout(idleT);
-  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok,Math.random,{pen:!!G.pen});G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
+  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok,Math.random,{pen:!!G.pen,streak:ok?G.streak+1:0});if(ok&&isCorner(G.shot))G.corners=(G.corners||0)+1;G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
   if(!G.camp&&strikeStep(G.strikes||(G.strikes={}),T.topic,ok)){(G.cool||(G.cool={}))[T.topic]=true;G.offerNext=true;} // Frust-Bremse: Thema seltener, nächste Aufgabe mit Tipp-Angebot
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.
@@ -465,7 +465,7 @@ function finishCheck(checked){
 function evalShow(i){
   const T=G.tasks[i],it=G.grade.items[i];
   G.task=T;G.done=true;G.why=false;G.given=G.finals[i];G.ok=it.ok;G.fixedNow=it.fixed;G.gain=G.gains[i]+(it.fixed?BONUS_FIX:0);G.offer=false;
-  G.shot=pickShot(it.ok);G.note=G.camp&&!it.ok?wrongNote(T,G.finals[i]):"";G.res.push(it.ok);
+  let st=it.ok?1:0;for(let j=G.res.length-1;it.ok&&j>=0&&G.res[j];j--)st++;G.shot=pickShot(it.ok,Math.random,{streak:st});if(it.ok&&isCorner(G.shot))G.corners=(G.corners||0)+1;G.note=G.camp&&!it.ok?wrongNote(T,G.finals[i]):"";G.res.push(it.ok);
   G.hist.push({topic:T.topic,ok:it.ok,q:T.q.replace(/<[^>]+>/g,""),given:String(G.given),right:rightText(T)});
   tone(it.ok?[523,659,784]:[220,180],it.ok?.12:.18,S().settings.sound);
   render();window.scrollTo(0,0);
