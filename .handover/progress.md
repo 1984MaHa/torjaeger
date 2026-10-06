@@ -1,4 +1,13 @@
-# Fortschritt (Auftrag current.md vom 05.10.2026, Pakete C0 bis C4)
+# Fortschritt (Auftrag current.md vom 06.10.2026, Pakete D1 und D2: Tor-Animation)
+
+Anker: Branch preview, Version 1.7.7, HEAD ebd0a0e. main und origin bei ebd0a0e.
+
+| Paket | Stand | Tests |
+|---|---|---|
+| D1 Trefferpunkte und Flugbahn (1.7.8) | offen | |
+| D2 Genau ins Eck (1.7.9) | offen | |
+
+## Vorheriger Auftrag (C0 bis C4, 1.7.0 bis 1.7.7)
 
 Anker: Branch preview, Version 1.6.7, Schema 8, 295 Tests, HEAD 441c8e9. main/origin bei e0cd3e5.
 
