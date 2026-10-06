@@ -83,19 +83,44 @@ export const SHOT_TEXT={goal:"Tor!",post:"Pfosten!",bar:"Latte!",wide:"Knapp vor
 const SHOT_ARIA={saved:"Der Torwart hält den Ball.",goal:"Der Ball fliegt ins Tor.",post:"Der Ball trifft den Pfosten.",bar:"Der Ball trifft die Latte.",wide:"Der Ball fliegt knapp am Tor vorbei."};
 const POP_TEXT={post:"PLING!",bar:"BONG!",wide:"Uups!",saved:"Gehalten!"};
 
-// Richtig: Tor. Falsch: zufällig Pfosten, Latte oder knapp vorbei. Seite zufällig (-1 links, 1 rechts).
-export function pickShot(ok,rnd=Math.random){
-  return{kind:ok?"goal":["post","bar","wide"][Math.floor(rnd()*3)%3],side:rnd()<.5?-1:1};
+// Trefferpunkte im Tor (Bildpunkte der Szene, Tor innen 114 bis 226 mal 40 bis 88). side: -1 links, 1 rechts, 0 Mitte.
+// curve: Bahnform (effet = Bogen von außen herein, arc = hoher Bogen, flat = flach).
+export const SPOTS={
+  ul:{x:127,y:48,side:-1,curve:"effet"},ur:{x:213,y:48,side:1,curve:"effet"},
+  ll:{x:127,y:80,side:-1,curve:"flat"},lr:{x:213,y:80,side:1,curve:"flat"},
+  ml:{x:138,y:64,side:-1,curve:"arc"},mr:{x:202,y:64,side:1,curve:"arc"},
+  mf:{x:170,y:82,side:0,curve:"flat"},lat:{x:170,y:44,side:0,curve:"arc"}
+};
+export const SPOT_IDS=Object.keys(SPOTS);
+let lastSpot="";
+// Richtig: Tor mit gewürfeltem Trefferpunkt (nie zweimal derselbe hintereinander). Falsch: zufällig Pfosten, Latte oder knapp vorbei.
+// Seite zufällig (-1 links, 1 rechts). opts.prev: der vorige Punkt (sonst wird der zuletzt gewürfelte gemerkt), opts.pen: Elfmeterschießen (richtig = Tor, falsch = gehalten).
+export function pickShot(ok,rnd=Math.random,opts={}){
+  if(opts.pen&&!ok)return{kind:"saved",side:rnd()<.5?-1:1};
+  if(!ok)return{kind:["post","bar","wide"][Math.floor(rnd()*3)%3],side:rnd()<.5?-1:1};
+  const prev=opts.prev!==undefined?opts.prev:lastSpot,pool=SPOT_IDS.filter(i=>i!==prev),spot=pool[Math.floor(rnd()*pool.length)%pool.length];
+  if(opts.prev===undefined)lastSpot=spot;
+  return{kind:"goal",spot,side:SPOTS[spot].side||(rnd()<.5?-1:1)};
+}
+// Zwischenpunkt der ersten Strecke: leicht gebogene Bahn
+function bend(a,b,curve,dir){
+  const m={x:(a.x+b.x)/2,y:(a.y+b.y)/2,s:(a.s+b.s)/2};
+  if(curve==="arc")m.y-=26;else if(curve==="flat")m.y-=6;else{m.x-=dir*18;m.y-=12;}
+  return m;
 }
 // Ballbahn in Bildpunkten der Szene (340 mal 230), s ist der Maßstab (Perspektive).
-// end ist der Endpunkt ohne Bewegung (reduzierte Bewegung).
-export function shotPath(kind,side){
-  const s={x:188,y:205,s:1};
-  if(kind==="saved")return{start:s,end:{x:170+side*34,y:68,s:.66}}; // Elfmeterschießen: der Torwart hält
-  if(kind==="goal")return{start:s,end:{x:170+side*36,y:62,s:.62}};
-  if(kind==="post")return{start:s,hit:{x:side>0?238:102,y:62,s:.66},end:{x:side>0?276:64,y:132,s:.95}};
-  if(kind==="bar")return{start:s,hit:{x:170+side*34,y:32,s:.68},end:{x:170+side*34,y:32,s:.68},out:{x:170+side*62,y:-24,s:.5}};
-  return{start:s,hit:{x:170+side*80,y:44,s:.64},end:{x:side>0?318:22,y:66,s:.58}};
+// c ist ein Zwischenpunkt der Bogenbahn, end der Endpunkt ohne Bewegung (reduzierte Bewegung).
+export function shotPath(kind,side,spot){
+  const s={x:188,y:205,s:1},sd=side<0?-1:1;
+  if(kind==="saved"){const end={x:170+sd*34,y:68,s:.66};return{start:s,c:bend(s,end,"arc",sd),end};}
+  if(kind==="goal"){
+    const sp=SPOTS[spot]||SPOTS[sd>0?"ur":"ul"],end={x:sp.x,y:sp.y,s:.6};
+    return{start:s,c:bend(s,end,sp.curve,sp.side),end};
+  }
+  if(kind==="post"){const hit={x:sd>0?238:102,y:62,s:.66};return{start:s,c:bend(s,hit,"effet",sd),hit,end:{x:sd>0?276:64,y:132,s:.95}};}
+  if(kind==="bar"){const hit={x:170+sd*34,y:32,s:.68};return{start:s,c:bend(s,hit,"arc",sd),hit,end:hit,out:{x:170+sd*62,y:-24,s:.5}};}
+  const hit={x:170+sd*80,y:44,s:.64};
+  return{start:s,c:bend(s,hit,"effet",sd),hit,end:{x:sd>0?318:22,y:66,s:.58}};
 }
 // Der Spieler von hinten (Rückansicht der Vorlage), Füße am unteren Rand der Szene, Mitte vor dem Tor
 function playerG(l){
@@ -113,9 +138,9 @@ function keeperG(dir,saved){
 }
 const CROWD=["#e5484d","#ffc83d","#f4f4f4","#2f6fde","#34a853","#ff8a00"];
 export function sceneSVG(look,shot,opts={}){
-  const l=cleanLook(look),keeper=!!opts.keeper,k=SHOT_KINDS.includes(shot&&shot.kind)||(keeper&&shot&&shot.kind==="saved")?shot.kind:"goal",side=shot&&shot.side<0?-1:1,p=shotPath(k,side);
+  const l=cleanLook(look),keeper=!!opts.keeper,k=SHOT_KINDS.includes(shot&&shot.kind)||(keeper&&shot&&shot.kind==="saved")?shot.kind:"goal",side=shot&&shot.side<0?-1:1,p=shotPath(k,side,shot&&shot.spot);
   const pt=(n,o)=>`--${n}x:${Math.round(o.x)}px;--${n}y:${Math.round(o.y)}px;--${n}s:${o.s}`;
-  const vars=[pt("s",p.start),pt("e",p.end),p.hit?pt("h",p.hit):"",p.out?pt("o",p.out):""].filter(Boolean).join(";");
+  const vars=[pt("s",p.start),pt("e",p.end),pt("c",p.c),p.hit?pt("h",p.hit):"",p.out?pt("o",p.out):""].filter(Boolean).join(";");
   let crowd="";
   for(let r=0;r<3;r++)for(let i=0;i<40;i++)crowd+=`<circle cx="${(4+r*4+i*8.6).toFixed(1)}" cy="${46+r*7}" r="3.1" fill="${CROWD[(i*5+r*3)%CROWD.length]}"/>`;
   let stripes="";
@@ -131,12 +156,12 @@ export function sceneSVG(look,shot,opts={}){
     +`<defs><linearGradient id="scSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eb6ff"/><stop offset="1" stop-color="#d8f0ff"/></linearGradient>`
     +`<linearGradient id="scGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f9a4f"/><stop offset="1" stop-color="#5cc06c"/></linearGradient>`
     +`<linearGradient id="scPost" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#e3e8ec"/><stop offset="1" stop-color="#b9c2c9"/></linearGradient>`
-    +`<radialGradient id="scBall" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d5dde3"/></radialGradient></defs>`
+    +`<radialGradient id="scBump"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><radialGradient id="scBall" cx=".38" cy=".34" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d5dde3"/></radialGradient></defs>`
     +`<rect width="340" height="74" fill="url(#scSky)"/><ellipse cx="60" cy="18" rx="30" ry="8" fill="#fff" opacity=".85"/><ellipse cx="84" cy="14" rx="20" ry="7" fill="#fff" opacity=".85"/><ellipse cx="280" cy="24" rx="26" ry="7" fill="#fff" opacity=".8"/>`
     +`<rect y="38" width="340" height="34" fill="#2d3f5c"/>${crowd}<rect y="66" width="340" height="8" fill="#e5484d"/><rect x="0" y="66" width="70" height="8" fill="#ffc83d"/><rect x="140" y="66" width="70" height="8" fill="#2f6fde"/><rect x="270" y="66" width="70" height="8" fill="#ffc83d"/>`
     +`<rect y="74" width="340" height="156" fill="url(#scGrass)"/>${stripes}`
     +`<g stroke="#fff" stroke-opacity=".7" stroke-width="2" fill="none"><path d="M0 93 H340"/><path d="M52 93 L28 150 H312 L288 93"/><path d="M96 93 L88 114 H252 L244 93"/></g><ellipse cx="170" cy="176" rx="5" ry="2.4" fill="#fff" opacity=".85"/>`
-    +`<rect x="114" y="40" width="112" height="48" fill="#0d2a17" opacity=".3"/><g stroke="#fff" stroke-opacity=".55" stroke-width="1">${mesh}<path d="M102 32 L114 40 M238 32 L226 40 M102 92 L114 88 M238 92 L226 88"/></g><rect class="netfx" x="106" y="34" width="128" height="58" fill="#fff" opacity="0"/>`
+    +`<rect x="114" y="40" width="112" height="48" fill="#0d2a17" opacity=".3"/><g stroke="#fff" stroke-opacity=".55" stroke-width="1">${mesh}<path d="M102 32 L114 40 M238 32 L226 40 M102 92 L114 88 M238 92 L226 88"/></g><g class="netfx" style="--bx:${Math.round(p.end.x)}px;--by:${Math.round(p.end.y)}px"><ellipse cx="${p.end.x}" cy="${p.end.y}" rx="30" ry="22" fill="url(#scBump)"/><path d="M${p.end.x-22} ${p.end.y} Q${p.end.x} ${p.end.y+14} ${p.end.x+22} ${p.end.y} M${p.end.x} ${p.end.y-16} Q${p.end.x+10} ${p.end.y} ${p.end.x} ${p.end.y+16}" stroke="#fff" stroke-width="1.4" fill="none"/></g>`
     +`<rect x="98" y="28" width="7" height="66" rx="2" fill="url(#scPost)"/><rect x="235" y="28" width="7" height="66" rx="2" fill="url(#scPost)"/><rect x="98" y="28" width="144" height="7" rx="2" fill="url(#scPost)"/>`
     +(keeper?keeperG(k==="saved"?side:-side,k==="saved"):"")
     +`<g class="pl">${playerG(l)}</g>`

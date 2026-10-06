@@ -4,8 +4,11 @@ Anker: Branch preview, Version 1.7.7, HEAD ebd0a0e. main und origin bei ebd0a0e.
 
 | Paket | Stand | Tests |
 |---|---|---|
-| D1 Trefferpunkte und Flugbahn (1.7.8) | offen | |
+| D1 Trefferpunkte und Flugbahn (1.7.8) | fertig, Tag v1.7.8 | 359 |
 | D2 Genau ins Eck (1.7.9) | offen | |
+
+Entscheidungen:
+- D1: 8 Trefferpunkte (SPOTS in avatardraw.js), pickShot merkt den letzten Punkt im Modul (Test: opts.prev). Bahn: Zwischenpunkt c je Punkt (Effet, hoher Bogen, flach), vier Keyframes nutzen --cx/--cy/--cs. Netz: Gruppe netfx (Name bleibt wegen Tests) mit Animation bump am Endpunkt. Elfmeterschießen: pickShot(ok,rnd,{pen:true}), Torwart springt wie bisher in die Gegenseite von shot.side. Der Ende-zu-Ende-Test v14e2e ist unter Last gelegentlich knapp (bekannt), einzeln grün.
 
 ## Vorheriger Auftrag (C0 bis C4, 1.7.0 bis 1.7.7)
 

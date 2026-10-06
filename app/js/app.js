@@ -394,7 +394,7 @@ function answer(val){
   if(G.pack){packAnswer(val);return;}
   const ok=isRight(T,val);
   clearTimeout(idleT);
-  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=G.pen?{kind:ok?"goal":"saved",side:Math.random()<.5?-1:1}:pickShot(ok);G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
+  G.done=true;G.ok=ok;G.given=val;G.res.push(ok);G.shot=pickShot(ok,Math.random,{pen:!!G.pen});G.note=G.camp&&!ok?wrongNote(T,val):"";G.offer=false;
   if(ok){G.streak++;G.gain=10+(G.streak>=3?5:0);G.pts+=G.gain;}else{G.streak=0;G.gain=0;}
   if(!G.camp&&strikeStep(G.strikes||(G.strikes={}),T.topic,ok)){(G.cool||(G.cool={}))[T.topic]=true;G.offerNext=true;} // Frust-Bremse: Thema seltener, nächste Aufgabe mit Tipp-Angebot
   // Lokal zuerst: Antwort, Budget und Punkte sofort speichern, dann Abgleich anstoßen.

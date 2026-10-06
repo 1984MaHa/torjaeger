@@ -1,5 +1,11 @@
 # Änderungen
 
+## 1.7.8 (Tor-Animation: wechselnde Trefferpunkte, gebogene Flugbahn)
+- **Trefferpunkte im Tor:** Bei jedem Treffer wird ein Punkt gewürfelt (unten links, unten rechts, oben links, oben rechts, halbhoch links oder rechts, Mitte flach, unter die Latte). Nie zweimal derselbe hintereinander (`pickShot`, `SPOTS`).
+- **Flugbahn:** Der Ball fliegt eine leicht gebogene Bahn (Effet, hoher Bogen oder flach, je nach Punkt) und wird Richtung Tor kleiner. Das Netz beult an der Trefferstelle aus und federt zurück (`netfx`, Animation `bump`). Pfosten, Latte und knapp vorbei nutzen dieselbe Bogenbahn (Zwischenpunkt `c` in `shotPath`).
+- Dauer unverändert: Ball 0,85 Sekunden, Netz bis etwa 1,75 Sekunden, die nächste Aufgabe kommt nach 1,8 Sekunden. Mit `prefers-reduced-motion` liegt der Ball sofort am Trefferpunkt.
+- Kein Schemawechsel. Version 1.7.8 an allen vier Stellen. Tests in `test/v178.test.mjs`.
+
 ## 1.7.7 (Baukasten übersichtlicher)
 - **Editor für Trainingslager in Schritten von oben nach unten:** 1. Wie viele Aufgaben (je Halbzeit und Einheiten, mit Rechnung „Eine Einheit hat 20 Aufgaben, bei 3 Einheiten 60“), 2. Welche Fächer (Mathe, Deutsch, Englisch, Sachkunde, Einmaleins-Reihen), 3. Welche Themen und Aufgaben (nur die Themen der gewählten Fächer, je Fach „Alle“ und „Keine“ und „x von y gewählt“), 4. Welche Reihen (nur wenn Aufgaben mit Mal und Geteilt gewählt sind, sonst entfällt der Schritt), dann Nachspielzeit und zuletzt der Name. Ein Fach abwählen nimmt auch seine Themen heraus.
 - **Gelöschte Vorlagen zurückholen:** Unter der Liste steht „Gelöschte Vorlagen“ mit „Zurückholen“. Der Fortschritt der Konten war nie weg.
